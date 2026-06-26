@@ -83,9 +83,8 @@ export const appRouter = router({
     saveContact: publicProcedure
       .input(z.object({
         sessionToken: z.string(),
-        name: z.string().optional(),
+        name: z.string().optional(), // "How to address you" field
         email: z.string().email(),
-        phone: z.string().optional(),
         productName: z.string().optional(),
         website: z.string().optional(),
       }))
@@ -97,7 +96,6 @@ export const appRouter = router({
           sessionId: session.id,
           name: input.name,
           email: input.email,
-          phone: input.phone,
           productName: input.productName,
           website: input.website,
         });
@@ -105,12 +103,13 @@ export const appRouter = router({
         return { success: true };
       }),
 
-    // Save a single answer (auto-save)
+    // Save a single answer (auto-save) — supports multi-select via answerIds array
     saveAnswer: publicProcedure
       .input(z.object({
         sessionToken: z.string(),
         questionId: z.string(),
-        answerId: z.string(),
+        answerId: z.string(), // primary/first answer id
+        answerIds: z.array(z.string()).optional(), // all selected ids for multi-select
         answerText: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
@@ -121,6 +120,7 @@ export const appRouter = router({
           sessionId: session.id,
           questionId: input.questionId,
           answerId: input.answerId,
+          answerIds: input.answerIds ?? [input.answerId],
           answerText: input.answerText,
         });
         if (session.status === "contact_collected") {
@@ -142,7 +142,7 @@ export const appRouter = router({
     complete: publicProcedure
       .input(z.object({
         sessionToken: z.string(),
-        answers: z.record(z.string(), z.string()),
+        answers: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
       }))
       .mutation(async ({ input }) => {
         const session = await getSessionByToken(input.sessionToken);
@@ -168,7 +168,7 @@ export const appRouter = router({
         const categoryLabel = { low: "Низкий", moderate: "Умеренный", high: "Высокий", critical: "Критический" }[scoring.riskCategory];
         await notifyOwner({
           title: `Новая диагностика завершена — ${categoryLabel} риск`,
-          content: `Пользователь: ${contact?.name || "—"}\nEmail: ${contact?.email || "—"}\nТелефон: ${contact?.phone || "—"}\nПродукт: ${contact?.productName || "—"}\nСайт: ${contact?.website || "—"}\nКатегория риска: ${categoryLabel}\nБалл: ${scoring.totalScore}`,
+          content: `Как обращаться: ${contact?.name || "—"}\nEmail: ${contact?.email || "—"}\nПродукт: ${contact?.productName || "—"}\nСайт: ${contact?.website || "—"}\nКатегория риска: ${categoryLabel}\nБалл: ${scoring.totalScore}`,
         });
 
         return { success: true, scoring };

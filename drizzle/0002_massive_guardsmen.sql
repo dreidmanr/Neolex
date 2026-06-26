@@ -1,0 +1,1 @@
+ALTER TABLE `questionnaire_answers` ADD `answerIds` json;

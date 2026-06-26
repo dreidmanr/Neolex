@@ -18,17 +18,17 @@ export default function Diagnostic() {
   const [step, setStep] = useState<Step>("consent");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  // answers: Record<questionId, string | string[]>
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
 
   // Consent state
   const [userAgreementAccepted, setUserAgreementAccepted] = useState(false);
   const [marketingAccepted, setMarketingAccepted] = useState(false);
 
-  // Contact state
+  // Contact state — phone removed per spec
   const [contactForm, setContactForm] = useState({
-    name: "",
+    name: "",       // "Как к вам обращаться"
     email: "",
-    phone: "",
     productName: "",
     website: "",
   });
@@ -55,9 +55,15 @@ export default function Diagnostic() {
 
   useEffect(() => {
     if (savedAnswersData && savedAnswersData.length > 0) {
-      const restored: Record<string, string> = {};
+      const restored: Record<string, string | string[]> = {};
       for (const row of savedAnswersData) {
-        restored[row.questionId] = row.answerId;
+        // Prefer answerIds array if available (multi-select)
+        const ids = row.answerIds as string[] | null;
+        if (ids && Array.isArray(ids) && ids.length > 1) {
+          restored[row.questionId] = ids;
+        } else {
+          restored[row.questionId] = row.answerId;
+        }
       }
       setAnswers((prev) => ({ ...restored, ...prev }));
     }
@@ -78,7 +84,11 @@ export default function Diagnostic() {
   }, []);
 
   const totalQuestions = QUESTIONS.length;
-  const progress = step === "consent" ? 5 : step === "contact" ? 15 : step === "questionnaire" ? 15 + (currentQuestion / totalQuestions) * 75 : 95;
+  const progress =
+    step === "consent" ? 5
+    : step === "contact" ? 15
+    : step === "questionnaire" ? 15 + (currentQuestion / totalQuestions) * 75
+    : 95;
 
   // ── CONSENT STEP ──
   const handleConsentNext = async () => {
@@ -116,7 +126,6 @@ export default function Diagnostic() {
       sessionToken,
       name: contactForm.name || undefined,
       email: contactForm.email,
-      phone: contactForm.phone || undefined,
       productName: contactForm.productName || undefined,
       website: contactForm.website || undefined,
     });
@@ -124,16 +133,65 @@ export default function Diagnostic() {
   };
 
   // ── QUESTIONNAIRE STEP ──
-  const handleSelectAnswer = useCallback(async (questionId: string, answerId: string) => {
+
+  // Helper: get currently selected ids for a question
+  const getSelected = (questionId: string): string[] => {
+    const val = answers[questionId];
+    if (!val) return [];
+    return Array.isArray(val) ? val : [val];
+  };
+
+  const isOptionSelected = (questionId: string, optionId: string): boolean => {
+    return getSelected(questionId).includes(optionId);
+  };
+
+  // Handle single-select answer
+  const handleSelectSingle = useCallback(async (questionId: string, answerId: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
     if (sessionToken) {
-      saveAnswer.mutate({ sessionToken, questionId, answerId });
+      saveAnswer.mutate({ sessionToken, questionId, answerId, answerIds: [answerId] });
     }
   }, [sessionToken]);
 
+  // Handle multi-select answer toggle
+  const handleToggleMulti = useCallback(async (questionId: string, answerId: string, exclusive: boolean) => {
+    setAnswers((prev) => {
+      const current = getSelected(questionId);
+      let next: string[];
+
+      if (exclusive) {
+        // Exclusive option: select only this one
+        next = current.includes(answerId) ? [] : [answerId];
+      } else {
+        // Remove exclusive options if any were selected
+        const q = QUESTIONS.find(q => q.id === questionId);
+        const exclusiveIds = q?.options.filter(o => o.exclusive).map(o => o.id) ?? [];
+        const withoutExclusive = current.filter(id => !exclusiveIds.includes(id));
+
+        if (withoutExclusive.includes(answerId)) {
+          next = withoutExclusive.filter(id => id !== answerId);
+        } else {
+          next = [...withoutExclusive, answerId];
+        }
+      }
+
+      const primaryId = next[0] ?? answerId;
+      if (sessionToken) {
+        saveAnswer.mutate({ sessionToken, questionId, answerId: primaryId, answerIds: next });
+      }
+      return { ...prev, [questionId]: next };
+    });
+  }, [sessionToken]);
+
+  const hasAnsweredCurrentQuestion = (): boolean => {
+    const q = QUESTIONS[currentQuestion];
+    const selected = getSelected(q.id);
+    return selected.length > 0;
+  };
+
   const handleQuestionNext = () => {
     const q = QUESTIONS[currentQuestion];
-    if (!answers[q.id]) {
+    if (!hasAnsweredCurrentQuestion()) {
       toast.error("Пожалуйста, выберите ответ");
       return;
     }
@@ -227,7 +285,7 @@ export default function Diagnostic() {
                       Принимаю пользовательское соглашение <span className="text-destructive">*</span>
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Я ознакомился(-ась) с условиями использования сервиса Neolex и соглашаюсь с тем, что результаты диагностики носят информационный характер и не являются юридической консультацией. Версия документа: {CONSENT_VERSIONS.userAgreement} · {new Date().toLocaleDateString("ru-RU")}
+                      Я ознакомился(-ась) с условиями использования сервиса Lexy и соглашаюсь с тем, что результаты диагностики носят информационный характер и не являются юридической консультацией. Версия документа: {CONSENT_VERSIONS.userAgreement} · {new Date().toLocaleDateString("ru-RU")}
                     </p>
                   </div>
                 </div>
@@ -284,10 +342,10 @@ export default function Diagnostic() {
               <div className="card-premium p-6 rounded-2xl space-y-5">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">Имя</Label>
+                    <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">Как к вам обращаться</Label>
                     <Input
                       id="name"
-                      placeholder="Иван Иванов"
+                      placeholder="Иван"
                       value={contactForm.name}
                       onChange={(e) => setContactForm((p) => ({ ...p, name: e.target.value }))}
                     />
@@ -307,15 +365,6 @@ export default function Diagnostic() {
                     {emailError && <p className="text-xs text-destructive mt-1">{emailError}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="phone" className="text-sm font-medium mb-1.5 block">Телефон</Label>
-                    <Input
-                      id="phone"
-                      placeholder="+7 (999) 000-00-00"
-                      value={contactForm.phone}
-                      onChange={(e) => setContactForm((p) => ({ ...p, phone: e.target.value }))}
-                    />
-                  </div>
-                  <div>
                     <Label htmlFor="product" className="text-sm font-medium mb-1.5 block">Название продукта</Label>
                     <Input
                       id="product"
@@ -324,7 +373,7 @@ export default function Diagnostic() {
                       onChange={(e) => setContactForm((p) => ({ ...p, productName: e.target.value }))}
                     />
                   </div>
-                  <div className="sm:col-span-2">
+                  <div>
                     <Label htmlFor="website" className="text-sm font-medium mb-1.5 block">Сайт продукта</Label>
                     <Input
                       id="website"
@@ -364,6 +413,11 @@ export default function Diagnostic() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                   <span className="font-display font-700 text-primary">Вопрос {currentQuestion + 1}</span>
                   <span>из {totalQuestions}</span>
+                  {currentQ.multiSelect && (
+                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                      Можно выбрать несколько
+                    </span>
+                  )}
                 </div>
                 <h1 className="font-display text-2xl sm:text-3xl font-800 mb-3 leading-tight">
                   {currentQ.title}
@@ -376,29 +430,61 @@ export default function Diagnostic() {
               {/* Answer options */}
               <div className="space-y-3">
                 {currentQ.options.map((option) => {
-                  const isSelected = answers[currentQ.id] === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => handleSelectAnswer(currentQ.id, option.id)}
-                      className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
-                        isSelected
-                          ? "border-primary bg-primary/5 shadow-sm"
-                          : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                          isSelected ? "border-primary bg-primary" : "border-border"
-                        }`}>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                  const isSelected = isOptionSelected(currentQ.id, option.id);
+
+                  if (currentQ.multiSelect) {
+                    // Multi-select: checkbox style
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => handleToggleMulti(currentQ.id, option.id, !!option.exclusive)}
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                            isSelected ? "border-primary bg-primary" : "border-border"
+                          }`}>
+                            {isSelected && (
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
+                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )}
+                          </div>
+                          <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
+                            {option.text}
+                          </span>
                         </div>
-                        <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
-                          {option.text}
-                        </span>
-                      </div>
-                    </button>
-                  );
+                      </button>
+                    );
+                  } else {
+                    // Single-select: radio style
+                    return (
+                      <button
+                        key={option.id}
+                        onClick={() => handleSelectSingle(currentQ.id, option.id)}
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                            isSelected ? "border-primary bg-primary" : "border-border"
+                          }`}>
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                          <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
+                            {option.text}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  }
                 })}
               </div>
 
@@ -412,7 +498,7 @@ export default function Diagnostic() {
                 </button>
                 <button
                   onClick={handleQuestionNext}
-                  disabled={!answers[currentQ.id] || complete.isPending}
+                  disabled={!hasAnsweredCurrentQuestion() || complete.isPending}
                   className="btn-electric flex items-center gap-2 px-8 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {currentQuestion === totalQuestions - 1

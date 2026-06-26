@@ -114,7 +114,7 @@ export async function upsertAnswer(data: InsertQuestionnaireAnswer) {
     .where(and(eq(questionnaireAnswers.sessionId, data.sessionId!), eq(questionnaireAnswers.questionId, data.questionId!)))
     .limit(1);
   if (existing.length > 0) {
-    await db.update(questionnaireAnswers).set({ answerId: data.answerId!, answerText: data.answerText ?? null })
+    await db.update(questionnaireAnswers).set({ answerId: data.answerId!, answerIds: data.answerIds ?? null, answerText: data.answerText ?? null })
       .where(and(eq(questionnaireAnswers.sessionId, data.sessionId!), eq(questionnaireAnswers.questionId, data.questionId!)));
   } else {
     await db.insert(questionnaireAnswers).values(data);

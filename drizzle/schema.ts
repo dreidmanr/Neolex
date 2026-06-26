@@ -74,7 +74,8 @@ export const questionnaireAnswers = mysqlTable("questionnaire_answers", {
   id: int("id").autoincrement().primaryKey(),
   sessionId: int("sessionId").notNull(),
   questionId: varchar("questionId", { length: 64 }).notNull(),
-  answerId: varchar("answerId", { length: 64 }).notNull(),
+  answerId: varchar("answerId", { length: 64 }).notNull(), // primary/first answer id (kept for compatibility)
+  answerIds: json("answerIds"), // array of selected answer ids for multi-select questions
   answerText: text("answerText"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
