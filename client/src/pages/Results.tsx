@@ -156,7 +156,7 @@ export default function Results() {
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-primary" />
-            <span className="font-display font-700 text-base">Neolex</span>
+            <span className="font-display font-700 text-base">Lexy</span>
           </button>
           <div className="text-sm text-muted-foreground">Результаты диагностики</div>
         </div>
@@ -331,7 +331,7 @@ export default function Results() {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="mailto:hello@neolex.ru?subject=Запрос на расширенную диагностику"
+                href="mailto:hello@lexy.ru?subject=Запрос на расширенную диагностику"
                 className="btn-electric flex items-center justify-center gap-2 px-8 py-3 rounded-xl"
               >
                 Записаться на расширенную диагностику
@@ -360,7 +360,7 @@ export default function Results() {
             <h3 className="font-display text-xl font-800 text-white mb-3">{upsell.title}</h3>
             <p className="text-white/70 leading-relaxed mb-6">{upsell.description}</p>
             <a
-              href="mailto:hello@neolex.ru?subject=Профилактическая проверка продукта"
+              href="mailto:hello@lexy.ru?subject=Профилактическая проверка продукта"
               className="btn-electric flex items-center gap-2 px-8 py-3 rounded-xl inline-flex"
             >
               Запросить профилактическую проверку
@@ -385,7 +385,7 @@ export default function Results() {
         <div className="container flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-white/50" />
-            <span className="font-display font-700 text-white text-sm">Neolex</span>
+            <span className="font-display font-700 text-white text-sm">Lexy</span>
           </div>
           <p className="text-white/40 text-xs text-center">
             Диагностика носит информационный характер и не является юридической консультацией.

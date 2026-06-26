@@ -9,7 +9,7 @@ const DOCS: Record<string, { title: string; version: string; date: string; conte
     content: `
 ## 1. Общие положения
 
-1.1. Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между ООО «Неолекс» (далее — «Оператор») и физическим или юридическим лицом (далее — «Пользователь»), использующим сервис Lexy, доступный по адресу neolex.ru (далее — «Сервис»).
+1.1. Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между Оператором (далее — «Оператор») и физическим или юридическим лицом (далее — «Пользователь»), использующим сервис Lexy (далее — «Сервис»).
 
 1.2. Использование Сервиса означает полное и безоговорочное принятие Пользователем условий настоящего Соглашения. Если Пользователь не согласен с условиями Соглашения, он обязан немедленно прекратить использование Сервиса.
 
@@ -57,10 +57,10 @@ const DOCS: Record<string, { title: string; version: string; date: string; conte
 
 ## 7. Реквизиты оператора
 
-ООО «Неолекс»  
+Оператор сервиса Lexy  
 ИНН: [указывается при регистрации]  
 Адрес: [указывается при регистрации]  
-Email: support@neolex.ru
+Email: support@lexy.ru
     `,
   },
   "privacy-policy": {
@@ -72,7 +72,7 @@ Email: support@neolex.ru
 
 1.1. Настоящая Политика обработки персональных данных (далее — «Политика») разработана в соответствии с требованиями Федерального закона от 27.07.2006 № 152-ФЗ «О персональных данных» (далее — «152-ФЗ»).
 
-1.2. Оператором персональных данных является ООО «Неолекс» (далее — «Оператор»).
+1.2. Оператором персональных данных является Оператор сервиса Lexy (далее — «Оператор»).
 
 1.3. Политика определяет порядок обработки персональных данных Пользователей сервиса Lexy.
 
@@ -127,7 +127,7 @@ Email: support@neolex.ru
 - отозвать согласие на обработку персональных данных;
 - обратиться с жалобой в Роскомнадзор.
 
-7.2. Для реализации прав Пользователь направляет запрос на адрес: support@neolex.ru
+7.2. Для реализации прав Пользователь направляет запрос на адрес: privacy@lexy.ru
 
 ## 8. Файлы cookie
 
@@ -140,7 +140,7 @@ Email: support@neolex.ru
 ## 10. Контактная информация
 
 По вопросам обработки персональных данных:  
-Email: privacy@neolex.ru  
+Email: privacy@lexy.ru  
 Адрес: [указывается при регистрации]
     `,
   },
@@ -180,7 +180,7 @@ export default function LegalDocs() {
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
               <Scale className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="font-display font-800 text-lg tracking-tight">Neolex</span>
+            <span className="font-display font-800 text-lg tracking-tight">Lexy</span>
           </div>
         </div>
       </nav>
@@ -215,7 +215,7 @@ export default function LegalDocs() {
       {/* Footer */}
       <footer className="section-dark py-8 border-t border-white/8 mt-16">
         <div className="container text-center">
-          <p className="text-white/40 text-sm">© 2025 Neolex · Все права защищены</p>
+          <p className="text-white/40 text-sm">© 2025 Lexy · Все права защищены</p>
         </div>
       </footer>
     </div>

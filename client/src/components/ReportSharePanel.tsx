@@ -28,10 +28,10 @@ export function ReportSharePanel({ pdfUrl, type, riskLabel, productName }: Repor
     : "Углублённая диагностика правовых рисков";
 
   const shareText = productName
-    ? `Прошёл правовую диагностику IT-продукта «${productName}» через Lexy by Neolex. Категория риска: ${riskLabel}. Рекомендую проверить свой продукт.`
-    : `Прошёл правовую диагностику IT-продукта через Lexy by Neolex. Категория риска: ${riskLabel}. Рекомендую проверить свой продукт.`;
+    ? `Прошёл правовую диагностику IT-продукта «${productName}» через Lexy. Категория риска: ${riskLabel}. Рекомендую проверить свой продукт.`
+    : `Прошёл правовую диагностику IT-продукта через Lexy. Категория риска: ${riskLabel}. Рекомендую проверить свой продукт.`;
 
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://neolex.ru";
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://lexy.ru";
   const shareUrl = `${siteUrl}/diagnostic`;
 
   async function handleDownload() {
@@ -43,7 +43,7 @@ export function ReportSharePanel({ pdfUrl, type, riskLabel, productName }: Repor
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = type === "free" ? "neolex-free-report.pdf" : "neolex-paid-report.pdf";
+      a.download = type === "free" ? "lexy-free-report.pdf" : "lexy-paid-report.pdf";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

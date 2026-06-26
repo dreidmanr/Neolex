@@ -83,7 +83,7 @@ export default function LexyWidget() {
             </div>
             <div>
               <div className="font-semibold text-sm">Lexy</div>
-              <div className="text-xs text-white/70">Помощник Neolex</div>
+              <div className="text-xs text-white/70">Ваш правовой помощник</div>
             </div>
           </div>
 
