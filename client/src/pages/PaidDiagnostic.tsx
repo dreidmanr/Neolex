@@ -24,6 +24,7 @@ import {
   Lock,
   X,
 } from "lucide-react";
+import { ReportSharePanel } from "@/components/ReportSharePanel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -432,6 +433,7 @@ export default function PaidDiagnostic() {
             scoring={scoring}
             reportMarkdown={reportMarkdown}
             productName={productName || (answers["b1_q1"] as string) || "ваш продукт"}
+            sessionToken={sessionToken}
             onNavigateHome={() => navigate("/")}
           />
         )}
@@ -898,8 +900,8 @@ function ProcessingScreen() {
   );
 }
 
-function ReportScreen({ scoring, reportMarkdown, productName, onNavigateHome }: {
-  scoring: any; reportMarkdown: string; productName: string; onNavigateHome: () => void;
+function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNavigateHome }: {
+  scoring: any; reportMarkdown: string; productName: string; sessionToken: string | null; onNavigateHome: () => void;
 }) {
   const riskColors: Record<string, string> = {
     low: "text-green-700 bg-green-50 border-green-200",
@@ -970,12 +972,20 @@ function ReportScreen({ scoring, reportMarkdown, productName, onNavigateHome }: 
         </div>
       )}
 
-      {/* Full report markdown */}
+      {/* Full report markdown — rendered cleanly */}
       {reportMarkdown && (
         <div className="border border-gray-100 rounded-2xl p-6 space-y-4">
           <h2 className="text-xl font-bold text-gray-900">Полный отчёт</h2>
-          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {reportMarkdown}
+          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+            {reportMarkdown
+              .replace(/^#+\s*/gm, "")
+              .replace(/\*\*([^*]+)\*\*/g, "$1")
+              .replace(/^[-*]\s+/gm, "• ")
+              .split("\n")
+              .filter((l: string) => l.trim())
+              .map((line: string, i: number) => (
+                <p key={i} className={line.startsWith("• ") ? "ml-3" : ""}>{line}</p>
+              ))}
           </div>
         </div>
       )}
@@ -1038,6 +1048,16 @@ function ReportScreen({ scoring, reportMarkdown, productName, onNavigateHome }: 
             ))}
           </ul>
         </div>
+      )}
+
+      {/* Download & Share */}
+      {sessionToken && (
+        <ReportSharePanel
+          pdfUrl={`/api/pdf/paid/${sessionToken}`}
+          type="paid"
+          riskLabel={label}
+          productName={productName}
+        />
       )}
 
       {/* Next step CTA */}

@@ -4,6 +4,7 @@ import { ArrowRight, Scale, AlertTriangle, CheckCircle2, XCircle, Info, ChevronD
 import { useState } from "react";
 import { RISK_CATEGORY_LABELS, UPSELL_TEXTS } from "../../../shared/diagnosticData";
 import type { RiskCategory, RiskBlock } from "../../../shared/diagnosticData";
+import { ReportSharePanel } from "@/components/ReportSharePanel";
 
 const RISK_COLORS: Record<RiskCategory, { bg: string; text: string; border: string; badge: string }> = {
   low: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", badge: "risk-low" },
@@ -254,13 +255,23 @@ export default function Results() {
         )}
 
         {/* ── DISCLAIMER ── */}
-        <div className="p-4 rounded-xl bg-muted/50 border border-border mb-8 animate-fade-in-up animate-delay-300">
+        <div className="p-4 rounded-xl bg-muted/50 border border-border mb-6 animate-fade-in-up animate-delay-300">
           <div className="flex items-start gap-3">
             <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">
               Данная диагностика носит информационный характер и не является юридической консультацией. Результаты основаны на ваших ответах и не учитывают полный контекст деятельности компании. Для получения юридически значимых выводов необходима работа с реальными документами.
             </p>
           </div>
+        </div>
+
+        {/* ── DOWNLOAD & SHARE ── */}
+        <div className="mb-8 animate-fade-in-up animate-delay-350">
+          <ReportSharePanel
+            pdfUrl={`/api/pdf/free/${params.token}`}
+            type="free"
+            riskLabel={categoryLabel}
+            productName={undefined}
+          />
         </div>
 
         {/* ── UPSELL ── */}

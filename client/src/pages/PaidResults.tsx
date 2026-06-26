@@ -2,6 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Shield, AlertTriangle, ChevronRight, X, Check } from "lucide-react";
 import { useState } from "react";
+import { ReportSharePanel } from "@/components/ReportSharePanel";
 
 export default function PaidResults() {
   const { token } = useParams<{ token: string }>();
@@ -136,12 +137,20 @@ export default function PaidResults() {
           </div>
         )}
 
-        {/* Full report */}
+        {/* Full report — clean render */}
         {reportMarkdown && (
           <div className="border border-gray-100 rounded-2xl p-6 space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Полный отчёт</h2>
-            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {reportMarkdown}
+            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+              {reportMarkdown
+                .replace(/^#+\s*/gm, "")
+                .replace(/\*\*([^*]+)\*\*/g, "$1")
+                .replace(/^[-*]\s+/gm, "• ")
+                .split("\n")
+                .filter((l: string) => l.trim())
+                .map((line: string, i: number) => (
+                  <p key={i} className={line.startsWith("• ") ? "ml-3" : ""}>{line}</p>
+                ))}
             </div>
           </div>
         )}
@@ -191,6 +200,14 @@ export default function PaidResults() {
             </ul>
           </div>
         )}
+
+        {/* Download & Share */}
+        <ReportSharePanel
+          pdfUrl={`/api/pdf/paid/${token}`}
+          type="paid"
+          riskLabel={riskLabels[scoring.riskCategory] ?? scoring.riskCategory}
+          productName={productName}
+        />
 
         {/* Next step */}
         {scoring.nextStep && (
