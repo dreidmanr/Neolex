@@ -19,6 +19,7 @@ import {
   getScoringResultBySession,
 } from "./db";
 import { calculateScore, CONSENT_VERSIONS } from "../shared/diagnosticData";
+import { paidRouter } from "./paidRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -30,6 +31,8 @@ export const appRouter = router({
       return { success: true } as const;
     }),
   }),
+
+  paid: paidRouter,
 
   diagnostic: router({
     // Create a new diagnostic session

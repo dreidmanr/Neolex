@@ -9,6 +9,10 @@ export default function Home() {
     navigate("/diagnostic");
   };
 
+  const handleStartPaid = () => {
+    navigate("/paid");
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* ── NAV ── */}
@@ -20,13 +24,21 @@ export default function Home() {
             </div>
             <span className="font-display font-800 text-xl tracking-tight">Neolex</span>
           </div>
-          <Button
-            onClick={handleStartDiagnostic}
-            className="btn-electric px-5 py-2 text-sm hidden sm:flex"
-          >
-            Пройти диагностику
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
+          <div className="hidden sm:flex items-center gap-3">
+            <button
+              onClick={handleStartPaid}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+            >
+              Углублённая диагностика
+            </button>
+            <Button
+              onClick={handleStartDiagnostic}
+              className="btn-electric px-5 py-2 text-sm"
+            >
+              Бесплатно
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
         </div>
       </nav>
 
@@ -302,6 +314,62 @@ export default function Home() {
                 <div key={i} className="card-dark p-4 flex items-center justify-between">
                   <span className="text-white font-medium text-sm">{item.label}</span>
                   <span className="text-white/40 text-xs font-mono">{item.law}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PAID DIAGNOSTIC SECTION ── */}
+      <section className="py-24 bg-background border-t border-border">
+        <div className="container">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-primary text-sm font-medium mb-6">
+                <Shield className="w-3.5 h-3.5" />
+                Углублённая диагностика
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl font-800 leading-tight mb-4">
+                Полный правовой аудит
+                <br />
+                <span className="text-gradient">за 4 900 ₽</span>
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                14 блоков анализа, 50+ вопросов, AI-отчёт с дорожной картой устранения рисков на 30/60/90 дней. Загрузка документов, конкретные правовые основания, финансовые последствия каждого риска.
+              </p>
+              <ul className="space-y-2 mb-8">
+                {[
+                  "Корпоративная структура и права на продукт",
+                  "Персональные данные и соответствие 152-ФЗ",
+                  "Договорная база с командой и подрядчиками",
+                  "Платёжная модель и финансовое регулирование",
+                  "Дорожная карта устранения рисков 30/60/90 дней",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={handleStartPaid}
+                className="btn-electric flex items-center gap-2 px-8 py-4 text-base rounded-xl"
+              >
+                Начать углублённую диагностику
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { num: "14", label: "блоков анализа" },
+                { num: "50+", label: "вопросов" },
+                { num: "30/60/90", label: "дней дорожная карта" },
+                { num: "AI", label: "генерация отчёта" },
+              ].map((stat) => (
+                <div key={stat.label} className="card-premium p-6 text-center">
+                  <div className="font-display text-3xl font-800 text-foreground mb-1">{stat.num}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </div>
               ))}
             </div>
