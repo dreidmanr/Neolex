@@ -19,6 +19,7 @@ import {
   getScoringResultBySession,
 } from "./db";
 import { calculateScore, CONSENT_VERSIONS } from "../shared/diagnosticData";
+import { invokeLLM } from "./_core/llm";
 import { paidRouter } from "./paidRouter";
 
 export const appRouter = router({
@@ -175,6 +176,36 @@ export const appRouter = router({
         });
 
         return { success: true, scoring };
+      }),
+
+    // Lexy widget: answer a user question about the service
+    askLexy: publicProcedure
+      .input(z.object({ question: z.string().max(500) }))
+      .mutation(async ({ input }) => {
+        const systemPrompt = `Ты Lexy — дружелюбный AI-помощник юридического сервиса Neolex. 
+Neolex помогает IT-предпринимателям выявить правовые риски в их продуктах.
+
+Отвечай коротко (2-4 предложения), по-русски, без юридического жаргона.
+Если вопрос не связан с сервисом, мягко перенаправь на тему диагностики.
+
+О сервисе:
+- Бесплатная экспресс-диагностика: 8 вопросов, 5-7 минут, результат сразу
+- Углублённая диагностика: 14 блоков, 50+ вопросов, AI-отчёт, 4 900 ₽
+- Результат: категория риска (низкий/умеренный/высокий/критический), конкретные риски, правовые основания
+- Дорожная карта устранения рисков на 30/60/90 дней (в платной версии)`;
+        try {
+          const response = await invokeLLM({
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: input.question },
+            ],
+          });
+          const content = response.choices?.[0]?.message?.content;
+          const answer = typeof content === "string" ? content : "Извините, не смог сформулировать ответ. Попробуйте переформулировать вопрос.";
+          return { answer };
+        } catch {
+          return { answer: "Сейчас я недоступен. Пожалуйста, попробуйте позже или начните диагностику — результат придёт сразу после завершения." };
+        }
       }),
 
     // Get results by session token

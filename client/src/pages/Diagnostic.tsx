@@ -282,7 +282,11 @@ export default function Diagnostic() {
                   />
                   <div>
                     <Label htmlFor="user-agreement" className="font-display font-600 text-sm cursor-pointer">
-                      Принимаю пользовательское соглашение <span className="text-destructive">*</span>
+                      Принимаю{" "}
+                      <a href="/legal/user-agreement" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                        пользовательское соглашение
+                      </a>{" "}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       Я ознакомился(-ась) с условиями использования сервиса Lexy и соглашаюсь с тем, что результаты диагностики носят информационный характер и не являются юридической консультацией. Версия документа: {CONSENT_VERSIONS.userAgreement} · {new Date().toLocaleDateString("ru-RU")}
@@ -302,6 +306,12 @@ export default function Diagnostic() {
                     <Label htmlFor="marketing" className="font-display font-600 text-sm cursor-pointer">
                       Согласен(-на) получать полезные материалы по правовым вопросам IT-продуктов
                     </Label>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                      Обработка данных в соответствии с{" "}
+                      <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                        Политикой обработки персональных данных
+                      </a>.
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       Необязательно. Вы можете отписаться в любой момент. Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
                     </p>

@@ -9,6 +9,8 @@ import Diagnostic from "./pages/Diagnostic";
 import Results from "./pages/Results";
 import PaidDiagnostic from "./pages/PaidDiagnostic";
 import PaidResults from "./pages/PaidResults";
+import LexyWidget from "./components/LexyWidget";
+import LegalDocs from "./pages/LegalDocs";
 
 function Router() {
   return (
@@ -18,6 +20,7 @@ function Router() {
       <Route path="/results/:token" component={Results} />
       <Route path="/paid" component={PaidDiagnostic} />
       <Route path="/paid/results/:token" component={PaidResults} />
+      <Route path="/legal/:doc" component={LegalDocs} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -31,6 +34,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <LexyWidget />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
