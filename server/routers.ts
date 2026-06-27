@@ -21,6 +21,7 @@ import {
 import { calculateScore, CONSENT_VERSIONS } from "../shared/diagnosticData";
 import { invokeLLM } from "./_core/llm";
 import { paidRouter } from "./paidRouter";
+import { adminRouter } from "./adminRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -34,6 +35,7 @@ export const appRouter = router({
   }),
 
   paid: paidRouter,
+  admin: adminRouter,
 
   diagnostic: router({
     // Create a new diagnostic session

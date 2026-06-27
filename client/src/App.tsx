@@ -11,6 +11,7 @@ import PaidDiagnostic from "./pages/PaidDiagnostic";
 import PaidResults from "./pages/PaidResults";
 import LexyWidget from "./components/LexyWidget";
 import LegalDocs from "./pages/LegalDocs";
+import Admin from "./pages/Admin";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/paid" component={PaidDiagnostic} />
       <Route path="/paid/results/:token" component={PaidResults} />
       <Route path="/legal/:doc" component={LegalDocs} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
