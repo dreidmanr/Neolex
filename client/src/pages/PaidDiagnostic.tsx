@@ -443,8 +443,25 @@ export default function PaidDiagnostic() {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
 function PaidLanding({ onStart }: { onStart: () => void }) {
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState("");
+  const [promoValid, setPromoValid] = useState(false);
+
+  const handlePromoCheck = () => {
+    if (promoCode.trim() === "123") {
+      setPromoValid(true);
+      setPromoError("");
+    } else {
+      setPromoError("Неверный промо-код. Попробуйте ещё раз.");
+      setPromoValid(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handlePromoCheck();
+  };
+
   return (
     <div className="space-y-16">
       {/* Hero */}
@@ -460,10 +477,52 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
         <p className="text-lg text-gray-600 max-w-xl mx-auto leading-relaxed">
           14 блоков анализа, 50+ вопросов, AI-отчёт с дорожной картой устранения рисков на 30/60/90 дней. Подготовка к инвестициям, сделкам и масштабированию.
         </p>
+
+        {/* Promo-code gate */}
+        <div className="max-w-sm mx-auto space-y-3">
+          <div className="text-sm font-medium text-gray-700 flex items-center gap-2 justify-center">
+            <Lock className="w-4 h-4" />
+            Доступ по промо-коду
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => { setPromoCode(e.target.value); setPromoError(""); setPromoValid(false); }}
+              onKeyDown={handleKeyDown}
+              placeholder="Введите промо-код"
+              className={`flex-1 px-4 py-3 border-2 rounded-xl text-sm outline-none transition-colors ${
+                promoValid
+                  ? "border-green-500 bg-green-50 text-green-800"
+                  : promoError
+                  ? "border-red-400 bg-red-50"
+                  : "border-gray-200 focus:border-gray-900"
+              }`}
+            />
+            <button
+              onClick={handlePromoCheck}
+              className="px-5 py-3 bg-gray-900 text-white rounded-xl font-medium text-sm hover:bg-gray-800 active:scale-[0.98] transition-all"
+            >
+              Применить
+            </button>
+          </div>
+          {promoError && (
+            <p className="text-sm text-red-500 flex items-center gap-1">
+              <X className="w-3.5 h-3.5" /> {promoError}
+            </p>
+          )}
+          {promoValid && (
+            <p className="text-sm text-green-600 flex items-center gap-1 font-medium">
+              <Check className="w-3.5 h-3.5" /> Промо-код принят!
+            </p>
+          )}
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={onStart}
-            className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
+            disabled={!promoValid}
+            className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             Начать диагностику — {PAID_PRICE_RUB.toLocaleString("ru-RU")} ₽
           </button>
@@ -508,11 +567,12 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
       <div className="text-center space-y-4">
         <button
           onClick={onStart}
-          className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
+          disabled={!promoValid}
+          className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
         >
           Начать диагностику — {PAID_PRICE_RUB.toLocaleString("ru-RU")} ₽
         </button>
-        <p className="text-sm text-gray-400">Оплата картой · Результат сразу после прохождения</p>
+        <p className="text-sm text-gray-400">Доступ по промо-коду · Результат через 20–30 минут</p>
       </div>
     </div>
   );
