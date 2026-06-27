@@ -304,7 +304,7 @@ export default function Diagnostic() {
                   />
                   <div>
                     <Label htmlFor="marketing" className="font-display font-600 text-sm cursor-pointer">
-                      Согласен(-на) получать полезные материалы по правовым вопросам IT-продуктов
+                      Согласен(-на) получать рекламные рассылки. Необязательно. От согласия можно отказаться в любой момент
                     </Label>
                     <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                       Обработка данных в соответствии с{" "}
