@@ -254,7 +254,7 @@ export default function Diagnostic() {
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <Scale className="w-5 h-5" />
-            <span className="font-display font-700 text-base">Lexy</span>
+            <span className="font-display font-700 text-base">Neolex</span>
           </button>
           {step !== "processing" && (
             <div className="flex items-center gap-3">
@@ -329,16 +329,12 @@ export default function Diagnostic() {
                   />
                   <div>
                     <Label htmlFor="marketing" className="font-display font-600 text-sm cursor-pointer">
-                      Согласен(-на) получать рекламные рассылки (необязательно).{" "}
-                      <a href="/legal/marketing-consent" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80 font-normal" onClick={(e) => e.stopPropagation()}>
-                        Согласие на обработку ПДн с целью рассылки
+                      <a href="/legal/marketing-consent" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                        Согласен(-на) получать рекламные рассылки (необязательно)
                       </a>
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Обработка данных в соответствии с{" "}
-                      <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
-                        Политикой обработки персональных данных
-                      </a>. Вы можете отписаться в любой момент. Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
+                      Вы можете отписаться в любой момент. Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
                     </p>
                   </div>
                 </div>

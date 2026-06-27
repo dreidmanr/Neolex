@@ -6,14 +6,100 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   text: string;
+  suggestions?: string[];
 };
 
-const QUICK_QUESTIONS = [
+// Initial quick questions shown before any conversation
+const INITIAL_QUESTIONS = [
   "Что такое диагностика?",
   "Сколько времени занимает?",
   "Что будет в результате?",
   "Чем отличается платная?",
 ];
+
+// Contextual follow-up questions mapped to keywords in Lexy's answer
+const SUGGESTION_RULES: { keywords: string[]; suggestions: string[] }[] = [
+  {
+    keywords: ["диагностик", "анкет", "вопрос"],
+    suggestions: [
+      "Сколько вопросов в анкете?",
+      "Можно ли сохранить прогресс?",
+      "Что происходит после анкеты?",
+    ],
+  },
+  {
+    keywords: ["риск", "категори", "уровень"],
+    suggestions: [
+      "Что означает высокий риск?",
+      "Как снизить риски?",
+      "Что делать при критическом риске?",
+    ],
+  },
+  {
+    keywords: ["документ", "договор", "политик", "соглашени"],
+    suggestions: [
+      "Какие документы нужны для SaaS?",
+      "Как составить политику конфиденциальности?",
+      "Что такое пользовательское соглашение?",
+    ],
+  },
+  {
+    keywords: ["персональн", "данн", "152-ФЗ", "GDPR"],
+    suggestions: [
+      "Что такое 152-ФЗ?",
+      "Нужно ли уведомлять Роскомнадзор?",
+      "Как правильно собирать согласия?",
+    ],
+  },
+  {
+    keywords: ["платн", "тариф", "стоимост", "цен"],
+    suggestions: [
+      "Что входит в платную диагностику?",
+      "Как оплатить?",
+      "Когда будет готов отчёт?",
+    ],
+  },
+  {
+    keywords: ["отчёт", "результат", "PDF", "скачать"],
+    suggestions: [
+      "Можно ли поделиться отчётом?",
+      "Как долго хранится отчёт?",
+      "Что делать с рекомендациями?",
+    ],
+  },
+  {
+    keywords: ["интеллектуальн", "авторск", "права", "патент"],
+    suggestions: [
+      "Как защитить программный код?",
+      "Что такое свидетельство на ПО?",
+      "Нужен ли патент для IT-продукта?",
+    ],
+  },
+  {
+    keywords: ["оферт", "публичн", "акцепт"],
+    suggestions: [
+      "Чем оферта отличается от договора?",
+      "Когда нужна публичная оферта?",
+      "Как правильно оформить акцепт?",
+    ],
+  },
+];
+
+const DEFAULT_SUGGESTIONS = [
+  "Расскажи подробнее",
+  "Как начать диагностику?",
+  "Какие риски самые частые?",
+];
+
+function getSuggestions(answerText: string): string[] {
+  const lower = answerText.toLowerCase();
+  for (const rule of SUGGESTION_RULES) {
+    if (rule.keywords.some((kw) => lower.includes(kw))) {
+      return rule.suggestions;
+    }
+  }
+  return DEFAULT_SUGGESTIONS;
+}
 
 export default function LexyWidget() {
   const [open, setOpen] = useState(false);
@@ -44,9 +130,15 @@ export default function LexyWidget() {
     setLoading(true);
     try {
       const res = await askLexy.mutateAsync({ question: text });
+      const suggestions = getSuggestions(res.answer);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString() + "_a", role: "assistant", text: res.answer },
+        {
+          id: Date.now().toString() + "_a",
+          role: "assistant",
+          text: res.answer,
+          suggestions,
+        },
       ]);
     } catch {
       setMessages((prev) => [
@@ -55,12 +147,19 @@ export default function LexyWidget() {
           id: Date.now().toString() + "_err",
           role: "assistant",
           text: "Извините, произошла ошибка. Попробуйте ещё раз.",
+          suggestions: DEFAULT_SUGGESTIONS,
         },
       ]);
     } finally {
       setLoading(false);
     }
   };
+
+  // The last assistant message (to show its suggestions below it)
+  const lastAssistantIdx = messages.reduce(
+    (last, msg, idx) => (msg.role === "assistant" ? idx : last),
+    -1
+  );
 
   return (
     <>
@@ -89,27 +188,62 @@ export default function LexyWidget() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-72">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-              >
-                {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Bot className="w-3.5 h-3.5 text-primary" />
-                  </div>
-                )}
+            {messages.map((msg, idx) => (
+              <div key={msg.id}>
                 <div
-                  className={`max-w-[80%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
-                    msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-tr-sm"
-                      : "bg-muted text-foreground rounded-tl-sm"
-                  }`}
+                  className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
                 >
-                  {msg.text}
+                  {msg.role === "assistant" && (
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Bot className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[80%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-tr-sm"
+                        : "bg-muted text-foreground rounded-tl-sm"
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
                 </div>
+
+                {/* Suggested follow-up questions after each assistant message */}
+                {msg.role === "assistant" &&
+                  idx === lastAssistantIdx &&
+                  !loading &&
+                  msg.suggestions && (
+                    <div className="mt-2 ml-9 flex flex-wrap gap-1.5">
+                      {msg.suggestions.map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => sendMessage(q)}
+                          className="text-xs px-2.5 py-1 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary transition-colors"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  )}
               </div>
             ))}
+
+            {/* Initial quick questions (before first user message) */}
+            {messages.length === 1 && !loading && (
+              <div className="flex flex-wrap gap-1.5">
+                {INITIAL_QUESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => sendMessage(q)}
+                    className="text-xs px-2.5 py-1 rounded-full border border-border bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {loading && (
               <div className="flex gap-2">
                 <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -126,21 +260,6 @@ export default function LexyWidget() {
             )}
             <div ref={bottomRef} />
           </div>
-
-          {/* Quick questions */}
-          {messages.length === 1 && (
-            <div className="px-4 pb-2 flex flex-wrap gap-1.5">
-              {QUICK_QUESTIONS.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => sendMessage(q)}
-                  className="text-xs px-2.5 py-1 rounded-full border border-border bg-muted hover:bg-muted/80 text-muted-foreground transition-colors"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
 
           {/* Input */}
           <div className="border-t border-border p-3 flex gap-2">

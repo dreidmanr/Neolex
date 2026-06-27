@@ -22,7 +22,7 @@ export default function Home() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Scale className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-800 text-xl tracking-tight">Lexy</span>
+            <span className="font-display font-800 text-xl tracking-tight">Neolex</span>
           </div>
           <div className="hidden sm:flex items-center gap-3">
             <button
@@ -408,12 +408,12 @@ export default function Home() {
             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
               <Scale className="w-3.5 h-3.5 text-white/70" />
             </div>
-            <span className="font-display font-700 text-white">Lexy</span>
+            <span className="font-display font-700 text-white">Neolex</span>
           </div>
           <p className="text-white/40 text-sm text-center">
             Диагностика носит информационный характер и не является юридической консультацией.
           </p>
-          <p className="text-white/30 text-xs">© 2025 Lexy</p>
+          <p className="text-white/30 text-xs">© 2025 Neolex</p>
         </div>
       </footer>
     </div>

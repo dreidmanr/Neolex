@@ -338,7 +338,7 @@ export default function PaidDiagnostic() {
             <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
               <span className="text-white font-bold text-xs">N</span>
             </div>
-            <span className="font-semibold text-sm">Lexy</span>
+            <span className="font-semibold text-sm">Neolex</span>
           </button>
           {step === "questionnaire" && (
             <div className="flex items-center gap-3">

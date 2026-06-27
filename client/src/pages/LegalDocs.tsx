@@ -226,7 +226,7 @@ export default function LegalDocs() {
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
               <Scale className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="font-display font-800 text-lg tracking-tight">Lexy</span>
+            <span className="font-display font-800 text-lg tracking-tight">Neolex</span>
           </div>
         </div>
       </nav>
@@ -261,7 +261,7 @@ export default function LegalDocs() {
       {/* Footer */}
       <footer className="section-dark py-8 border-t border-white/8 mt-16">
         <div className="container text-center">
-          <p className="text-white/40 text-sm">© 2025 Lexy · Все права защищены</p>
+          <p className="text-white/40 text-sm">© 2025 Neolex · Все права защищены</p>
         </div>
       </footer>
     </div>

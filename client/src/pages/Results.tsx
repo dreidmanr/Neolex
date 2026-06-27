@@ -338,7 +338,7 @@ export default function Results() {
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-primary" />
-            <span className="font-display font-700 text-base">Lexy</span>
+            <span className="font-display font-700 text-base">Neolex</span>
           </button>
           <div className="text-sm text-muted-foreground">Результаты диагностики</div>
         </div>
@@ -572,7 +572,7 @@ export default function Results() {
         <div className="container flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-white/50" />
-            <span className="font-display font-700 text-white text-sm">Lexy</span>
+            <span className="font-display font-700 text-white text-sm">Neolex</span>
           </div>
           <p className="text-white/40 text-xs text-center">
             Диагностика носит информационный характер и не является юридической консультацией.

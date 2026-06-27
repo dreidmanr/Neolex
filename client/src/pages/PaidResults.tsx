@@ -78,7 +78,7 @@ export default function PaidResults() {
             <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
               <span className="text-white font-bold text-xs">N</span>
             </div>
-            <span className="font-semibold text-sm">Lexy</span>
+            <span className="font-semibold text-sm">Neolex</span>
           </button>
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${colorClass}`}>
             <Shield className="w-3 h-3" />
