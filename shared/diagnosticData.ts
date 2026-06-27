@@ -10,6 +10,7 @@ export type AnswerOption = {
   isSignificantRisk?: boolean;
   riskTag?: string;
   exclusive?: boolean; // if true, selecting this deselects all others (e.g. "none of the above")
+  allowOther?: boolean; // if true, shows a text input when this option is selected
 };
 
 export type Question = {
@@ -39,14 +40,14 @@ export const QUESTIONS: Question[] = [
       { id: "b2b_software", text: "Программное обеспечение для бизнеса", score: 1, riskTag: "documents" },
       { id: "b2c_software", text: "Приложение для конечных пользователей", score: 3, isSignificantRisk: true, riskTag: "consumer_protection" },
       { id: "regulated", text: "Продукт для регулируемой сферы: финансы, медицина, образование, трудовые отношения", score: 8, isCriticalEvent: true, riskTag: "regulated_sector" },
-      { id: "other_digital", text: "Иной цифровой сервис", score: 1, riskTag: "documents" },
+      { id: "other_digital", text: "Иной цифровой сервис", score: 1, riskTag: "documents", allowOther: true },
     ],
   },
   {
     id: "q2_customers",
     number: 2,
-    title: "Кто является клиентами, пользователями или заказчиками продукта?",
-    hint: "Можно выбрать несколько вариантов. Тип аудитории влияет на правовую модель: работа с физическими лицами подключает законодательство о защите прав потребителей с повышенными требованиями к документам, возвратам и ответственности.",
+    title: "Насколько юридически защищена компания при работе с клиентами, пользователями, заказчиками и партнёрами?",
+    hint: "Можно выбрать несколько вариантов. Тип аудитории определяет правовую модель: работа с физическими лицами подключает законодательство о защите прав потребителей с повышенными требованиями к документам, возвратам и ответственности.",
     required: true,
     multiSelect: true,
     options: [
@@ -80,7 +81,7 @@ export const QUESTIONS: Question[] = [
       { id: "health_data", text: "Данные о здоровье", score: 8, isCriticalEvent: true, riskTag: "personal_data_special" },
       { id: "biometric", text: "Биометрические данные", score: 8, isCriticalEvent: true, riskTag: "personal_data_special" },
       { id: "children_data", text: "Данные несовершеннолетних", score: 8, isCriticalEvent: true, riskTag: "personal_data_special" },
-      { id: "other_pd", text: "Иные персональные данные", score: 3, isSignificantRisk: true, riskTag: "personal_data" },
+      { id: "other_pd", text: "Иные персональные данные", score: 3, isSignificantRisk: true, riskTag: "personal_data", allowOther: true },
     ],
   },
   {
@@ -94,7 +95,7 @@ export const QUESTIONS: Question[] = [
       { id: "russia_only", text: "Только в России", score: 0 },
       { id: "mixed_storage", text: "Частично в России, частично за рубежом", score: 5, isSignificantRisk: true, riskTag: "data_storage" },
       { id: "abroad_only", text: "Только за рубежом", score: 8, isCriticalEvent: true, riskTag: "data_storage" },
-      { id: "dont_know", text: "Не знаю, где хранятся данные", score: 8, isCriticalEvent: true, riskTag: "data_storage" },
+      { id: "dont_know", text: "Не знаю, где хранятся данные", score: 8, isCriticalEvent: true, riskTag: "data_storage", allowOther: true },
     ],
   },
   {

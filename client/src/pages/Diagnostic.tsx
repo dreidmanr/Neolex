@@ -20,6 +20,8 @@ export default function Diagnostic() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   // answers: Record<questionId, string | string[]>
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  // otherTexts: Record<"questionId:optionId", string>
+  const [otherTexts, setOtherTexts] = useState<Record<string, string>>({});
 
   // Consent state
   const [userAgreementAccepted, setUserAgreementAccepted] = useState(false);
@@ -63,6 +65,10 @@ export default function Diagnostic() {
           restored[row.questionId] = ids;
         } else {
           restored[row.questionId] = row.answerId;
+        }
+        // Restore other text if saved
+        if (row.answerText) {
+          setOtherTexts((prev) => ({ ...prev, [`${row.questionId}:${row.answerId}`]: row.answerText as string }));
         }
       }
       setAnswers((prev) => ({ ...restored, ...prev }));
@@ -145,16 +151,30 @@ export default function Diagnostic() {
     return getSelected(questionId).includes(optionId);
   };
 
-  // Handle single-select answer
-  const handleSelectSingle = useCallback(async (questionId: string, answerId: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
-    if (sessionToken) {
-      saveAnswer.mutate({ sessionToken, questionId, answerId, answerIds: [answerId] });
-    }
+  // Get other text key
+  const otherKey = (questionId: string, optionId: string) => `${questionId}:${optionId}`;
+
+  // Save answer to server (debounced via fire-and-forget)
+  const persistAnswer = useCallback((questionId: string, selectedIds: string[], answerText?: string) => {
+    if (!sessionToken) return;
+    const primaryId = selectedIds[0] ?? "";
+    saveAnswer.mutate({
+      sessionToken,
+      questionId,
+      answerId: primaryId,
+      answerIds: selectedIds,
+      answerText,
+    });
   }, [sessionToken]);
 
+  // Handle single-select answer
+  const handleSelectSingle = useCallback((questionId: string, answerId: string) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
+    persistAnswer(questionId, [answerId]);
+  }, [persistAnswer]);
+
   // Handle multi-select answer toggle
-  const handleToggleMulti = useCallback(async (questionId: string, answerId: string, exclusive: boolean) => {
+  const handleToggleMulti = useCallback((questionId: string, answerId: string, exclusive: boolean) => {
     setAnswers((prev) => {
       const current = getSelected(questionId);
       let next: string[];
@@ -175,13 +195,19 @@ export default function Diagnostic() {
         }
       }
 
-      const primaryId = next[0] ?? answerId;
-      if (sessionToken) {
-        saveAnswer.mutate({ sessionToken, questionId, answerId: primaryId, answerIds: next });
-      }
+      persistAnswer(questionId, next);
       return { ...prev, [questionId]: next };
     });
-  }, [sessionToken]);
+  }, [persistAnswer]);
+
+  // Handle other text change
+  const handleOtherTextChange = useCallback((questionId: string, optionId: string, text: string) => {
+    const key = otherKey(questionId, optionId);
+    setOtherTexts((prev) => ({ ...prev, [key]: text }));
+    // Persist with answerText
+    const selected = getSelected(questionId);
+    persistAnswer(questionId, selected.length > 0 ? selected : [optionId], text);
+  }, [persistAnswer]);
 
   const hasAnsweredCurrentQuestion = (): boolean => {
     const q = QUESTIONS[currentQuestion];
@@ -190,7 +216,6 @@ export default function Diagnostic() {
   };
 
   const handleQuestionNext = () => {
-    const q = QUESTIONS[currentQuestion];
     if (!hasAnsweredCurrentQuestion()) {
       toast.error("Пожалуйста, выберите ответ");
       return;
@@ -284,7 +309,7 @@ export default function Diagnostic() {
                     <Label htmlFor="user-agreement" className="font-display font-600 text-sm cursor-pointer">
                       Принимаю{" "}
                       <a href="/legal/user-agreement" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
-                        пользовательское соглашение
+                        Пользовательское соглашение
                       </a>{" "}
                       <span className="text-destructive">*</span>
                     </Label>
@@ -304,16 +329,16 @@ export default function Diagnostic() {
                   />
                   <div>
                     <Label htmlFor="marketing" className="font-display font-600 text-sm cursor-pointer">
-                      Согласен(-на) получать рекламные рассылки. Необязательно. От согласия можно отказаться в любой момент
+                      Согласен(-на) получать рекламные рассылки (необязательно).{" "}
+                      <a href="/legal/marketing-consent" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80 font-normal" onClick={(e) => e.stopPropagation()}>
+                        Согласие на обработку ПДн с целью рассылки
+                      </a>
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       Обработка данных в соответствии с{" "}
                       <a href="/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
                         Политикой обработки персональных данных
-                      </a>.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Необязательно. Вы можете отписаться в любой момент. Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
+                      </a>. Вы можете отписаться в любой момент. Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
                     </p>
                   </div>
                 </div>
@@ -349,13 +374,13 @@ export default function Diagnostic() {
                 </p>
               </div>
 
-              <div className="card-premium p-6 rounded-2xl space-y-5">
+              <div className="card-premium p-6 rounded-2xl">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">Как к вам обращаться</Label>
                     <Input
                       id="name"
-                      placeholder="Иван"
+                      placeholder="Никнейм"
                       value={contactForm.name}
                       onChange={(e) => setContactForm((p) => ({ ...p, name: e.target.value }))}
                     />
@@ -441,58 +466,85 @@ export default function Diagnostic() {
               <div className="space-y-3">
                 {currentQ.options.map((option) => {
                   const isSelected = isOptionSelected(currentQ.id, option.id);
+                  const oKey = otherKey(currentQ.id, option.id);
 
                   if (currentQ.multiSelect) {
                     // Multi-select: checkbox style
                     return (
-                      <button
-                        key={option.id}
-                        onClick={() => handleToggleMulti(currentQ.id, option.id, !!option.exclusive)}
-                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
-                          isSelected
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                            isSelected ? "border-primary bg-primary" : "border-border"
-                          }`}>
-                            {isSelected && (
-                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
-                                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            )}
+                      <div key={option.id} className="space-y-2">
+                        <button
+                          onClick={() => handleToggleMulti(currentQ.id, option.id, !!option.exclusive)}
+                          className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                              isSelected ? "border-primary bg-primary" : "border-border"
+                            }`}>
+                              {isSelected && (
+                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
+                                  <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </div>
+                            <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
+                              {option.text}
+                            </span>
                           </div>
-                          <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
-                            {option.text}
-                          </span>
-                        </div>
-                      </button>
+                        </button>
+                        {/* "Иное" text input */}
+                        {option.allowOther && isSelected && (
+                          <div className="ml-8 animate-fade-in-up">
+                            <Input
+                              placeholder="Уточните, пожалуйста..."
+                              value={otherTexts[oKey] || ""}
+                              onChange={(e) => handleOtherTextChange(currentQ.id, option.id, e.target.value)}
+                              className="text-sm"
+                              autoFocus
+                            />
+                          </div>
+                        )}
+                      </div>
                     );
                   } else {
                     // Single-select: radio style
                     return (
-                      <button
-                        key={option.id}
-                        onClick={() => handleSelectSingle(currentQ.id, option.id)}
-                        className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
-                          isSelected
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                            isSelected ? "border-primary bg-primary" : "border-border"
-                          }`}>
-                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                      <div key={option.id} className="space-y-2">
+                        <button
+                          onClick={() => handleSelectSingle(currentQ.id, option.id)}
+                          className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                              isSelected ? "border-primary bg-primary" : "border-border"
+                            }`}>
+                              {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                            <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
+                              {option.text}
+                            </span>
                           </div>
-                          <span className={`text-sm font-medium leading-relaxed ${isSelected ? "text-foreground" : "text-foreground/80"}`}>
-                            {option.text}
-                          </span>
-                        </div>
-                      </button>
+                        </button>
+                        {/* "Иное" text input */}
+                        {option.allowOther && isSelected && (
+                          <div className="ml-8 animate-fade-in-up">
+                            <Input
+                              placeholder="Уточните, пожалуйста..."
+                              value={otherTexts[oKey] || ""}
+                              onChange={(e) => handleOtherTextChange(currentQ.id, option.id, e.target.value)}
+                              className="text-sm"
+                              autoFocus
+                            />
+                          </div>
+                        )}
+                      </div>
                     );
                   }
                 })}
