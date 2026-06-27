@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, diagnosticSessions, contacts, consentRecords, questionnaireAnswers, scoringResults } from "../drizzle/schema";
-import type { InsertDiagnosticSession, InsertContact, InsertConsentRecord, InsertQuestionnaireAnswer, InsertScoringResult } from "../drizzle/schema";
+import { InsertUser, users, diagnosticSessions, contacts, consentRecords, questionnaireAnswers, scoringResults, feedbacks } from "../drizzle/schema";
+import type { InsertDiagnosticSession, InsertContact, InsertConsentRecord, InsertQuestionnaireAnswer, InsertScoringResult, InsertFeedback } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -149,4 +149,17 @@ export async function getScoringResultBySession(sessionId: number) {
   if (!db) return undefined;
   const result = await db.select().from(scoringResults).where(eq(scoringResults.sessionId, sessionId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+// ---- Feedback ----
+export async function saveFeedback(data: InsertFeedback) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(feedbacks).values(data);
+}
+
+export async function getAllFeedbacks() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(feedbacks).orderBy(feedbacks.createdAt);
 }

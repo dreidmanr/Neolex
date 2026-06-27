@@ -17,6 +17,7 @@ import {
   getAnswersBySession,
   saveScoringResult,
   getScoringResultBySession,
+  saveFeedback,
 } from "./db";
 import { calculateScore, CONSENT_VERSIONS } from "../shared/diagnosticData";
 import { invokeLLM } from "./_core/llm";
@@ -36,6 +37,31 @@ export const appRouter = router({
 
   paid: paidRouter,
   admin: adminRouter,
+
+  feedback: router({
+    submit: publicProcedure
+      .input(z.object({
+        sessionToken: z.string().optional(),
+        rating: z.number().int().min(1).max(5),
+        usefulnessRating: z.number().int().min(1).max(5).optional(),
+        wouldRecommend: z.boolean().optional(),
+        comment: z.string().max(2000).optional(),
+        foundAccurate: z.boolean().optional(),
+        interestedInPaid: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await saveFeedback({
+          sessionToken: input.sessionToken ?? null,
+          rating: input.rating,
+          usefulnessRating: input.usefulnessRating ?? null,
+          wouldRecommend: input.wouldRecommend ?? null,
+          comment: input.comment ?? null,
+          foundAccurate: input.foundAccurate ?? null,
+          interestedInPaid: input.interestedInPaid ?? null,
+        });
+        return { success: true };
+      }),
+  }),
 
   diagnostic: router({
     // Create a new diagnostic session

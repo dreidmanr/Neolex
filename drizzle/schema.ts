@@ -226,3 +226,19 @@ export const paidConsentRecords = mysqlTable("paid_consent_records", {
 
 export type PaidConsentRecord = typeof paidConsentRecords.$inferSelect;
 export type InsertPaidConsentRecord = typeof paidConsentRecords.$inferInsert;
+
+// ── Feedback (post-diagnostic survey) ──────────────────────────────────────
+export const feedbacks = mysqlTable("feedbacks", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionToken: varchar("sessionToken", { length: 64 }),
+  rating: int("rating").notNull(), // 1-5
+  usefulnessRating: int("usefulnessRating"), // 1-5, optional
+  wouldRecommend: boolean("wouldRecommend"),
+  comment: text("comment"),
+  foundAccurate: boolean("foundAccurate"),
+  interestedInPaid: boolean("interestedInPaid"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Feedback = typeof feedbacks.$inferSelect;
+export type InsertFeedback = typeof feedbacks.$inferInsert;

@@ -1,10 +1,192 @@
 import { useParams, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { ArrowRight, Scale, AlertTriangle, CheckCircle2, XCircle, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, Scale, AlertTriangle, CheckCircle2, XCircle, Info, ChevronDown, ChevronUp, Star, MessageSquare, ThumbsUp } from "lucide-react";
 import { useState } from "react";
 import { RISK_CATEGORY_LABELS, UPSELL_TEXTS } from "../../../shared/diagnosticData";
 import type { RiskCategory, RiskBlock } from "../../../shared/diagnosticData";
 import { ReportSharePanel } from "@/components/ReportSharePanel";
+
+// ── Feedback Form ──────────────────────────────────────────────────────────
+function FeedbackForm({ sessionToken }: { sessionToken?: string }) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [usefulnessRating, setUsefulnessRating] = useState(0);
+  const [hoverUsefulness, setHoverUsefulness] = useState(0);
+  const [wouldRecommend, setWouldRecommend] = useState<boolean | null>(null);
+  const [foundAccurate, setFoundAccurate] = useState<boolean | null>(null);
+  const [interestedInPaid, setInterestedInPaid] = useState<boolean | null>(null);
+  const [comment, setComment] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const submitMutation = trpc.feedback.submit.useMutation({
+    onSuccess: () => setSubmitted(true),
+  });
+
+  if (submitted) {
+    return (
+      <div className="card-premium rounded-2xl p-8 text-center animate-fade-in-up">
+        <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+          <ThumbsUp className="w-6 h-6 text-green-600" />
+        </div>
+        <h3 className="font-display font-700 text-lg mb-2">Спасибо за обратную связь!</h3>
+        <p className="text-muted-foreground text-sm">Ваш отзыв помогает нам улучшать сервис.</p>
+      </div>
+    );
+  }
+
+  const StarRow = ({
+    value, hover, onSet, onHover, onLeave, label,
+  }: {
+    value: number; hover: number;
+    onSet: (n: number) => void;
+    onHover: (n: number) => void;
+    onLeave: () => void;
+    label: string;
+  }) => (
+    <div>
+      <div className="text-sm font-600 text-foreground mb-2">{label}</div>
+      <div className="flex gap-1" onMouseLeave={onLeave}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onSet(n)}
+            onMouseEnter={() => onHover(n)}
+            className="p-0.5 transition-transform hover:scale-110 active:scale-95"
+          >
+            <Star
+              className={`w-7 h-7 transition-colors ${
+                n <= (hover || value)
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "text-muted-foreground/30"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const YesNoRow = ({
+    label, value, onChange,
+  }: {
+    label: string; value: boolean | null; onChange: (v: boolean) => void;
+  }) => (
+    <div>
+      <div className="text-sm font-600 text-foreground mb-2">{label}</div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          className={`px-4 py-1.5 rounded-lg text-sm font-500 border transition-colors ${
+            value === true
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:border-primary/50"
+          }`}
+        >
+          Да
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          className={`px-4 py-1.5 rounded-lg text-sm font-500 border transition-colors ${
+            value === false
+              ? "bg-muted text-foreground border-border"
+              : "border-border hover:border-muted"
+          }`}
+        >
+          Нет
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="card-premium rounded-2xl p-6 sm:p-8 animate-fade-in-up">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <MessageSquare className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h3 className="font-display font-700 text-lg">Обратная связь</h3>
+          <p className="text-muted-foreground text-sm">Помогите нам улучшить сервис — это займёт 1 минуту</p>
+        </div>
+      </div>
+
+      <div className="space-y-6">
+        <StarRow
+          label="Общая оценка диагностики"
+          value={rating}
+          hover={hoverRating}
+          onSet={setRating}
+          onHover={setHoverRating}
+          onLeave={() => setHoverRating(0)}
+        />
+
+        <StarRow
+          label="Насколько полезны результаты?"
+          value={usefulnessRating}
+          hover={hoverUsefulness}
+          onSet={setUsefulnessRating}
+          onHover={setHoverUsefulness}
+          onLeave={() => setHoverUsefulness(0)}
+        />
+
+        <YesNoRow
+          label="Результаты диагностики показались вам точными?"
+          value={foundAccurate}
+          onChange={setFoundAccurate}
+        />
+
+        <YesNoRow
+          label="Порекомендовали бы вы сервис коллегам?"
+          value={wouldRecommend}
+          onChange={setWouldRecommend}
+        />
+
+        <YesNoRow
+          label="Интересна ли вам углублённая диагностика?"
+          value={interestedInPaid}
+          onChange={setInterestedInPaid}
+        />
+
+        <div>
+          <div className="text-sm font-600 text-foreground mb-2">Комментарий (необязательно)</div>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Что понравилось? Что можно улучшить?"
+            rows={3}
+            maxLength={2000}
+            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={rating === 0 || submitMutation.isPending}
+          onClick={() =>
+            submitMutation.mutate({
+              sessionToken,
+              rating,
+              usefulnessRating: usefulnessRating || undefined,
+              wouldRecommend: wouldRecommend ?? undefined,
+              foundAccurate: foundAccurate ?? undefined,
+              interestedInPaid: interestedInPaid ?? undefined,
+              comment: comment.trim() || undefined,
+            })
+          }
+          className="btn-electric w-full py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {submitMutation.isPending ? "Отправляем..." : "Отправить отзыв"}
+        </button>
+        {rating === 0 && (
+          <p className="text-xs text-muted-foreground text-center">Поставьте оценку, чтобы отправить отзыв</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const RISK_COLORS: Record<RiskCategory, { bg: string; text: string; border: string; badge: string }> = {
   low: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200", badge: "risk-low" },
@@ -368,6 +550,11 @@ export default function Results() {
             </a>
           </div>
         )}
+
+        {/* Feedback Form */}
+        <div className="mt-10 animate-fade-in-up animate-delay-500">
+          <FeedbackForm sessionToken={params.token} />
+        </div>
 
         {/* New diagnostic */}
         <div className="mt-8 text-center">
