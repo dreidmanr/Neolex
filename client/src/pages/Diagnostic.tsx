@@ -176,7 +176,8 @@ export default function Diagnostic() {
   // Handle multi-select answer toggle
   const handleToggleMulti = useCallback((questionId: string, answerId: string, exclusive: boolean) => {
     setAnswers((prev) => {
-      const current = getSelected(questionId);
+      const val = prev[questionId];
+      const current: string[] = Array.isArray(val) ? val : val ? [val] : [];
       let next: string[];
 
       if (exclusive) {
