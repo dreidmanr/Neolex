@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Scale, CheckCircle2, AlertCircle } from "lucide-react";
 import { QUESTIONS, CONSENT_VERSIONS } from "../../../shared/diagnosticData";
+import { useRef } from "react";
 
 type Step = "consent" | "contact" | "questionnaire" | "processing";
 
@@ -17,6 +18,8 @@ export default function Diagnostic() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState<Step>("consent");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  // Stable ref so callbacks never go stale when sessionToken changes
+  const sessionTokenRef = useRef<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   // answers: Record<questionId, string | string[]>
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
@@ -43,10 +46,16 @@ export default function Diagnostic() {
   const saveAnswer = trpc.diagnostic.saveAnswer.useMutation();
   const complete = trpc.diagnostic.complete.useMutation();
 
+  // Keep ref in sync with state
+  useEffect(() => { sessionTokenRef.current = sessionToken; }, [sessionToken]);
+
   // Restore session from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(SESSION_KEY);
-    if (stored) setSessionToken(stored);
+    if (stored) {
+      setSessionToken(stored);
+      sessionTokenRef.current = stored;
+    }
   }, []);
 
   // Load saved answers when session token is available
@@ -154,37 +163,43 @@ export default function Diagnostic() {
   // Get other text key
   const otherKey = (questionId: string, optionId: string) => `${questionId}:${optionId}`;
 
-  // Save answer to server (debounced via fire-and-forget)
+  // Stable ref for saveAnswer mutation to avoid stale closures
+  const saveAnswerRef = useRef(saveAnswer);
+  useEffect(() => { saveAnswerRef.current = saveAnswer; });
+
+  // Save answer to server — uses refs so it never goes stale
   const persistAnswer = useCallback((questionId: string, selectedIds: string[], answerText?: string) => {
-    if (!sessionToken) return;
+    const token = sessionTokenRef.current;
+    if (!token) return;
     const primaryId = selectedIds[0] ?? "";
-    saveAnswer.mutate({
-      sessionToken,
+    saveAnswerRef.current.mutate({
+      sessionToken: token,
       questionId,
       answerId: primaryId,
       answerIds: selectedIds,
       answerText,
     });
-  }, [sessionToken]);
+  }, []); // no deps — always stable
 
   // Handle single-select answer
   const handleSelectSingle = useCallback((questionId: string, answerId: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answerId }));
     persistAnswer(questionId, [answerId]);
-  }, [persistAnswer]);
+  }, [persistAnswer]); // persistAnswer is now stable
 
   // Handle multi-select answer toggle
   const handleToggleMulti = useCallback((questionId: string, answerId: string, exclusive: boolean) => {
+    // Compute next selection synchronously from current state
     setAnswers((prev) => {
       const val = prev[questionId];
       const current: string[] = Array.isArray(val) ? val : val ? [val] : [];
       let next: string[];
 
       if (exclusive) {
-        // Exclusive option: select only this one
+        // Exclusive option: select only this one, deselect if already selected
         next = current.includes(answerId) ? [] : [answerId];
       } else {
-        // Remove exclusive options if any were selected
+        // Remove exclusive options when a non-exclusive one is picked
         const q = QUESTIONS.find(q => q.id === questionId);
         const exclusiveIds = q?.options.filter(o => o.exclusive).map(o => o.id) ?? [];
         const withoutExclusive = current.filter(id => !exclusiveIds.includes(id));
@@ -196,8 +211,15 @@ export default function Diagnostic() {
         }
       }
 
-      persistAnswer(questionId, next);
       return { ...prev, [questionId]: next };
+    });
+    // Persist AFTER state update using a separate effect-like call
+    // We read the latest answers via a functional update trick
+    setAnswers((prev) => {
+      const val = prev[questionId];
+      const ids: string[] = Array.isArray(val) ? val : val ? [val] : [];
+      persistAnswer(questionId, ids);
+      return prev; // no change, just side-effect
     });
   }, [persistAnswer]);
 
@@ -255,7 +277,7 @@ export default function Diagnostic() {
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <Scale className="w-5 h-5" />
-            <span className="font-display font-700 text-base">Neolex</span>
+            <span className="font-display font-700 text-base">Lexy</span>
           </button>
           {step !== "processing" && (
             <div className="flex items-center gap-3">
@@ -331,11 +353,11 @@ export default function Diagnostic() {
                   <div>
                     <Label htmlFor="marketing" className="font-display font-600 text-sm cursor-pointer">
                       <a href="/legal/marketing-consent" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
-                        Согласен(-на) получать рекламные рассылки (необязательно)
+                        Согласен(-на) получать рекламные рассылки. Необязательно. От согласия можно отказаться в любой момент
                       </a>
                     </Label>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Вы можете отписаться в любой момент. Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
+                      Версия: {CONSENT_VERSIONS.marketing} · {new Date().toLocaleDateString("ru-RU")}
                     </p>
                   </div>
                 </div>

@@ -22,7 +22,7 @@ export default function Home() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Scale className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-display font-800 text-xl tracking-tight">Neolex</span>
+            <span className="font-display font-800 text-xl tracking-tight">Lexy</span>
           </div>
           <div className="hidden sm:flex items-center gap-3">
             <button
@@ -143,14 +143,14 @@ export default function Home() {
                 <span className="text-gradient">по итогам</span>
               </h2>
               <p className="text-lg text-muted-foreground mb-10">
-                Не просто список вопросов, а структурированный вывод с конкретными последствиями и ссылками на нормы закона.
+                Не просто список вопросов, а структурированный вывод с конкретными последствиями и ссылками на применимые правовые основания.
               </p>
 
               <div className="space-y-5">
                 {[
                   { title: "Категория риска", desc: "Низкий, умеренный, высокий или критический — с объяснением, почему именно эта оценка" },
                   { title: "Матрица зон риска", desc: "Наглядное отображение того, в каких зонах выявлены проблемы" },
-                  { title: "Ключевые риски с последствиями", desc: "До 5 рисков с денежными последствиями, влиянием на бизнес и применимыми правовыми основаниями" },
+                  { title: "Ключевые риски с последствиями", desc: "До 5 ключевых рисков с денежными последствиями, влиянием на бизнес и ссылками на применимые правовые основания" },
                   { title: "Главный вывод", desc: "Итоговая оценка правовой устойчивости продукта на текущем этапе" },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
@@ -408,12 +408,12 @@ export default function Home() {
             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
               <Scale className="w-3.5 h-3.5 text-white/70" />
             </div>
-            <span className="font-display font-700 text-white">Neolex</span>
+            <span className="font-display font-700 text-white">Lexy</span>
           </div>
           <p className="text-white/40 text-sm text-center">
             Диагностика носит информационный характер и не является юридической консультацией.
           </p>
-          <p className="text-white/30 text-xs">© 2025 Neolex</p>
+          <p className="text-white/30 text-xs">© 2025 Lexy</p>
         </div>
       </footer>
     </div>
