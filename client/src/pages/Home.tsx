@@ -1,16 +1,36 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, FileText, AlertTriangle, CheckCircle2, Clock, Users, ChevronRight, Scale, Lock, Zap } from "lucide-react";
+import { ArrowRight, Shield, FileText, AlertTriangle, CheckCircle2, Clock, Users, ChevronRight, Scale, Lock, Zap, X, Check } from "lucide-react";
 
 export default function Home() {
   const [, navigate] = useLocation();
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState("");
+  const [promoValid, setPromoValid] = useState(false);
 
   const handleStartDiagnostic = () => {
     navigate("/diagnostic");
   };
-
   const handleStartPaid = () => {
-    navigate("/paid");
+    setShowPromoModal(true);
+    setPromoCode("");
+    setPromoError("");
+    setPromoValid(false);
+  };
+  const handlePromoSubmit = () => {
+    if (promoCode.trim() === "123") {
+      setPromoValid(true);
+      setPromoError("");
+      setTimeout(() => {
+        setShowPromoModal(false);
+        navigate("/paid");
+      }, 600);
+    } else {
+      setPromoError("Неверный промо-код. Попробуйте ещё раз.");
+      setPromoValid(false);
+    }
   };
 
   return (
@@ -27,8 +47,9 @@ export default function Home() {
           <div className="hidden sm:flex items-center gap-3">
             <button
               onClick={handleStartPaid}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors flex items-center gap-1.5"
             >
+              <Lock className="w-3.5 h-3.5" />
               Углублённая диагностика
             </button>
             <Button
@@ -403,19 +424,86 @@ export default function Home() {
 
       {/* ── FOOTER ── */}
       <footer className="section-dark py-10 border-t border-white/8">
-        <div className="container flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
-              <Scale className="w-3.5 h-3.5 text-white/70" />
+        <div className="container flex flex-col gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
+                <Scale className="w-3.5 h-3.5 text-white/70" />
+              </div>
+              <span className="font-display font-700 text-white">Lexy</span>
             </div>
-            <span className="font-display font-700 text-white">Lexy</span>
+            <p className="text-white/40 text-sm text-center">
+              Диагностика носит информационный характер и не является юридической консультацией.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-white/30">
+              <a href="/legal/user-agreement" className="hover:text-white/60 transition-colors">Соглашение</a>
+              <a href="/legal/privacy-policy" className="hover:text-white/60 transition-colors">Конфиденциальность</a>
+            </div>
           </div>
-          <p className="text-white/40 text-sm text-center">
-            Диагностика носит информационный характер и не является юридической консультацией.
-          </p>
-          <p className="text-white/30 text-xs">© 2025 Lexy</p>
+          <div className="border-t border-white/8 pt-4 text-center text-white/20 text-xs">
+            © 2025 Lexy · Колунова Рада Янушевна · ИНН 402404019964 · Самозанятая · kolunovarada@yandex.ru
+          </div>
         </div>
       </footer>
+
+      {/* ── PROMO MODAL ── */}
+      {showPromoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPromoModal(false); }}
+        >
+          <div className="bg-card border border-border rounded-2xl p-8 w-full max-w-sm mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-display font-700 text-lg">Углублённая диагностика</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Доступ по промо-коду</p>
+              </div>
+              <button
+                onClick={() => setShowPromoModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Промо-код</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => { setPromoCode(e.target.value); setPromoError(""); setPromoValid(false); }}
+                    onKeyDown={(e) => e.key === "Enter" && handlePromoSubmit()}
+                    placeholder="Введите код"
+                    className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handlePromoSubmit}
+                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Войти
+                  </button>
+                </div>
+                {promoError && (
+                  <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                    <X className="w-3 h-3" /> {promoError}
+                  </p>
+                )}
+                {promoValid && (
+                  <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Промо-код принят! Открываю...
+                  </p>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Углублённая диагностика сейчас доступна только по приглашению. Если у вас нет промо-кода — напишите нам на{" "}
+                <a href="mailto:kolunovarada@yandex.ru" className="text-primary hover:underline">kolunovarada@yandex.ru</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
