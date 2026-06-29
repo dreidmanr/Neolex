@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { Download, Share2, MessageCircle, Send, Copy, Check, Loader2, FileText } from "lucide-react";
+import { Download, Share2, MessageCircle, Send, Copy, Check, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReportSharePanelProps {
@@ -19,7 +19,6 @@ interface ReportSharePanelProps {
 }
 
 export function ReportSharePanel({ pdfUrl, type, riskLabel, productName }: ReportSharePanelProps) {
-  const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -34,26 +33,12 @@ export function ReportSharePanel({ pdfUrl, type, riskLabel, productName }: Repor
   const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://lexy.ru";
   const shareUrl = `${siteUrl}/diagnostic`;
 
-  async function handleDownload() {
-    setDownloading(true);
-    try {
-      const res = await fetch(pdfUrl);
-      if (!res.ok) throw new Error("Failed to fetch PDF");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = type === "free" ? "lexy-free-report.pdf" : "lexy-paid-report.pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Отчёт скачан");
-    } catch {
-      toast.error("Не удалось скачать отчёт. Попробуйте ещё раз.");
-    } finally {
-      setDownloading(false);
-    }
+  function handleDownload() {
+    // Открываем PDF напрямую в новой вкладке — работает на всех устройствах включая iOS/Android
+    // На iOS: нажать «Поделиться» → «Сохранить в Файлы»
+    // На Android: нажать меню браузера → «Скачать»
+    window.open(pdfUrl, "_blank");
+    toast.success("PDF открыт в новой вкладке — сохраните через меню браузера");
   }
 
   async function handleCopyLink() {
@@ -111,20 +96,12 @@ export function ReportSharePanel({ pdfUrl, type, riskLabel, productName }: Repor
       {/* Download button */}
       <button
         onClick={handleDownload}
-        disabled={downloading}
-        className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed mb-3"
+        className="w-full flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-xl bg-gray-900 text-white font-semibold text-sm hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 mb-3"
       >
-        {downloading ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Генерируем PDF...
-          </>
-        ) : (
-          <>
-            <Download className="w-4 h-4" />
-            Скачать PDF-отчёт
-          </>
-        )}
+        <>
+          <Download className="w-4 h-4" />
+          Открыть PDF-отчёт
+        </>
       </button>
 
       {/* Share toggle */}
@@ -173,7 +150,7 @@ export function ReportSharePanel({ pdfUrl, type, riskLabel, productName }: Repor
       )}
 
       <p className="text-xs text-gray-400 text-center mt-3 leading-relaxed">
-        PDF формируется на сервере и может занять 5–15 секунд
+        PDF откроется в новой вкладке. На iOS: «Поделиться» → «Сохранить в Файлы». На Android: меню браузера → «Скачать».
       </p>
     </div>
   );
