@@ -256,9 +256,12 @@ function RiskBlockCard({ block }: { block: RiskBlock }) {
             <div className="text-xs font-700 text-primary uppercase tracking-wider mb-1.5">Что проверить</div>
             <p className="text-sm text-foreground leading-relaxed">{block.action}</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="font-mono">{block.legalBasis}</span>
+          <div className="p-4 rounded-xl bg-muted/60 border border-border">
+            <div className="flex items-center gap-1.5 text-xs font-700 text-foreground uppercase tracking-wider mb-1.5">
+              <Info className="w-3.5 h-3.5 flex-shrink-0" />
+              Правовое основание
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed font-mono">{block.legalBasis}</p>
           </div>
         </div>
       )}
@@ -513,7 +516,7 @@ export default function Results() {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <a
-                href="mailto:hello@lexy.ru?subject=Запрос на расширенную диагностику"
+                href="mailto:kolunovarada@yandex.ru?subject=Запрос на расширенную диагностику"
                 className="btn-electric flex items-center justify-center gap-2 px-8 py-3 rounded-xl"
               >
                 Записаться на расширенную диагностику
@@ -542,7 +545,7 @@ export default function Results() {
             <h3 className="font-display text-xl font-800 text-white mb-3">{upsell.title}</h3>
             <p className="text-white/70 leading-relaxed mb-6">{upsell.description}</p>
             <a
-              href="mailto:hello@lexy.ru?subject=Профилактическая проверка продукта"
+              href="mailto:kolunovarada@yandex.ru?subject=Профилактическая проверка продукта"
               className="btn-electric flex items-center gap-2 px-8 py-3 rounded-xl inline-flex"
             >
               Запросить профилактическую проверку
@@ -575,7 +578,8 @@ export default function Results() {
             <span className="font-display font-700 text-white text-sm">Lexy</span>
           </div>
           <p className="text-white/40 text-xs text-center">
-            Диагностика носит информационный характер и не является юридической консультацией.
+            Диагностика носит информационный характер и не является юридической консультацией.<br />
+            Колунова Рада Янушевна · ИНН 402404019964 · НПД (самозанятая) · kolunovarada@yandex.ru
           </p>
         </div>
       </footer>

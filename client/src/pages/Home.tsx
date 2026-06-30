@@ -47,6 +47,7 @@ export default function Home() {
           <div className="hidden sm:flex items-center gap-3">
             <button
               onClick={handleStartPaid}
+              title="Доступна в тестовом режиме по промокоду"
               className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors flex items-center gap-1.5"
             >
               <Lock className="w-3.5 h-3.5" />
@@ -136,7 +137,7 @@ export default function Home() {
               { icon: Lock, title: "Персональные данные", desc: "Соответствует ли работа с данными применимым требованиям законодательства" },
               { icon: Shield, title: "Права на продукт", desc: "Оформлены ли исключительные права на код и результаты разработки" },
               { icon: AlertTriangle, title: "Хранение данных", desc: "Где хранятся данные российских пользователей и есть ли риск блокировки" },
-              { icon: Users, title: "Работа с клиентами", desc: "Защищена ли компания при работе с физическими лицами" },
+              { icon: Users, title: "Работа с клиентами", desc: "Насколько юридически защищена компания при работе с клиентами, пользователями, заказчиками и партнёрами" },
               { icon: Scale, title: "Платёжная модель", desc: "Корректно ли оформлены расчёты и работа через посредников" },
               { icon: CheckCircle2, title: "Подрядчики", desc: "Переданы ли права на результаты работ подрядчиков" },
               { icon: Zap, title: "Регулируемые сферы", desc: "Нужны ли лицензии и специальные разрешения для вашей деятельности" },
@@ -171,7 +172,7 @@ export default function Home() {
                 {[
                   { title: "Категория риска", desc: "Низкий, умеренный, высокий или критический — с объяснением, почему именно эта оценка" },
                   { title: "Матрица зон риска", desc: "Наглядное отображение того, в каких зонах выявлены проблемы" },
-                  { title: "Ключевые риски с последствиями", desc: "До 5 ключевых рисков с денежными последствиями, влиянием на бизнес и ссылками на применимые правовые основания" },
+                  { title: "Ключевые риски с последствиями", desc: "До 5 ключевых рисков с конкретными статьями законов, размерами штрафов и последствиями бездействия: претензии, блокировка, убытки" },
                   { title: "Главный вывод", desc: "Итоговая оценка правовой устойчивости продукта на текущем этапе" },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4">
@@ -187,23 +188,33 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Mock result card */}
+            {/* Realistic report preview */}
             <div className="relative">
-              <div className="card-premium p-8 rounded-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="font-display font-800 text-lg">Результат диагностики</div>
-                  <span className="risk-badge risk-high">Высокий риск</span>
+              <div className="card-premium p-7 rounded-2xl">
+                {/* Header with category and score */}
+                <div className="flex items-start justify-between mb-5 pb-5 border-b border-border">
+                  <div>
+                    <div className="text-xs text-muted-foreground mb-1">Отчёт по экспресс-диагностике</div>
+                    <div className="font-display font-800 text-lg leading-tight">Категория риска</div>
+                  </div>
+                  <div className="text-right">
+                    <span className="risk-badge risk-high">Высокий</span>
+                    <div className="text-xs text-muted-foreground mt-1">балл 21 · высокий риск (16–24)</div>
+                  </div>
                 </div>
-                <div className="space-y-4">
+
+                {/* Risk zones matrix */}
+                <div className="text-xs font-600 text-muted-foreground uppercase tracking-wide mb-3">Матрица зон риска</div>
+                <div className="space-y-3 mb-5">
                   {[
                     { label: "Права на продукт", level: "critical", pct: 90 },
-                    { label: "Персональные данные", level: "high", pct: 70 },
+                    { label: "Хранение данных", level: "critical", pct: 85 },
                     { label: "Пользовательские документы", level: "high", pct: 65 },
-                    { label: "Хранение данных", level: "moderate", pct: 40 },
-                    { label: "Платёжная модель", level: "low", pct: 20 },
+                    { label: "Персональные данные", level: "high", pct: 60 },
+                    { label: "Платёжная модель", level: "moderate", pct: 35 },
                   ].map((row) => (
                     <div key={row.label}>
-                      <div className="flex justify-between text-sm mb-1.5">
+                      <div className="flex justify-between text-sm mb-1">
                         <span className="text-foreground font-medium">{row.label}</span>
                         <span className={`text-xs font-600 ${row.level === "critical" ? "text-red-600" : row.level === "high" ? "text-orange-500" : row.level === "moderate" ? "text-yellow-600" : "text-green-600"}`}>
                           {row.level === "critical" ? "Критично" : row.level === "high" ? "Высокий" : row.level === "moderate" ? "Умеренный" : "Низкий"}
@@ -221,13 +232,32 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 p-4 rounded-xl bg-muted/60 text-sm text-muted-foreground leading-relaxed">
-                  Выявлены существенные правовые риски в ключевых зонах. Рекомендуется провести расширенную диагностику.
+
+                {/* Sample key risk block — mirrors the real report structure */}
+                <div className="text-xs font-600 text-muted-foreground uppercase tracking-wide mb-2">Ключевой риск (1 из 4)</div>
+                <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="risk-badge risk-high text-[10px] px-2 py-0.5">Критично</span>
+                    <span className="font-display font-700 text-sm">Права на продукт оформлены не полностью</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="text-foreground font-600">Почему опасно:</span> если исключительные права на код не переданы компании, правовой титул на продукт остаётся спорным — это первое, что проверяют на due diligence.
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                    <span className="text-foreground font-600">Последствия:</span> компенсация от 10 000 до 5 000 000 ₽ (ст. 1301 ГК РФ), срыв инвестиционной сделки, снижение оценки бизнеса.
+                  </p>
+                  <div className="text-[11px] font-mono text-primary/80 mt-2 pt-2 border-t border-border">
+                    Правовое основание: ГК РФ ст. 1295, 1296, 1301
+                  </div>
+                </div>
+
+                <div className="mt-5 p-4 rounded-xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground leading-relaxed">
+                  <span className="text-foreground font-600">Главный вывод:</span> выявлены существенные правовые риски в ключевых зонах. Сохранение текущей конструкции может привести к прямым финансовым потерям и спорам.
                 </div>
               </div>
               {/* Floating badge */}
               <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground text-xs font-700 px-3 py-1.5 rounded-full shadow-lg">
-                Пример отчёта
+                Пример отчёта · образец
               </div>
             </div>
           </div>
@@ -306,7 +336,7 @@ export default function Home() {
               </h2>
               <div className="space-y-6">
                 {[
-                  { icon: Scale, title: "Основано на реальных нормах", desc: "Каждый риск привязан к конкретным применимым правовым основаниям и актуальным нормам" },
+                  { icon: Scale, title: "Основано на конкретных нормах", desc: "Каждый риск привязан к конкретным статьям: 152-ФЗ, КоАП РФ, ГК РФ ч. IV, Закону о защите прав потребителей и иным применимым актам" },
                   { icon: AlertTriangle, title: "Трёхуровневая система оценки", desc: "Критические события, существенные риски и накопительный балл — не один параметр, а комплексная модель" },
                   { icon: Shield, title: "Прозрачная методология", desc: "Вы видите, какие именно зоны проверялись и почему присвоена та или иная категория риска" },
                   { icon: Clock, title: "Это не юридическая консультация", desc: "Диагностика — предварительная оценка, которая помогает понять, нужна ли полноценная проверка. Мы честно говорим об ограничениях" },
@@ -326,11 +356,11 @@ export default function Home() {
 
             <div className="space-y-4">
               {[
-                { label: "Права на продукт", law: "Применимые правовые основания" },
-                { label: "Персональные данные", law: "Применимые требования и практика" },
-                { label: "Защита потребителей", law: "Применимые правовые основания" },
-                { label: "Хранение данных", law: "Обязательные требования" },
-                { label: "Платёжная модель", law: "Применимые правовые основания" },
+                  { label: "Права на продукт", law: "ГК РФ ч. IV, ст. 1295, 1296, 1301" },
+                { label: "Персональные данные", law: "152-ФЗ · ст. 13.11 КоАП РФ" },
+                { label: "Защита потребителей", law: "Закон № 2300-1 · ст. 428 ГК РФ" },
+                { label: "Хранение данных", law: "ст. 18.1 152-ФЗ · ст. 15.5 149-ФЗ" },
+                { label: "Платёжная модель", law: "161-ФЗ · 173-ФЗ · ст. 15.25 КоАП" },
               ].map((item, i) => (
                 <div key={i} className="card-dark p-4 flex items-center justify-between">
                   <span className="text-white font-medium text-sm">{item.label}</span>
@@ -347,9 +377,13 @@ export default function Home() {
         <div className="container">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-primary text-sm font-medium mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-primary text-sm font-medium mb-4">
                 <Shield className="w-3.5 h-3.5" />
                 Углублённая диагностика
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 text-xs font-medium mb-6 ml-0 sm:ml-2">
+                <Lock className="w-3 h-3" />
+                Сейчас в закрытом тестировании · доступ по промокоду
               </div>
               <h2 className="font-display text-3xl sm:text-4xl font-800 leading-tight mb-4">
                 Полный правовой аудит
@@ -380,6 +414,10 @@ export default function Home() {
                 Начать углублённую диагностику
                 <ArrowRight className="w-5 h-5" />
               </button>
+              <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
+                <Lock className="w-3 h-3 flex-shrink-0" />
+                Углублённая диагностика пока доступна в тестовом режиме по промокоду
+              </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
@@ -438,10 +476,11 @@ export default function Home() {
             <div className="flex items-center gap-4 text-xs text-white/30">
               <a href="/legal/user-agreement" className="hover:text-white/60 transition-colors">Соглашение</a>
               <a href="/legal/privacy-policy" className="hover:text-white/60 transition-colors">Конфиденциальность</a>
+              <a href="/legal/marketing-consent" className="hover:text-white/60 transition-colors">Согласие на рассылку</a>
             </div>
           </div>
           <div className="border-t border-white/8 pt-4 text-center text-white/20 text-xs">
-            © 2025 Lexy · Колунова Рада Янушевна · ИНН 402404019964 · Самозанятая · kolunovarada@yandex.ru
+            © 2026 Lexy · Колунова Рада Янушевна · ИНН 402404019964 · Налог на профессиональный доход (самозанятая) · kolunovarada@yandex.ru
           </div>
         </div>
       </footer>
@@ -456,7 +495,7 @@ export default function Home() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="font-display font-700 text-lg">Углублённая диагностика</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">Доступ по промо-коду</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Доступна в тестовом режиме по промокоду</p>
               </div>
               <button
                 onClick={() => setShowPromoModal(false)}
@@ -497,7 +536,7 @@ export default function Home() {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Углублённая диагностика сейчас доступна только по приглашению. Если у вас нет промо-кода — напишите нам на{" "}
+                Углублённая диагностика находится в закрытом тестировании и пока доступна только по промокоду. Если у вас нет кода — напишите нам на{" "}
                 <a href="mailto:kolunovarada@yandex.ru" className="text-primary hover:underline">kolunovarada@yandex.ru</a>
               </p>
             </div>
