@@ -1,0 +1,1540 @@
+{
+  "$schema": "./schemas/risk-catalog.schema.json",
+  "catalogId": "risk_catalog_v1",
+  "catalogMeta": {
+    "releaseId": "lexy-r0-2026-09-12",
+    "version": "1.0.0-draft.1",
+    "effectiveFrom": null,
+    "effectiveTo": null,
+    "status": "draft_pending_legal_approval",
+    "updatedBy": "Manus AI",
+    "updatedAt": "2026-09-12T18:40:24Z",
+    "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+    "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+  },
+  "governance": {
+    "normativeRequirements": [
+      {
+        "id": "NORM-TZ-13-2",
+        "source": "ТЗ v3 §13.2",
+        "requirement": "Каталог покрывает критические категории: права на ключевые активы, чувствительные данные, локализацию, B2C-условия, регулируемую деятельность, споры и контроль над критическими доступами."
+      },
+      {
+        "id": "NORM-TZ-13-3",
+        "source": "ТЗ v3 §13.3",
+        "requirement": "Риски с критическим override или обязательной экспертной квалификацией предусматривают ручную проверку и не должны вести к предложению фиксированного пакета как достаточного решения."
+      },
+      {
+        "id": "NORM-TZ-13-4",
+        "source": "ТЗ v3 §13.4",
+        "requirement": "Условия активации, уровни, override и эскалации определяются только детерминированными правилами rules_v1; в настоящем каталоге предикаты по ответам отсутствуют."
+      },
+      {
+        "id": "NORM-TZ-14-4",
+        "source": "ТЗ v3 §14.4",
+        "requirement": "Автоматический статус подтверждения документом допустим только при выполнении всех требований ТЗ; в Release 0 он не разрешён."
+      },
+      {
+        "id": "NORM-TZ-21",
+        "source": "ТЗ v3 §21",
+        "requirement": "Каждое определение риска имеет стабильный идентификатор, метаданные версии, домен, доказательственные требования, основания, допустимые формулировки, действия и срок дорожной карты."
+      }
+    ],
+    "projectDecisions": [
+      {
+        "id": "DESIGN-R0-001",
+        "decision": "Каталог содержит ровно 25 определений риска в девяти доменах, предусмотренных ТЗ."
+      },
+      {
+        "id": "DESIGN-R0-002",
+        "decision": "Все ссылки на правовые основания и формулировки представлены только идентификаторами будущих независимых каталогов; тексты норм, санкций и утверждённые формулировки здесь не дублируются."
+      },
+      {
+        "id": "DESIGN-R0-003",
+        "decision": "До отдельной реализации Release 2 автоматическое документарное подтверждение для всех рисков запрещено; базовый статус доказательности — «по данным анкеты». "
+      },
+      {
+        "id": "DESIGN-R0-004",
+        "decision": "Поле criticalOverride показывает допустимость жёсткого override для rules_v1, но не является условием по ответу и не заменяет правило."
+      },
+      {
+        "id": "DESIGN-R0-005",
+        "decision": "Допустимые коды рекомендаций являются проектными идентификаторами для recommendation_mapping_v1; rules_v1 и mapping обязаны вернуть ровно один код."
+      }
+    ],
+    "openQuestions": [
+      {
+        "id": "OQ-R0-001",
+        "question": "Требуется юридическое согласование всех идентификаторов правовых оснований и допустимых формулировок до их использования в клиентском отчёте."
+      },
+      {
+        "id": "OQ-R0-002",
+        "question": "Требуется утвердить детальные predicates rules_v1, включая пороги, сочетания ответов, противоречия и disabled-trigger follow-up."
+      },
+      {
+        "id": "OQ-R0-003",
+        "question": "Требуется согласовать состав и коды продуктовой линейки в recommendation_mapping_v1; текущие коды не являются утверждённым коммерческим предложением."
+      },
+      {
+        "id": "OQ-R0-004",
+        "question": "Требуется отдельно подтвердить правила документарного анализа, включая чувствительные категории и ручную проверку, до Release 2."
+      }
+    ]
+  },
+  "coverage": {
+    "domainCoverage": {
+      "ip": [
+        "LEXR0-RISK-004",
+        "LEXR0-RISK-005",
+        "LEXR0-RISK-006",
+        "LEXR0-RISK-007",
+        "LEXR0-RISK-008"
+      ],
+      "personal_data": [
+        "LEXR0-RISK-009",
+        "LEXR0-RISK-010",
+        "LEXR0-RISK-011",
+        "LEXR0-RISK-012"
+      ],
+      "contracts": [
+        "LEXR0-RISK-013",
+        "LEXR0-RISK-014",
+        "LEXR0-RISK-015"
+      ],
+      "payments": [
+        "LEXR0-RISK-016",
+        "LEXR0-RISK-017"
+      ],
+      "consumer": [
+        "LEXR0-RISK-018",
+        "LEXR0-RISK-019"
+      ],
+      "marketing": [
+        "LEXR0-RISK-020"
+      ],
+      "partners": [
+        "LEXR0-RISK-021",
+        "LEXR0-RISK-022"
+      ],
+      "regulation": [
+        "LEXR0-RISK-023",
+        "LEXR0-RISK-024",
+        "LEXR0-RISK-025"
+      ],
+      "corporate": [
+        "LEXR0-RISK-001",
+        "LEXR0-RISK-002",
+        "LEXR0-RISK-003"
+      ]
+    },
+    "criticalTriggerCoverage": [
+      {
+        "id": "CT-TZ-13-2-01",
+        "requirement": "Не подтверждены права на ключевые активы.",
+        "riskIds": [
+          "LEXR0-RISK-004",
+          "LEXR0-RISK-005",
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-008"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-02",
+        "requirement": "Обрабатываются медицинские, биометрические данные или данные детей без ясной правовой модели.",
+        "riskIds": [
+          "LEXR0-RISK-009"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-03",
+        "requirement": "Данные российских пользователей хранятся за рубежом либо место хранения неясно.",
+        "riskIds": [
+          "LEXR0-RISK-010"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-04",
+        "requirement": "Есть значимые B2C-продажи без ясных условий оплаты, возврата и ограничения ответственности.",
+        "riskIds": [
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-018"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-05",
+        "requirement": "Продукт относится к регулируемой сфере без проверки специальных требований.",
+        "riskIds": [
+          "LEXR0-RISK-023",
+          "LEXR0-RISK-024"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-06",
+        "requirement": "Есть спор, проверка, предписание или требование удалить ключевой актив.",
+        "riskIds": [
+          "LEXR0-RISK-003",
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-012",
+          "LEXR0-RISK-025"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-07",
+        "requirement": "При подготовке к инвестициям, продаже или Enterprise-проверке есть разрывы в правах, данных или договорах.",
+        "riskIds": [
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-005",
+          "LEXR0-RISK-010",
+          "LEXR0-RISK-013",
+          "LEXR0-RISK-014",
+          "LEXR0-RISK-015"
+        ]
+      },
+      {
+        "id": "CT-TZ-13-2-08",
+        "requirement": "Домены, репозитории, облака или ключевые доступы контролируются подрядчиком либо бывшим сотрудником.",
+        "riskIds": [
+          "LEXR0-RISK-008"
+        ]
+      }
+    ],
+    "currentQuestionnaireBranchCoverage": [
+      {
+        "branchId": "block_consumer",
+        "riskIds": [
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-018",
+          "LEXR0-RISK-019",
+          "LEXR0-RISK-020"
+        ]
+      },
+      {
+        "branchId": "block_investment",
+        "riskIds": [
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-003",
+          "LEXR0-RISK-005",
+          "LEXR0-RISK-010",
+          "LEXR0-RISK-013",
+          "LEXR0-RISK-014",
+          "LEXR0-RISK-015"
+        ]
+      },
+      {
+        "branchId": "block_partners",
+        "riskIds": [
+          "LEXR0-RISK-016",
+          "LEXR0-RISK-021",
+          "LEXR0-RISK-022"
+        ]
+      },
+      {
+        "branchId": "block_contractors",
+        "riskIds": [
+          "LEXR0-RISK-004",
+          "LEXR0-RISK-005",
+          "LEXR0-RISK-007",
+          "LEXR0-RISK-008"
+        ]
+      }
+    ],
+    "note": "Карта покрытия фиксирует только связь доменов и контекстов с определениями риска. Условия по конкретным ответам, комбинации и приоритеты должны находиться исключительно в rules_v1."
+  },
+  "riskDefinitions": [
+    {
+      "id": "LEXR0-RISK-001",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "corporate",
+      "title": "Деятельность ведётся без подтверждённой организационно-правовой основы",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b2_q1"
+        ],
+        "documentEvidence": [
+          "Учредительные документы и сведения о лице, ведущем деятельность"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-CORP-001"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-001-V1"
+      ],
+      "businessImpacts": [
+        "Риск невозможности надлежащим образом заключать договоры и принимать платежи.",
+        "Риск блокировки масштабирования и привлечения контрагентов."
+      ],
+      "requiredActions": [
+        "Определить лицо, через которое ведётся деятельность, и оформить его полномочия.",
+        "Проверить корпоративные и регистрационные документы до продолжения масштабирования."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-002",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "corporate",
+      "title": "Разрыв между лицом, ведущим деятельность, и правообладателем ключевых активов",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b2_q2",
+          "b1_q5"
+        ],
+        "documentEvidence": [
+          "Документы о правах на код, домены, товарные знаки, договоры и структуре владения"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-CORP-001",
+        "LB-RU-GK-1229",
+        "LB-RU-GK-1234"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-002-V1"
+      ],
+      "businessImpacts": [
+        "Риск срыва инвестиционной, сделочной или Enterprise-проверки.",
+        "Риск невозможности передать инвестору или покупателю чистый титул на активы."
+      ],
+      "requiredActions": [
+        "Составить реестр ключевых активов и их правообладателей.",
+        "Подготовить план консолидации прав на лице, ведущем бизнес."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "rights_and_ip",
+        "enterprise_readiness",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-003",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "corporate",
+      "title": "Неоформленные сооснователи либо неурегулированный корпоративный конфликт",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b2_q3",
+          "b2_q5",
+          "b11_q1",
+          "b11_q4",
+          "b1_q5"
+        ],
+        "documentEvidence": [
+          "Устав, корпоративное соглашение, документы об участии сооснователей и материалы спора"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-CORP-002",
+        "LB-RU-GK-1228"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-003-V1"
+      ],
+      "businessImpacts": [
+        "Риск оспаривания прав на бизнес и результаты разработки.",
+        "Риск блокировки корпоративных решений, инвестиций и сделки."
+      ],
+      "requiredActions": [
+        "Зафиксировать статус и договорённости с каждым сооснователем.",
+        "Выделить спорные вопросы для отдельного экспертного разбора."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-004",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "ip",
+      "title": "Письменные отношения с разработчиками и подрядчиками не подтверждены",
+      "defaultSeverity": "high",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b4_q1",
+          "b4_q2",
+          "b11_q2"
+        ],
+        "documentEvidence": [
+          "Трудовые договоры, договоры подряда, акты и технические задания"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-1234",
+        "LB-RU-GK-1296"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-004-V1"
+      ],
+      "businessImpacts": [
+        "Риск невозможности подтвердить основание использования результатов разработки.",
+        "Риск претензий исполнителей и отказа контрагентов от сделки."
+      ],
+      "requiredActions": [
+        "Сформировать реестр лиц, участвовавших в разработке.",
+        "Собрать и при необходимости восстановить письменные договоры и акты."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "rights_and_ip",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-005",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "ip",
+      "title": "Переход исключительных прав на ключевой код и иные результаты разработки не подтверждён",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b4_q3",
+          "b4_q2",
+          "b1_q5"
+        ],
+        "documentEvidence": [
+          "Договоры с условиями о правах, акты приёма-передачи, служебные задания и отчёты"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-1228",
+        "LB-RU-GK-1229",
+        "LB-RU-GK-1234",
+        "LB-RU-GK-1296"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-005-V1"
+      ],
+      "businessImpacts": [
+        "Риск использования продукта без подтверждённого титула.",
+        "Риск блокировки продажи бизнеса, инвестиций и лицензирования."
+      ],
+      "requiredActions": [
+        "Провести инвентаризацию цепочки прав на ключевые результаты разработки.",
+        "Подготовить документы для оформления или уточнения перехода исключительных прав."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "rights_and_ip",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-006",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "ip",
+      "title": "Имеются споры, претензии или требования, затрагивающие права на интеллектуальную собственность",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b4_q7",
+          "b12_q1",
+          "b12_q3"
+        ],
+        "documentEvidence": [
+          "Претензии, переписка, судебные документы, материалы по объектам интеллектуальной собственности"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-1229",
+        "LB-RU-GK-1301"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-006-V1"
+      ],
+      "businessImpacts": [
+        "Риск запрета использования ключевого актива или требования удалить контент.",
+        "Риск убытков, компенсаций и срыва коммерческих планов."
+      ],
+      "requiredActions": [
+        "Зафиксировать перечень активных требований и процессуальные сроки.",
+        "Передать ситуацию на экспертный разбор до автоматического предложения пакета документов."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-007",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "ip",
+      "title": "Использование open source и сторонних объектов не сопровождается подтверждённым учётом лицензий",
+      "defaultSeverity": "medium",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b4_q4",
+          "b4_q5",
+          "b4_q8"
+        ],
+        "documentEvidence": [
+          "Реестр компонентов, лицензионные условия, договоры и условия поставщиков"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-1235",
+        "LB-RU-GK-1286"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-007-V1"
+      ],
+      "businessImpacts": [
+        "Риск нарушения лицензионных условий и необходимости срочной замены компонентов.",
+        "Риск ограничений на коммерческое использование или распространение продукта."
+      ],
+      "requiredActions": [
+        "Составить инвентаризацию сторонних компонентов и объектов.",
+        "Сопоставить условия использования с моделью распространения продукта."
+      ],
+      "roadmapPeriod": "60",
+      "manualReviewRequired": false,
+      "allowedRecommendationProductCodes": [
+        "rights_and_ip"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-008",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "ip",
+      "title": "Контроль над репозиториями, доменами, облаками или ключевыми доступами не подтверждён у компании",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b11_q3",
+          "b4_q1"
+        ],
+        "documentEvidence": [
+          "Реестр доступов, сведения о владельцах аккаунтов, регламенты передачи доступов"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-1229",
+        "LB-RU-INFO-149FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-008-V1"
+      ],
+      "businessImpacts": [
+        "Риск потери доступа к коду, инфраструктуре или данным.",
+        "Риск остановки сервиса при уходе подрядчика или ключевого сотрудника."
+      ],
+      "requiredActions": [
+        "Провести инвентаризацию критических учётных записей и владельцев.",
+        "Передать контрольные доступы компании и оформить процедуру отзыва доступа."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "rights_and_ip",
+        "data_and_infrastructure",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-009",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "personal_data",
+      "title": "Обработка специальных категорий, биометрических данных или данных детей требует отдельной правовой модели",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b5_q1",
+          "b10_q1"
+        ],
+        "documentEvidence": [
+          "Описание процессов обработки, формы согласий, политика и документы по специальному режиму"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-PD-152FZ-6",
+        "LB-RU-PD-152FZ-9",
+        "LB-RU-PD-152FZ-10",
+        "LB-RU-PD-152FZ-11"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-009-V1"
+      ],
+      "businessImpacts": [
+        "Риск ограничения обработки чувствительных данных и претензий субъектов.",
+        "Риск невозможности безопасно продолжать продуктовый сценарий без экспертной квалификации."
+      ],
+      "requiredActions": [
+        "Описать категории данных, цели, роли и основания обработки.",
+        "Направить сценарий на экспертную проверку до масштабирования."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-010",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "personal_data",
+      "title": "Место хранения данных российских пользователей или трансграничная архитектура не подтверждены",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b5_q2",
+          "b1_q4",
+          "b7_q3"
+        ],
+        "documentEvidence": [
+          "Схема потоков данных, договоры с провайдерами, сведения о размещении баз данных"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-PD-152FZ-18-5",
+        "LB-RU-PD-152FZ-12",
+        "LB-RU-ADMIN-13-11"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-010-V1"
+      ],
+      "businessImpacts": [
+        "Риск ограничения работы сервиса на российском рынке.",
+        "Риск срыва проверок со стороны корпоративных клиентов и контрагентов."
+      ],
+      "requiredActions": [
+        "Зафиксировать фактические места хранения и передачи данных.",
+        "Проверить необходимость локализации и правила трансграничной передачи."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "data_and_infrastructure",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-011",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "personal_data",
+      "title": "Политика обработки данных, согласия или обязательные организационные меры не подтверждены",
+      "defaultSeverity": "high",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b5_q3",
+          "b5_q4",
+          "b5_q5",
+          "b5_q7"
+        ],
+        "documentEvidence": [
+          "Политика обработки персональных данных, формы согласий, уведомления и реестр процессов"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-PD-152FZ-6",
+        "LB-RU-PD-152FZ-9",
+        "LB-RU-PD-152FZ-18-1",
+        "LB-RU-ADMIN-13-11"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-011-V1"
+      ],
+      "businessImpacts": [
+        "Риск претензий субъектов данных и регулятора.",
+        "Риск ограничения продаж корпоративным клиентам при отсутствии базовых документов."
+      ],
+      "requiredActions": [
+        "Сопоставить все точки сбора данных с основаниями и текстами уведомлений.",
+        "Подготовить и внедрить недостающие документы и пользовательские механизмы."
+      ],
+      "roadmapPeriod": "30",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "data_and_infrastructure",
+        "safe_sales",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-012",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "personal_data",
+      "title": "Зафиксированы инциденты безопасности, обращения субъектов данных или проверки по данным",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b5_q6",
+          "b12_q1",
+          "b12_q4"
+        ],
+        "documentEvidence": [
+          "Журналы инцидентов, уведомления, обращения субъектов, акты и переписка с регуляторами"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-PD-152FZ-19",
+        "LB-RU-ADMIN-13-11"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-012-V1"
+      ],
+      "businessImpacts": [
+        "Риск развития уже материализовавшегося инцидента в претензию или проверку.",
+        "Риск повторных нарушений при отсутствии мер реагирования."
+      ],
+      "requiredActions": [
+        "Зафиксировать статус каждого инцидента, обращения и срок ответа.",
+        "Передать материалы на экспертный разбор и определить план реагирования."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-013",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "contracts",
+      "title": "Отсутствует подтверждённый минимальный комплект пользовательских и договорных документов",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b6_q1"
+        ],
+        "documentEvidence": [
+          "Оферта или пользовательское соглашение, политика обработки данных, клиентские и лицензионные договоры"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-428",
+        "LB-RU-GK-437",
+        "LB-RU-ZPP-10",
+        "LB-RU-PD-152FZ-18-1"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-013-V1"
+      ],
+      "businessImpacts": [
+        "Риск неурегулированности отношений с пользователями, клиентами и подрядчиками.",
+        "Риск невозможности ограничить ответственность и защищать коммерческие условия."
+      ],
+      "requiredActions": [
+        "Определить обязательный для модели продукта минимальный пакет документов.",
+        "Подготовить первоочередные пользовательские и договорные документы."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "start_product",
+        "safe_sales",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-014",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "contracts",
+      "title": "Существующие пользовательские или договорные документы могут быть неполными либо неактуальными",
+      "defaultSeverity": "high",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b6_q2",
+          "b13_q1"
+        ],
+        "documentEvidence": [
+          "Действующие версии пользовательских документов, история обновлений и договорные шаблоны"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-428",
+        "LB-RU-GK-437",
+        "LB-RU-PD-152FZ-18-1"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-014-V1"
+      ],
+      "businessImpacts": [
+        "Риск расхождения документов с фактической моделью продукта.",
+        "Риск отказа корпоративных клиентов при юридической проверке."
+      ],
+      "requiredActions": [
+        "Собрать действующие версии документов и сопоставить их с фактическими процессами.",
+        "Определить приоритет обновления документов по продуктовым изменениям."
+      ],
+      "roadmapPeriod": "30",
+      "manualReviewRequired": false,
+      "allowedRecommendationProductCodes": [
+        "start_product",
+        "safe_sales",
+        "enterprise_readiness"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-015",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "contracts",
+      "title": "Условия клиентских договоров, ответственности или сервиса могут создавать несоразмерные обязательства",
+      "defaultSeverity": "high",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b6_q3",
+          "b1_q3"
+        ],
+        "documentEvidence": [
+          "Клиентские договоры, SLA, приложения об ответственности и коммерческие предложения"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-421",
+        "LB-RU-GK-401"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-015-V1"
+      ],
+      "businessImpacts": [
+        "Риск непредсказуемых убытков и штрафных требований.",
+        "Риск невозможности пройти согласование с крупным клиентом без пересмотра условий."
+      ],
+      "requiredActions": [
+        "Выделить условия об ответственности, гарантиях, исключительности и уровне сервиса.",
+        "Подготовить позицию по допустимому распределению рисков для переговоров."
+      ],
+      "roadmapPeriod": "30",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "enterprise_readiness",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-016",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "payments",
+      "title": "Иностранная платёжная инфраструктура или трансграничные расчёты требуют отдельной проверки",
+      "defaultSeverity": "high",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b7_q1",
+          "b7_q3",
+          "b1_q4"
+        ],
+        "documentEvidence": [
+          "Договоры с платёжными провайдерами, схема расчётов, сведения о валютных операциях"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-CURRENCY-173FZ",
+        "LB-RU-NPS-161FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-016-V1"
+      ],
+      "businessImpacts": [
+        "Риск сбоев расчётов и ограничений со стороны банков или провайдеров.",
+        "Риск необходимости изменения платёжной модели при масштабировании."
+      ],
+      "requiredActions": [
+        "Зафиксировать маршрут денежных средств и роли участников расчётов.",
+        "Направить трансграничную или иностранную инфраструктуру на экспертную оценку."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-017",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "payments",
+      "title": "Подписка, возвраты или платёжные споры не имеют подтверждённого процесса урегулирования",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b7_q2",
+          "b7_q4"
+        ],
+        "documentEvidence": [
+          "Правила подписки и возвратов, договор с платёжным провайдером, журнал обращений и возвратов"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-ZPP-10",
+        "LB-RU-ZPP-13-6",
+        "LB-RU-GK-309"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-017-V1"
+      ],
+      "businessImpacts": [
+        "Риск массовых возвратов и оспаривания платежей.",
+        "Риск финансовых потерь и ухудшения отношений с платёжными провайдерами."
+      ],
+      "requiredActions": [
+        "Описать пользовательский путь подписки, отмены и возврата.",
+        "Разобрать действующие платёжные споры и определить приоритетные меры."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "safe_sales",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-018",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "consumer",
+      "title": "До оплаты не подтверждена ясность условий цены, списаний, отмены и возврата для потребителя",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b8_q1",
+          "b8_q2",
+          "b7_q2"
+        ],
+        "documentEvidence": [
+          "Экран оформления заказа, оферта, правила подписки и возврата, пользовательские сценарии"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-ZPP-10",
+        "LB-RU-ZPP-13-6",
+        "LB-RU-GK-437"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-018-V1"
+      ],
+      "businessImpacts": [
+        "Риск претензий потребителей, возвратов и репутационных потерь.",
+        "Риск срыва B2C-продаж при неясном пользовательском пути."
+      ],
+      "requiredActions": [
+        "Проверить раскрытие существенных условий до совершения оплаты.",
+        "Согласовать и внедрить понятный путь отмены и возврата."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "safe_sales",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-019",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "consumer",
+      "title": "Интерфейсные практики могут восприниматься как манипулятивные для пользователя",
+      "defaultSeverity": "medium",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b8_q3"
+        ],
+        "documentEvidence": [
+          "Макеты и записи пользовательских сценариев, тексты чекбоксов и экранов оформления"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-ZPP-10",
+        "LB-RU-ADS-38FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-019-V1"
+      ],
+      "businessImpacts": [
+        "Риск роста обращений, отказов и репутационного ущерба.",
+        "Риск необходимости срочной переработки пользовательских сценариев."
+      ],
+      "requiredActions": [
+        "Инвентаризировать спорные интерфейсные элементы и пользовательские согласия.",
+        "Переработать элементы, скрывающие существенные условия или затрудняющие отказ."
+      ],
+      "roadmapPeriod": "60",
+      "manualReviewRequired": false,
+      "allowedRecommendationProductCodes": [
+        "safe_sales"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-020",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "marketing",
+      "title": "Маркетинговые обещания, гарантии или сравнения требуют проверки допустимости и доказательности",
+      "defaultSeverity": "medium",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b3_q1",
+          "b3_q3",
+          "b10_q1"
+        ],
+        "documentEvidence": [
+          "Рекламные материалы, лендинги, интерфейсные тексты, доказательства заявленных характеристик"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-ADS-38FZ",
+        "LB-RU-ZPP-10"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-020-V1"
+      ],
+      "businessImpacts": [
+        "Риск претензий к рекламе и снижению доверия клиентов.",
+        "Риск переработки кампаний и интерфейсных текстов после запуска."
+      ],
+      "requiredActions": [
+        "Собрать перечень публичных обещаний и сравнений.",
+        "Проверить обоснованность и формулировки до следующей рекламной кампании."
+      ],
+      "roadmapPeriod": "60",
+      "manualReviewRequired": false,
+      "allowedRecommendationProductCodes": [
+        "safe_sales"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-021",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "partners",
+      "title": "Распределение ответственности с партнёрами, агентами или реселлерами не подтверждено",
+      "defaultSeverity": "high",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b9_q1",
+          "b9_q2",
+          "b3_q2"
+        ],
+        "documentEvidence": [
+          "Партнёрские, агентские и реселлерские договоры, приложения о роли сторон и ответственности"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-421",
+        "LB-RU-GK-1005"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-021-V1"
+      ],
+      "businessImpacts": [
+        "Риск споров о клиенте, деньгах, данных и качестве сервиса.",
+        "Риск потери контроля над обязательствами при продаже через партнёра."
+      ],
+      "requiredActions": [
+        "Определить роли сторон во всех каналах дистрибуции.",
+        "Проверить договорное распределение ответственности, данных и клиентских обязательств."
+      ],
+      "roadmapPeriod": "30",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "enterprise_readiness",
+        "safe_sales",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-022",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "partners",
+      "title": "Зависимость от внешних платформ, API или данных может угрожать непрерывности продукта",
+      "defaultSeverity": "medium",
+      "criticalOverride": false,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b9_q3",
+          "b3_q2"
+        ],
+        "documentEvidence": [
+          "Договоры и условия платформ, описание интеграций, план замены критичных сервисов"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-GK-421",
+        "LB-RU-INFO-149FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-022-V1"
+      ],
+      "businessImpacts": [
+        "Риск прекращения доступа к критичному внешнему ресурсу.",
+        "Риск потери функциональности, клиентов или выручки."
+      ],
+      "requiredActions": [
+        "Составить перечень критичных внешних зависимостей и их владельцев.",
+        "Определить договорные и технические меры снижения зависимости."
+      ],
+      "roadmapPeriod": "60",
+      "manualReviewRequired": false,
+      "allowedRecommendationProductCodes": [
+        "enterprise_readiness",
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-023",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "regulation",
+      "title": "Продукт может относиться к регулируемой сфере без подтверждённой квалификации специальных требований",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b1_q2",
+          "b10_q1"
+        ],
+        "documentEvidence": [
+          "Описание продукта, бизнес-процессы, документы о специальном статусе и внутренние регламенты"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-REG-99FZ",
+        "LB-RU-INFO-149FZ",
+        "LB-RU-KII-187FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-023-V1"
+      ],
+      "businessImpacts": [
+        "Риск запрета или ограничения деятельности до выполнения специальных требований.",
+        "Риск неприменимости типового автоматизированного решения без экспертной квалификации."
+      ],
+      "requiredActions": [
+        "Зафиксировать функциональность и роли продукта в потенциально регулируемой сфере.",
+        "Направить сценарий на профильный экспертный разбор до коммерческого масштабирования."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-024",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "regulation",
+      "title": "Лицензии, разрешения, аккредитации или иные обязательные формальные требования не подтверждены",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b10_q2"
+        ],
+        "documentEvidence": [
+          "Лицензии, разрешения, аккредитации, реестровые сведения и внутренние подтверждающие документы"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-REG-99FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-024-V1"
+      ],
+      "businessImpacts": [
+        "Риск приостановления или ограничения деятельности.",
+        "Риск невозможности законно предлагать часть функциональности или услуги."
+      ],
+      "requiredActions": [
+        "Составить перечень предполагаемых обязательных разрешительных требований.",
+        "Проверить наличие и применимость каждого разрешения с профильным специалистом."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    },
+    {
+      "id": "LEXR0-RISK-025",
+      "objectMeta": {
+        "releaseId": "lexy-r0-2026-09-12",
+        "version": "1.0.0-draft.1",
+        "effectiveFrom": null,
+        "effectiveTo": null,
+        "status": "draft_pending_legal_approval",
+        "updatedBy": "Manus AI",
+        "updatedAt": "2026-09-12T18:40:24Z",
+        "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+        "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; требуется юридическое согласование."
+      },
+      "domain": "regulation",
+      "title": "Имеются запросы регуляторов, проверки, предписания или иные активные требования",
+      "defaultSeverity": "critical",
+      "criticalOverride": true,
+      "evidenceRequirements": {
+        "questionnaireEvidence": [
+          "b10_q3",
+          "b12_q1",
+          "b12_q3",
+          "b12_q4"
+        ],
+        "documentEvidence": [
+          "Запросы, предписания, акты проверок, претензии, переписка и судебные материалы"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "defaultEvidenceStatus": "questionnaire_based",
+        "evidencePolicyNote": "В Release 0 сведения анкеты являются исходными данными; автоматическое подтверждение документом не допускается до отдельного согласования правил и документарного контура."
+      },
+      "allowedLegalBasisIds": [
+        "LB-RU-ADMIN-13-11",
+        "LB-RU-ADS-38FZ",
+        "LB-RU-INFO-149FZ"
+      ],
+      "approvedLanguageIds": [
+        "PH-RISK-025-V1"
+      ],
+      "businessImpacts": [
+        "Риск материализации требований в финансовые потери или ограничение деятельности.",
+        "Риск пропуска обязательных сроков ответа и усиления последствий."
+      ],
+      "requiredActions": [
+        "Составить перечень активных требований, сроков и ответственных лиц.",
+        "Передать материалы на экспертный разбор; не заменять его типовым пакетом документов."
+      ],
+      "roadmapPeriod": "immediate",
+      "manualReviewRequired": true,
+      "allowedRecommendationProductCodes": [
+        "expert_review"
+      ]
+    }
+  ]
+}

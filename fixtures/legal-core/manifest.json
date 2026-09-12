@@ -1,0 +1,243 @@
+{
+  "id": "LEXR0-FIXTURE-MANIFEST-001",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "artifactType": "legal_core_fixture_manifest_v1",
+  "fixtureDirectory": "./v1",
+  "fixtureCount": 15,
+  "sourceProfiles": "ТЗ v3 §29, профили 1–15",
+  "legalReviewNotice": "Набор является черновым тестовым оракулом. Юридическая проверка и утверждение не выполнены.",
+  "interpretation": {
+    "normativeRequirements": [
+      "ТЗ v3 §29 требует 12–15 версионируемых профилей с ожидаемыми и запрещёнными рисками, риск-профилем, эскалацией, следующим продуктом, структурой отчёта и правовыми основаниями.",
+      "ТЗ v3 §14.4 запрещает автоматически подтверждать нечитаемый документ без доказательного фрагмента, locator и достаточной уверенности."
+    ],
+    "projectDecisions": [
+      "Созданы ровно 15 fixtures по порядку профилей §29; canonicalAnswers содержат только вопросы, активные или условно активные в questionnaire_v2.",
+      "Document-only профиль 13 явно отнесён к release_2 и ожидает manual_review_required.",
+      "Набор не подключён к runtime и не меняет клиентский доступ, маршруты, React, БД, PDF или действующую бизнес-логику."
+    ],
+    "openQuestions": [
+      "Юристу требуется согласовать все положительные и отрицательные ожидания до использования набора как приёмочного оракула.",
+      "Требуется утвердить report_schema_v1 и заменить технические коды expectedReportSections на окончательный контракт, если его поля будут отличаться.",
+      "Требуется согласовать Release 2 document pipeline, OCR-порог, очередь и SLA ручной проверки."
+    ]
+  },
+  "sourceArtifacts": [
+    {
+      "id": "questionnaire_v2",
+      "path": "../../shared/legal-core/questionnaire_v2.json",
+      "version": "1.0.0-draft.1"
+    },
+    {
+      "id": "risk_catalog_v1",
+      "path": "../../shared/legal-core/risk_catalog_v1.json",
+      "version": "1.0.0-draft.1"
+    },
+    {
+      "id": "rules_v1",
+      "path": "../../shared/legal-core/rules_v1.json",
+      "version": "1.0.0-draft.1"
+    },
+    {
+      "id": "legal_basis_catalog_v1",
+      "path": "../../shared/legal-core/legal_basis_catalog_v1.json",
+      "version": "1.0.0-draft.1"
+    },
+    {
+      "id": "recommendation_mapping_v1",
+      "path": "../../shared/legal-core/recommendation_mapping_v1.json",
+      "version": "1.0.0-draft.1"
+    }
+  ],
+  "reportSectionCatalog": [
+    {
+      "id": "questionnaire_facts",
+      "title": "Факты анкеты"
+    },
+    {
+      "id": "executive_summary",
+      "title": "Краткое резюме"
+    },
+    {
+      "id": "preliminary_summary",
+      "title": "Предварительное безопасное резюме"
+    },
+    {
+      "id": "risk_profile",
+      "title": "Итоговый риск-профиль"
+    },
+    {
+      "id": "risk_details",
+      "title": "Детальные риск-блоки"
+    },
+    {
+      "id": "active_risks",
+      "title": "Активные риски предварительного отчёта"
+    },
+    {
+      "id": "evidence_statuses",
+      "title": "Статусы доказательности"
+    },
+    {
+      "id": "legal_bases",
+      "title": "Правовые основания"
+    },
+    {
+      "id": "roadmap",
+      "title": "Дорожная карта"
+    },
+    {
+      "id": "analysis_limitations",
+      "title": "Ограничения анализа"
+    },
+    {
+      "id": "expert_escalation",
+      "title": "Экспертная эскалация"
+    },
+    {
+      "id": "recommendation",
+      "title": "Единственный следующий продукт"
+    },
+    {
+      "id": "configuration_provenance",
+      "title": "Версии и происхождение конфигураций"
+    },
+    {
+      "id": "validation_errors",
+      "title": "Ошибки полноты анкеты"
+    },
+    {
+      "id": "document_processing_status",
+      "title": "Статус обработки документа"
+    }
+  ],
+  "fixtures": [
+    {
+      "fixtureId": "LEXR0-FIXTURE-001",
+      "path": "v1/01-clean-b2b-saas.json",
+      "profileName": "Чистый B2B SaaS",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "9baad4f4748155b269ed9451d8697a4c314fb98ec8804b8169183a6039c22f2a"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-002",
+      "path": "v1/02-b2b-saas-external-developers.json",
+      "profileName": "B2B SaaS с внешними разработчиками",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "b28a46c7db39e2728439d1e1f0a14797e2afa1f1c3f7e521d2efb3b544fb5b54"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-003",
+      "path": "v1/03-b2c-one-time-payment.json",
+      "profileName": "B2C с разовой оплатой",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "9f78ea08b9ec67e2dfd59423ee8f814b843160d95c7df3c69c597f148b925ce5"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-004",
+      "path": "v1/04-b2c-subscription-recurring.json",
+      "profileName": "B2C с подпиской и рекуррентными списаниями",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "7ae1b5a62ae4d00b79e47cd01685cf73f614e92b1f178c16d1e37294f6b86d5d"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-005",
+      "path": "v1/05-ai-service-user-content.json",
+      "profileName": "AI-сервис с пользовательским контентом",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "40b5dd0a580b6b9223223c8ddc013c7078cc52e473f50ee9e1a3ed5f504ec27c"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-006",
+      "path": "v1/06-cross-border-infrastructure.json",
+      "profileName": "Продукт с трансграничной инфраструктурой",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "1784306aed8d67603a00cc7c094ba2afeb66a3842694b7a6eb1d0a828b9f771c"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-007",
+      "path": "v1/07-marketplace.json",
+      "profileName": "Маркетплейс",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "f370552f71806bd000ba21a8e58176632a51656d1c048babf2fa86016243200a"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-008",
+      "path": "v1/08-white-label-reseller.json",
+      "profileName": "White-label / реселлерская модель",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "09d107dbe24caff3abd00974a7285bb29222b8f6e6f1ac9e42ad552458f17443"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-009",
+      "path": "v1/09-investment-round.json",
+      "profileName": "Проект с инвестиционным раундом",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "6dfc6a88b2f8603d00c31ab138e9d70be3d90cf22a00972e863df0bb81c559f6"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-010",
+      "path": "v1/10-dispute-or-claim.json",
+      "profileName": "Продукт со спором или претензией",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "a59022ac05e8252be4c3cb285dd9af1b4cf37a71625065ba773985e2b1e11cc8"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-011",
+      "path": "v1/11-regulated-domain.json",
+      "profileName": "Регулируемая сфера",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "bb44d016ca73640c89d2c1498a814ce4177108a87e326695220bc0c9d19bd9a9"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-012",
+      "path": "v1/12-incomplete-questionnaire.json",
+      "profileName": "Неполная анкета",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "validation_only",
+      "sha256": "b3657e82435b8298e627cbd518366afa0095eea16b9c74408fc29c439ef608e4"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-013",
+      "path": "v1/13-unreadable-scanned-document.json",
+      "profileName": "Сканированный нечитаемый документ",
+      "releaseTarget": "release_2",
+      "caseKind": "document_only",
+      "sha256": "464e6f1b68af066478d8624370b4161f04d608a6f3c254ce855a715c4a8c4c29"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-014",
+      "path": "v1/14-contradictory-answers.json",
+      "profileName": "Противоречивые ответы",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "2ac7bff0e5be915aaa4d33c0f3a75638b9c7334b617bd42c4f6e5d35f6afb79c"
+    },
+    {
+      "fixtureId": "LEXR0-FIXTURE-015",
+      "path": "v1/15-branch-answer-changed.json",
+      "profileName": "Клиент изменил ответ и отключил ранее открытую ветку",
+      "releaseTarget": "release_1_pilot",
+      "caseKind": "questionnaire",
+      "sha256": "32eff697fc9f039721e35e32c0326a57c0b83fa83af295cdcc7ec714548aa4b4"
+    }
+  ]
+}

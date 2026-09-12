@@ -1,0 +1,127 @@
+{
+  "id": "LEXR0-FIXTURE-014",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "caseKind": "questionnaire",
+  "releaseTarget": "release_1_pilot",
+  "profile": {
+    "code": "contradictory_answers",
+    "name": "Противоречивые ответы",
+    "scenario": "В одном multi-ответе одновременно указаны отсутствие документов и наличие оферты.",
+    "source": "ТЗ v3 §29, профиль 14"
+  },
+  "canonicalAnswers": {
+    "b1_q1": "Эталонный цифровой продукт",
+    "b1_q2": "saas",
+    "b1_q3": [
+      "b2b_small"
+    ],
+    "b1_q4": "russia_only",
+    "b1_q5": "growth",
+    "b1_q6": [
+      "goal_general"
+    ],
+    "b2_q1": "ooo",
+    "b2_q2": "same",
+    "b2_q3": "no",
+    "b2_q5": "no",
+    "b3_q1": [
+      "b2b_contract"
+    ],
+    "b3_q2": [
+      "direct"
+    ],
+    "b3_q3": "no",
+    "b4_q2": "all",
+    "b4_q3": "all",
+    "b4_q7": "no",
+    "b5_q1": [
+      "name",
+      "email"
+    ],
+    "b5_q2": "russia",
+    "b5_q3": "yes",
+    "b5_q4": "yes",
+    "b5_q6": "no",
+    "b6_q1": [
+      "none",
+      "offer"
+    ],
+    "b6_q2": "current",
+    "b7_q1": "direct",
+    "b7_q4": "no",
+    "b8_q2": "yes",
+    "b10_q1": [
+      "none"
+    ],
+    "b10_q2": "yes",
+    "b11_q1": [
+      "employees"
+    ],
+    "b11_q2": "yes",
+    "b11_q4": "no",
+    "b12_q1": "no",
+    "b12_q3": "no"
+  },
+  "expectedActiveRiskIds": [
+    "LEXR0-RISK-013"
+  ],
+  "expectedForbiddenRiskIds": [
+    "LEXR0-RISK-014",
+    "LEXR0-RISK-018"
+  ],
+  "expectedRiskProfile": "critical",
+  "expectedEscalation": {
+    "required": true,
+    "manualReviewRequired": true,
+    "manualFollowUpRequired": false,
+    "lawyerReviewRequired": true,
+    "expectedEvidenceStatus": "manual_review_required",
+    "expectedQueueCodes": [
+      "LEGAL-EXPERT-REVIEW",
+      "LEGAL-INCONSISTENCY-REVIEW"
+    ],
+    "reason": "Формализованное противоречие блокирует обычный автоматический отчёт."
+  },
+  "expectedRecommendationProductCode": "expert_review",
+  "expectedReportSections": [
+    "questionnaire_facts",
+    "preliminary_summary",
+    "active_risks",
+    "evidence_statuses",
+    "legal_bases",
+    "analysis_limitations",
+    "expert_escalation",
+    "recommendation",
+    "configuration_provenance"
+  ],
+  "allowedLegalBasisIds": [
+    "LB-RU-GK-428",
+    "LB-RU-GK-437",
+    "LB-RU-PD-152FZ-18-1",
+    "LB-RU-ZPP-10"
+  ],
+  "notes": {
+    "normativeRequirement": [
+      "ТЗ v3 §29 требует fixture противоречивых ответов; rules_v1 CONSISTENCY-001 должен сработать детерминированно."
+    ],
+    "projectDecision": [
+      "Ответ none активирует риск 013, а сочетание none+offer создаёт answers_inconsistent и предварительный режим отчёта."
+    ],
+    "openQuestion": [
+      "Требуется согласовать, можно ли предлагать пользователю исправить противоречие до постановки в экспертную очередь."
+    ]
+  },
+  "expectedConsistencyFlags": [
+    "answers_inconsistent"
+  ],
+  "expectedMatchedRuleIds": [
+    "CONSISTENCY-001"
+  ]
+}

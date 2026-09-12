@@ -1,0 +1,1406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neolex.local/schemas/legal-core/rules.schema.json",
+  "artifactType": "rules_schema_v1",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "reviewStatus": {
+    "reviewedByLawyer": false,
+    "statement": "Схема проверяет структуру, но не подтверждает юридическую корректность правил и не заменяет юридическое согласование."
+  },
+  "title": "Схема детерминированных правил Lexy Release 0",
+  "description": "Строгая JSON Schema для черновой конфигурации rules_v1. Ссылочная целостность идентификаторов проверяется отдельной детерминированной проверкой.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "artifactType",
+    "rulesetId",
+    "releaseId",
+    "version",
+    "effectiveFrom",
+    "effectiveTo",
+    "updatedBy",
+    "updatedAt",
+    "sourceCommit",
+    "status",
+    "reviewStatus",
+    "releaseFlags",
+    "governance",
+    "engineContract",
+    "levelModel",
+    "riskRules",
+    "criticalOverrideRules",
+    "branchRules",
+    "consistencyRules",
+    "followUpRules",
+    "escalationRules",
+    "requestedDocumentCategories",
+    "requestedDocumentCategoryRules",
+    "aggregationPolicy",
+    "coverage"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "./schemas/rules.schema.json"
+    },
+    "artifactType": {
+      "const": "rules_v1"
+    },
+    "rulesetId": {
+      "const": "rules_v1"
+    },
+    "releaseId": {
+      "const": "lexy-r0-2026-09-12"
+    },
+    "version": {
+      "const": "1.0.0-draft.1"
+    },
+    "effectiveFrom": {
+      "type": "null"
+    },
+    "effectiveTo": {
+      "type": "null"
+    },
+    "updatedBy": {
+      "const": "Manus AI"
+    },
+    "updatedAt": {
+      "const": "2026-09-12T18:40:24Z"
+    },
+    "sourceCommit": {
+      "const": "78e2f89e99340a403ce389eada223da6bf336676"
+    },
+    "status": {
+      "const": "draft_pending_legal_approval"
+    },
+    "reviewStatus": {
+      "$ref": "#/$defs/reviewStatus"
+    },
+    "releaseFlags": {
+      "$ref": "#/$defs/releaseFlags"
+    },
+    "governance": {
+      "$ref": "#/$defs/governance"
+    },
+    "engineContract": {
+      "$ref": "#/$defs/engineContract"
+    },
+    "levelModel": {
+      "$ref": "#/$defs/levelModel"
+    },
+    "riskRules": {
+      "type": "array",
+      "minItems": 25,
+      "maxItems": 25,
+      "items": {
+        "$ref": "#/$defs/riskRule"
+      }
+    },
+    "criticalOverrideRules": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/overrideRule"
+      }
+    },
+    "branchRules": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/branchRule"
+      }
+    },
+    "consistencyRules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/consistencyRule"
+      }
+    },
+    "followUpRules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/followUpRule"
+      }
+    },
+    "escalationRules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/escalationRule"
+      }
+    },
+    "requestedDocumentCategories": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/documentCategory"
+      }
+    },
+    "requestedDocumentCategoryRules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/documentRule"
+      }
+    },
+    "aggregationPolicy": {
+      "$ref": "#/$defs/aggregationPolicy"
+    },
+    "coverage": {
+      "$ref": "#/$defs/coverage"
+    }
+  },
+  "$defs": {
+    "reviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewedByLawyer",
+        "statement"
+      ],
+      "properties": {
+        "reviewedByLawyer": {
+          "const": false
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "releaseFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release0",
+        "release1Pilot",
+        "clientAccess"
+      ],
+      "properties": {
+        "release0": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "architectureOnly",
+            "runtimeIntegration"
+          ],
+          "properties": {
+            "architectureOnly": {
+              "const": true
+            },
+            "runtimeIntegration": {
+              "const": false
+            }
+          }
+        },
+        "release1Pilot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "planned",
+            "enabledNow"
+          ],
+          "properties": {
+            "planned": {
+              "const": true
+            },
+            "enabledNow": {
+              "const": false
+            }
+          }
+        },
+        "clientAccess": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "currentAccessChange",
+            "statement"
+          ],
+          "properties": {
+            "currentAccessChange": {
+              "const": "не_изменяется"
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "нормативное_требование",
+            "проектное_решение",
+            "открытый_вопрос"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normativeRequirements",
+        "projectDecisions",
+        "openQuestions"
+      ],
+      "properties": {
+        "normativeRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        },
+        "projectDecisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        }
+      }
+    },
+    "engineContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deterministic",
+        "predicateFormat",
+        "executionPhases",
+        "prohibitedPredicateCapabilities",
+        "unknownReferencePolicy",
+        "missingAnswerPolicy",
+        "tracePolicy"
+      ],
+      "properties": {
+        "deterministic": {
+          "const": true
+        },
+        "predicateFormat": {
+          "const": "declarative_json_ast_v1"
+        },
+        "executionPhases": {
+          "const": [
+            "consistency",
+            "branching",
+            "risk_activation",
+            "critical_override",
+            "follow_up",
+            "escalation",
+            "document_request",
+            "aggregation"
+          ]
+        },
+        "prohibitedPredicateCapabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unknownReferencePolicy": {
+          "const": "fail_closed_configuration_error"
+        },
+        "missingAnswerPolicy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tracePolicy": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "levelModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severityOrder",
+        "probabilityOrder",
+        "impactOrder",
+        "urgencyOrder",
+        "criticalOverrideFloor",
+        "evidenceStatusesAllowedInRelease0"
+      ],
+      "properties": {
+        "severityOrder": {
+          "const": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "probabilityOrder": {
+          "const": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "impactOrder": {
+          "const": [
+            "limited",
+            "significant",
+            "substantial",
+            "blocking"
+          ]
+        },
+        "urgencyOrder": {
+          "const": [
+            "monitor",
+            "90_days",
+            "60_days",
+            "30_days",
+            "immediate"
+          ]
+        },
+        "criticalOverrideFloor": {
+          "const": "high"
+        },
+        "evidenceStatusesAllowedInRelease0": {
+          "const": [
+            "questionnaire_based",
+            "manual_review_required"
+          ]
+        }
+      }
+    },
+    "questionId": {
+      "type": "string",
+      "pattern": "^b(1[0-4]|[1-9])_q[1-9][0-9]*$"
+    },
+    "riskId": {
+      "type": "string",
+      "pattern": "^LEXR0-RISK-[0-9]{3}$"
+    },
+    "categoryId": {
+      "type": "string",
+      "pattern": "^DOC-[A-Z0-9-]+$"
+    },
+    "severity": {
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "probability": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "impact": {
+      "enum": [
+        "limited",
+        "significant",
+        "substantial",
+        "blocking"
+      ]
+    },
+    "urgency": {
+      "enum": [
+        "monitor",
+        "90_days",
+        "60_days",
+        "30_days",
+        "immediate"
+      ]
+    },
+    "predicate": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/allOfPredicate"
+        },
+        {
+          "$ref": "#/$defs/anyOfPredicate"
+        },
+        {
+          "$ref": "#/$defs/notPredicate"
+        },
+        {
+          "$ref": "#/$defs/answerContainsAnyPredicate"
+        },
+        {
+          "$ref": "#/$defs/answerContainsAllPredicate"
+        },
+        {
+          "$ref": "#/$defs/riskActiveAnyPredicate"
+        },
+        {
+          "$ref": "#/$defs/branchActivePredicate"
+        },
+        {
+          "$ref": "#/$defs/flagPredicate"
+        },
+        {
+          "$ref": "#/$defs/branchCountPredicate"
+        }
+      ]
+    },
+    "allOfPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "args"
+      ],
+      "properties": {
+        "op": {
+          "const": "all_of"
+        },
+        "args": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/predicate"
+          }
+        }
+      }
+    },
+    "anyOfPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "args"
+      ],
+      "properties": {
+        "op": {
+          "const": "any_of"
+        },
+        "args": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/predicate"
+          }
+        }
+      }
+    },
+    "notPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "arg"
+      ],
+      "properties": {
+        "op": {
+          "const": "not"
+        },
+        "arg": {
+          "$ref": "#/$defs/predicate"
+        }
+      }
+    },
+    "answerContainsAnyPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "questionId",
+        "optionIds"
+      ],
+      "properties": {
+        "op": {
+          "const": "answer_contains_any"
+        },
+        "questionId": {
+          "$ref": "#/$defs/questionId"
+        },
+        "optionIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "answerContainsAllPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "questionId",
+        "optionIds"
+      ],
+      "properties": {
+        "op": {
+          "const": "answer_contains_all"
+        },
+        "questionId": {
+          "$ref": "#/$defs/questionId"
+        },
+        "optionIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "riskActiveAnyPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "riskIds"
+      ],
+      "properties": {
+        "op": {
+          "const": "risk_is_active_any"
+        },
+        "riskIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/riskId"
+          }
+        }
+      }
+    },
+    "branchActivePredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "branchId",
+        "expected"
+      ],
+      "properties": {
+        "op": {
+          "const": "branch_is_active"
+        },
+        "branchId": {
+          "enum": [
+            "consumer",
+            "partners",
+            "dispute_detail",
+            "investment",
+            "contractors"
+          ]
+        },
+        "expected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "flagPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "flag",
+        "expected"
+      ],
+      "properties": {
+        "op": {
+          "const": "flag_is_set"
+        },
+        "flag": {
+          "enum": [
+            "critical_override_applied",
+            "answers_inconsistent",
+            "manual_follow_up_required",
+            "lawyer_review_required"
+          ]
+        },
+        "expected": {
+          "const": true
+        }
+      }
+    },
+    "branchCountPredicate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "value"
+      ],
+      "properties": {
+        "op": {
+          "const": "active_branch_question_count_greater_than"
+        },
+        "value": {
+          "const": 15
+        }
+      }
+    },
+    "level": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "probability",
+        "impact",
+        "urgency"
+      ],
+      "properties": {
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "probability": {
+          "$ref": "#/$defs/probability"
+        },
+        "impact": {
+          "$ref": "#/$defs/impact"
+        },
+        "urgency": {
+          "$ref": "#/$defs/urgency"
+        }
+      }
+    },
+    "riskRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "priority",
+        "riskId",
+        "evaluationStage",
+        "when",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^RULE-RISK-[0-9]{3}$"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "riskId": {
+          "$ref": "#/$defs/riskId"
+        },
+        "evaluationStage": {
+          "const": "risk_activation"
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "active",
+            "level",
+            "criticalOverrideEligible",
+            "lawyerReviewRequiredWhenActive",
+            "evidence"
+          ],
+          "properties": {
+            "active": {
+              "const": true
+            },
+            "level": {
+              "$ref": "#/$defs/level"
+            },
+            "criticalOverrideEligible": {
+              "type": "boolean"
+            },
+            "lawyerReviewRequiredWhenActive": {
+              "type": "boolean"
+            },
+            "evidence": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "status",
+                "sourceQuestionIds",
+                "automaticDocumentConfirmationAllowed",
+                "requestedDocumentCategoryIds",
+                "tracePolicy"
+              ],
+              "properties": {
+                "status": {
+                  "const": "questionnaire_based"
+                },
+                "sourceQuestionIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/questionId"
+                  }
+                },
+                "automaticDocumentConfirmationAllowed": {
+                  "const": false
+                },
+                "requestedDocumentCategoryIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "$ref": "#/$defs/categoryId"
+                  }
+                },
+                "tracePolicy": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "overrideRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "normativeSource",
+        "description",
+        "evaluationStage",
+        "when",
+        "targetRiskIds",
+        "applicationMode",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OVERRIDE-TZ-13-2-[0-9]{2}$"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "normativeSource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evaluationStage": {
+          "const": "critical_override"
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "targetRiskIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/riskId"
+          }
+        },
+        "applicationMode": {
+          "const": "active_risks_only"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "minimumSeverity",
+            "lawyerReviewRequired",
+            "overrideAppliedFlag"
+          ],
+          "properties": {
+            "minimumSeverity": {
+              "const": "high"
+            },
+            "lawyerReviewRequired": {
+              "const": true
+            },
+            "overrideAppliedFlag": {
+              "const": "critical_override_applied"
+            }
+          }
+        }
+      }
+    },
+    "branchRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "priority",
+        "sourceQuestionId",
+        "sourceOptionId",
+        "targetBranchId",
+        "when",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^BRANCH-[0-9]{3}$"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sourceQuestionId": {
+          "$ref": "#/$defs/questionId"
+        },
+        "sourceOptionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "targetBranchId": {
+          "enum": [
+            "consumer",
+            "partners",
+            "dispute_detail",
+            "investment",
+            "contractors"
+          ]
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "action",
+            "targetQuestionIds",
+            "manualFollowUpRequired",
+            "reason"
+          ],
+          "properties": {
+            "action": {
+              "enum": [
+                "activate_questions",
+                "manual_follow_up_required"
+              ]
+            },
+            "targetQuestionIds": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/questionId"
+              }
+            },
+            "manualFollowUpRequired": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "consistencyRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "when",
+        "version",
+        "evaluationStage",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^CONSISTENCY-[0-9]{3}$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "evaluationStage": {
+          "const": "consistency"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "setFlag",
+            "lawyerReviewRequired",
+            "automaticReportMode"
+          ],
+          "properties": {
+            "setFlag": {
+              "const": "answers_inconsistent"
+            },
+            "lawyerReviewRequired": {
+              "const": true
+            },
+            "automaticReportMode": {
+              "const": "preliminary_summary_only"
+            }
+          }
+        }
+      }
+    },
+    "followUpRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "description",
+        "when",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^FOLLOW-UP-[0-9]{3}$"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "setFlag",
+            "reason",
+            "queueCode"
+          ],
+          "properties": {
+            "setFlag": {
+              "const": "manual_follow_up_required"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "queueCode": {
+              "const": "LEGAL-MANUAL-FOLLOW-UP"
+            }
+          }
+        }
+      }
+    },
+    "escalationRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "description",
+        "when",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^ESCALATION-[0-9]{3}$"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "setFlag",
+            "queueCode",
+            "clientCta",
+            "fixedPackageOfferAllowed",
+            "automaticReportMode"
+          ],
+          "properties": {
+            "setFlag": {
+              "const": "lawyer_review_required"
+            },
+            "queueCode": {
+              "type": "string",
+              "pattern": "^LEGAL-[A-Z0-9-]+$"
+            },
+            "clientCta": {
+              "const": "Запросить экспертный разбор"
+            },
+            "fixedPackageOfferAllowed": {
+              "const": false
+            },
+            "automaticReportMode": {
+              "const": "preliminary_summary_only"
+            }
+          }
+        }
+      }
+    },
+    "documentCategory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "purpose",
+        "potentialConfirmationTargetRiskIds",
+        "release0EvidenceEffect",
+        "baseTieBreakPriority"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/categoryId"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "potentialConfirmationTargetRiskIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/riskId"
+          }
+        },
+        "release0EvidenceEffect": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseTieBreakPriority": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "documentRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "when",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DOC-REQUEST-[0-9]{3}$"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "when": {
+          "$ref": "#/$defs/predicate"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requestCategoryId",
+            "supportingRiskIds"
+          ],
+          "properties": {
+            "requestCategoryId": {
+              "$ref": "#/$defs/categoryId"
+            },
+            "supportingRiskIds": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/riskId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "tieBreak": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "rank",
+        "field",
+        "direction"
+      ],
+      "properties": {
+        "rank": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "direction": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "aggregationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overallRiskProfile",
+        "leadRiskTieBreaks",
+        "lawyerReviewAggregation",
+        "requestedDocuments",
+        "ruleConflictResolution"
+      ],
+      "properties": {
+        "overallRiskProfile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "emptyRiskSetResult",
+            "overridePrecedence",
+            "statement"
+          ],
+          "properties": {
+            "method": {
+              "const": "maximum_active_risk_severity"
+            },
+            "emptyRiskSetResult": {
+              "const": "low"
+            },
+            "overridePrecedence": {
+              "const": true
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "leadRiskTieBreaks": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "$ref": "#/$defs/tieBreak"
+          }
+        },
+        "lawyerReviewAggregation": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "method",
+            "inputs",
+            "whenTrue"
+          ],
+          "properties": {
+            "method": {
+              "const": "logical_or"
+            },
+            "inputs": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "whenTrue": {
+              "type": "object"
+            }
+          }
+        },
+        "requestedDocuments": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "method",
+            "maxPrimaryCategories",
+            "candidateSource",
+            "categoryWeight",
+            "tieBreaks",
+            "overflowPolicy"
+          ],
+          "properties": {
+            "method": {
+              "const": "deduplicate_rank_limit"
+            },
+            "maxPrimaryCategories": {
+              "const": 3
+            },
+            "candidateSource": {
+              "type": "string"
+            },
+            "categoryWeight": {
+              "type": "object"
+            },
+            "tieBreaks": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/tieBreak"
+              }
+            },
+            "overflowPolicy": {
+              "type": "string"
+            }
+          }
+        },
+        "ruleConflictResolution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "riskActivation",
+            "override",
+            "flags",
+            "stableOutputOrder"
+          ],
+          "properties": {
+            "riskActivation": {
+              "type": "string"
+            },
+            "override": {
+              "type": "string"
+            },
+            "flags": {
+              "type": "string"
+            },
+            "stableOutputOrder": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "riskIds",
+        "criticalOverrideIds",
+        "disabledBranchManualFollowUpRuleIds",
+        "evidenceStatusCoverage",
+        "requestedDocumentCategoryIds",
+        "statement"
+      ],
+      "properties": {
+        "riskIds": {
+          "type": "array",
+          "minItems": 25,
+          "maxItems": 25,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/riskId"
+          }
+        },
+        "criticalOverrideIds": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^OVERRIDE-TZ-13-2-[0-9]{2}$"
+          }
+        },
+        "disabledBranchManualFollowUpRuleIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^BRANCH-[0-9]{3}$"
+          }
+        },
+        "evidenceStatusCoverage": {
+          "const": [
+            "questionnaire_based",
+            "manual_review_required"
+          ]
+        },
+        "requestedDocumentCategoryIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/categoryId"
+          }
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

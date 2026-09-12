@@ -1,0 +1,345 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neolex.local/schemas/legal-core/legal-basis.schema.json",
+  "title": "Схема каталога правовых оснований Lexy Release 0",
+  "description": "JSON Schema для draft-каталога правовых оснований. Схема проверяет структуру, но не подтверждает юридическую корректность, актуальность или применимость содержания; требуется отдельное юридическое согласование.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "catalogId",
+    "catalogMeta",
+    "governance",
+    "coverage",
+    "legalBases"
+  ],
+  "$defs": {
+    "objectMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "version",
+        "effectiveFrom",
+        "effectiveTo",
+        "status",
+        "updatedBy",
+        "updatedAt",
+        "sourceCommit",
+        "legalReviewNotice"
+      ],
+      "properties": {
+        "releaseId": {
+          "const": "lexy-r0-2026-09-12"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "effectiveFrom": {
+          "type": "null"
+        },
+        "effectiveTo": {
+          "type": "null"
+        },
+        "status": {
+          "const": "draft_pending_legal_approval"
+        },
+        "updatedBy": {
+          "const": "Manus AI"
+        },
+        "updatedAt": {
+          "const": "2026-09-12T18:40:24Z"
+        },
+        "sourceCommit": {
+          "const": "78e2f89e99340a403ce389eada223da6bf336676"
+        },
+        "legalReviewNotice": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "normativeRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "requirement"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^NORM-[A-Z0-9-]+$"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requirement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "projectDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "decision"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DESIGN-R0-[0-9]{3}$"
+        },
+        "decision": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "openQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "question"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OQ-R0-[0-9]{3}$"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "legalBasis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "objectMeta",
+        "jurisdiction",
+        "riskIds",
+        "act",
+        "article",
+        "approvedDraftWording",
+        "applicability",
+        "officialSource",
+        "checkedAt",
+        "verificationStatus",
+        "openIssues"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^LB-RU-[A-Z0-9-]+$"
+        },
+        "objectMeta": {
+          "$ref": "#/$defs/objectMeta"
+        },
+        "jurisdiction": {
+          "const": "RU"
+        },
+        "riskIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^LEXR0-RISK-[0-9]{3}$"
+          }
+        },
+        "act": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "article": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference",
+            "subject"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "approvedDraftWording": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "short",
+            "long",
+            "usageRule"
+          ],
+          "properties": {
+            "short": {
+              "type": "string",
+              "minLength": 1
+            },
+            "long": {
+              "type": "string",
+              "minLength": 1
+            },
+            "usageRule": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "applicability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "limitation"
+          ],
+          "properties": {
+            "summary": {
+              "type": "string",
+              "minLength": 1
+            },
+            "limitation": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "officialSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "publisher",
+            "url"
+          ],
+          "properties": {
+            "publisher": {
+              "const": "Официальный интернет-портал правовой информации"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://(www\\.)?pravo\\.gov\\.ru/"
+            }
+          }
+        },
+        "checkedAt": {
+          "const": "2026-09-12"
+        },
+        "verificationStatus": {
+          "const": "draft_pending_legal_review"
+        },
+        "openIssues": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "$schema": {
+      "const": "./schemas/legal-basis.schema.json"
+    },
+    "catalogId": {
+      "const": "legal_basis_catalog_v1"
+    },
+    "catalogMeta": {
+      "$ref": "#/$defs/objectMeta"
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normativeRequirements",
+        "projectDecisions",
+        "openQuestions"
+      ],
+      "properties": {
+        "normativeRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/normativeRequirement"
+          }
+        },
+        "projectDecisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/projectDecision"
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/openQuestion"
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "riskIds",
+        "cataloguePurpose",
+        "coverageNote"
+      ],
+      "properties": {
+        "riskIds": {
+          "type": "array",
+          "minItems": 25,
+          "maxItems": 25,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^LEXR0-RISK-[0-9]{3}$"
+          }
+        },
+        "cataloguePurpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coverageNote": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "legalBases": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/legalBasis"
+      }
+    }
+  }
+}
