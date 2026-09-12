@@ -144,6 +144,13 @@ def main() -> int:
 
     legal_catalog = load("shared/legal-core/legal_basis_catalog_v1.json")
     legal_basis_ids = unique((basis.get("id", "") for basis in legal_catalog.get("legalBases", [])), "legal basis catalog")
+    require(len(legal_basis_ids) == 35, f"legal basis catalog: expected 35 bases, got {len(legal_basis_ids)}")
+    required_review_bases = {
+        "LB-RU-ZPP-16-1-4-2",
+        "LB-RU-ZPP-32",
+        "LB-RU-PD-152FZ-3-11",
+    }
+    require(required_review_bases <= legal_basis_ids, "legal basis catalog: post-review bases are missing")
 
     phrases = load("shared/legal-core/approved_phrases_v1.json")
     phrase_ids = unique(
@@ -166,6 +173,20 @@ def main() -> int:
     require(len(risk_rules) == 25, f"rules: expected 25 base risk rules, got {len(risk_rules)}")
     require(set(rule_risk_ids) == risk_ids, "rules: base risk coverage does not equal risk catalog")
     require(len(rule_risk_ids) == len(set(rule_risk_ids)), "rules: a risk has more than one base risk rule")
+    engine_contract = rules.get("engineContract", {})
+    evidence_derivation = engine_contract.get("evidenceDerivation", {}).get("manualReviewRequired", {})
+    require(
+        evidence_derivation.get("derivationRuleId") == "DERIVATION-EVIDENCE-001"
+        and evidence_derivation.get("outputRiskBlockEvidenceStatus") == "manual_review_required",
+        "rules: manual-review evidence derivation contract is missing",
+    )
+    queue_aggregation = engine_contract.get("escalationQueueAggregation", {})
+    require(
+        queue_aggregation.get("outputField") == "requiredQueueCodes"
+        and queue_aggregation.get("beforeQueueEvent", {}).get("queueCode") is None
+        and queue_aggregation.get("beforeQueueEvent", {}).get("status") == "required_not_routed",
+        "rules: pre-event queue aggregation contract is invalid",
+    )
 
     for node in iter_dicts(rules):
         qid = node.get("questionId")
@@ -189,7 +210,26 @@ def main() -> int:
     product_codes = unique((product.get("productCode", "") for product in mapping.get("productCatalog", [])), "product catalog")
     require(
         mapping.get("selectionContract", {}).get("fallbackRuleId") == "FALLBACK-REC-001",
-        "recommendation mapping: stable clean-case fallbackRuleId is missing",
+        "recommendation mapping: stable fallbackRuleId is missing",
+    )
+    selection_contract = mapping.get("selectionContract", {})
+    require(
+        selection_contract.get("fallbackCondition") == {
+            "evaluationStage": "after_scoring",
+            "operator": "no_positive_candidates",
+        },
+        "recommendation mapping: fallback must be restricted to no positive candidates after scoring",
+    )
+    score_rules = {
+        item.get("ruleId"): (item.get("productCode"), item.get("points"))
+        for collection in (selection_contract.get("segmentBoosts", []), selection_contract.get("goalBoosts", []))
+        for item in collection
+    }
+    require(
+        score_rules.get("SCORE-SEGMENT-001") == ("start_product", 5)
+        and score_rules.get("SCORE-SEGMENT-006") == ("start_product", 1)
+        and score_rules.get("SCORE-GOAL-007") == ("start_product", 1),
+        "recommendation mapping: clean-case scoring trace must equal start_product 5+1+1",
     )
     routed_risks = []
     for route in mapping.get("riskRouting", []):
@@ -201,7 +241,11 @@ def main() -> int:
     require(set(routed_risks) == risk_ids, "recommendation mapping: risk routing does not cover all risks")
 
     report_rule_pattern = report_schema.get("$defs", {}).get("ruleId", {}).get("pattern", "")
-    require("FALLBACK-REC" in report_rule_pattern, "report schema: ruleId does not allow clean-case fallback trace")
+    require("FALLBACK-REC" in report_rule_pattern, "report schema: ruleId does not allow fallback trace")
+    require(
+        "SCORE-(SEGMENT|GOAL)" in report_rule_pattern and "DERIVATION-EVIDENCE" in report_rule_pattern,
+        "report schema: ruleId does not allow post-review scoring/evidence trace",
+    )
     for source in report_schema.get("sourceArtifacts", []):
         relative = source.get("relativePath")
         if not isinstance(relative, str):
@@ -250,6 +294,12 @@ def main() -> int:
         expected_risks = set(fixture.get("expectedActiveRiskIds", [])) | set(fixture.get("expectedForbiddenRiskIds", []))
         require(expected_risks <= risk_ids, f"{relative_name}: unknown expected risk IDs")
         require(set(fixture.get("allowedLegalBasisIds", [])) <= legal_basis_ids, f"{relative_name}: unknown legal basis IDs")
+        if relative_name == "v1/04-b2c-subscription-recurring.json":
+            reason = fixture.get("expectedEscalation", {}).get("reason", "")
+            require(
+                "объединённый вопрос" in reason and "оспариваниях платежей" in reason,
+                "B2C fixture: escalation reason must preserve the disjunctive meaning of b7_q4",
+            )
         recommendation = fixture.get("expectedRecommendationProductCode")
         if fixture.get("caseKind") == "validation_only":
             require(recommendation is None, f"{relative_name}: validation-only case must not produce a recommendation")
@@ -288,9 +338,16 @@ def main() -> int:
     clean_golden = golden_dir / "01-clean-b2b-saas.md"
     if clean_golden.is_file():
         require(
-            "FALLBACK-REC-001" in clean_golden.read_text(encoding="utf-8"),
-            "clean golden report: fallback trace rule is not documented",
+            "start_product=7" in clean_golden.read_text(encoding="utf-8")
+            and "SCORE-SEGMENT-001" in clean_golden.read_text(encoding="utf-8")
+            and "FALLBACK-REC-001" in clean_golden.read_text(encoding="utf-8"),
+            "clean golden report: scoring and fallback boundary are not documented",
         )
+    cross_border_golden = golden_dir / "03-ai-cross-border-escalation.md"
+    if cross_border_golden.is_file():
+        cross_border_text = cross_border_golden.read_text(encoding="utf-8")
+        require("segments=[early_saas_b2b, general]" in cross_border_text, "cross-border golden: normalized segments are incomplete")
+        require("b5_q2:1" not in cross_border_text and "b1_q4:1" not in cross_border_text, "cross-border golden: fictitious answer revisions remain")
 
     if ERRORS:
         print(f"RELEASE 0 VALIDATION FAIL: {len(ERRORS)} issue(s)")

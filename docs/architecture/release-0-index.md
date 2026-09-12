@@ -13,7 +13,7 @@
 
 ## 1. Итог review
 
-Проведён read-only review всех файлов, созданных в этой workflow. После review исправлены два внутренних расхождения: для риска `LEXR0-RISK-011`, требующего ручной проверки и critical override, в допустимые коды следующего продукта добавлен `expert_review`; для clean-case добавлен устойчивый recommendation trace `FALLBACK-REC-001`, совместимый с обязательными `activatedRules` и `selectionRuleIds`. Runtime-маршруты, React, схема БД, PDF и действующая бизнес-логика не менялись.
+После технического review и первого экспертного ИИ-review трёх golden reports исправлены внутренние расхождения. Clean-case теперь трассируется обычным scoring `5+1+1=7`; `FALLBACK-REC-001` применяется только при отсутствии положительных кандидатов. Для manual-review рисков формализован evidence derivation, а несколько обязательных очередей сохраняются в `requiredQueueCodes` до фактического queue event. B2C и privacy legal bases актуализированы по официальным редакциям 2025–2026 годов. Runtime-маршруты, React, схема БД, PDF и действующая бизнес-логика не менялись.
 
 **Нормативное требование.** §30.2 ТЗ требует до основной разработки зафиксировать state machines, матрицу доступа, миграцию, тарифы, шесть конфигураций юридического ядра, три эталонных отчёта, 12–15 fixtures, файловую политику, перечень клиентских формулировок и инвентарь сервисных аккаунтов, переменных окружения и секретов.[1]
 
@@ -33,7 +33,7 @@
 | `R0-G06` | Каталог рисков и правила | В каталоге ровно 25 рисков. Есть ровно 25 базовых risk rules; каждый риск покрыт одним базовым правилом. Critical override, branch, consistency, follow-up, escalation и document-request правила структурно проверены. | **PASS — техническая связность; legal approval pending** |
 | `R0-G07` | Ссылочная целостность | Существуют все ссылки rules на question/option/risk IDs, ссылки рисков и fixtures на legal basis, phrases, products и report sections. | **PASS** |
 | `R0-G08` | Fixtures | Существуют ровно 15 fixture-файлов и manifest; ссылки валидны, идентификаторы уникальны, SHA-256 manifest совпадают. | **PASS — техническая связность; oracle pending legal approval** |
-| `R0-G09` | Golden reports | Существуют ровно три draft golden reports и README. | **PASS — наличие; BLOCKED — юридическое утверждение** |
+| `R0-G09` | Golden reports | Существуют ровно три draft golden reports и README; первый экспертный ИИ-review выполнен, blocker/major-remediation внесена. | **PASS — наличие и remediation; BLOCKED — human legal approval** |
 | `R0-G10` | JSON и JSON Schema | Все 30 проверяемых JSON-файлов синтаксически валидны и завершаются LF. Пять конфигураций валидированы своими схемами; `report_schema_v1` проходит проверку Draft 2020-12. | **PASS** |
 | `R0-G11` | Новые клиентские и отчётные формулировки | Автоматическая проверка не выявила запрещённых обещаний юридической полноты, законности или состоявшегося юридического одобрения. | **PASS** |
 | `R0-G12` | Юридический статус metadata | В юридических конфигурациях и отчётных артефактах отсутствуют metadata-статусы, объявляющие юридическое одобрение; установлен `draft_pending_legal_approval`. | **PASS** |
@@ -68,7 +68,7 @@
 | `shared/legal-core/questionnaire_v2.json` | Полные 63 вопроса и Pilot 33 core + 6 branch | valid; `draft_pending_legal_approval` |
 | `shared/legal-core/risk_catalog_v1.json` | 25 определений рисков | valid; `draft_pending_legal_approval` |
 | `shared/legal-core/rules_v1.json` | Детерминированные правила и overrides | valid; `draft_pending_legal_approval` |
-| `shared/legal-core/legal_basis_catalog_v1.json` | 32 проекта правовых оснований | valid; `draft_pending_legal_approval` |
+| `shared/legal-core/legal_basis_catalog_v1.json` | 35 проектов правовых оснований | valid; `draft_pending_legal_approval` |
 | `shared/legal-core/recommendation_mapping_v1.json` | Детерминированный выбор одного следующего продукта | valid; `draft_pending_legal_approval` |
 | `shared/legal-core/approved_phrases_v1.json` | Проект перечня допустимых формулировок; имя файла не означает одобрение | valid; `draft_pending_legal_approval` |
 | `shared/report/report_schema_v1.json` | JSON Schema immutable report snapshot | valid schema; `draft_pending_legal_approval` |
@@ -120,6 +120,21 @@
 | `tools/validate-release-0.py` | Локальная read-only проверка schemas, counts, references, fixture hashes и обязательных файлов | PASS |
 | `tools/requirements-release-0.txt` | Зафиксированная Python-зависимость валидатора | `jsonschema==4.26.0` |
 
+### 3.7. Первый раунд юридического review
+
+| Путь | Назначение | Статус |
+|---|---|---|
+| `docs/legal-core/legal-review/round-1-summary.md` | Сводка первого экспертного ИИ-review и remediation plan | completed; не является legal approval |
+| `docs/legal-core/legal-review/01-clean-b2b-saas-review.md` | Review clean B2B report | round 1 completed |
+| `docs/legal-core/legal-review/02-b2c-subscription-critical-review.md` | Review B2C subscription report | round 1 completed |
+| `docs/legal-core/legal-review/03-ai-cross-border-escalation-review.md` | Review cross-border report | round 1 completed |
+| `docs/legal-core/legal-review/round-2/summary.md` | Сводка второго независимого ИИ-review | `pass_with_notes`; 0 blocker, 0 major |
+| `docs/legal-core/legal-review/round-2/01-clean-b2b-saas-review.md` | Round 2 review clean B2B report | ready for human review |
+| `docs/legal-core/legal-review/round-2/02-b2c-subscription-critical-review.md` | Round 2 review B2C report | ready for human review |
+| `docs/legal-core/legal-review/round-2/03-ai-cross-border-escalation-review.md` | Round 2 review cross-border report | ready for human review |
+| `docs/legal-core/legal-review/round-2/post-review-closure.md` | Проверка закрытия minor-замечаний и B2C wording | PASS; 0 unresolved minor |
+| `docs/legal-core/legal-review/human-approval-record-template.md` | Шаблон решения уполномоченного человека-юриста с hash-manifest | awaiting human decision |
+
 ## 4. Open decisions
 
 Открытые решения сгруппированы, чтобы формальная приёмка не смешивалась с технической готовностью файлов.
@@ -127,7 +142,7 @@
 | ID | Открытое решение | Владелец решения / блокируемый gate |
 |---|---|---|
 | `OD-01` | Назначить named legal approver и technical release custodian; определить workflow перевода конфигурации из draft. | Legal/Product; блокирует юридическое утверждение ядра и golden reports. |
-| `OD-02` | Юридически рассмотреть 25 рисков, 25 базовых правил, 32 правовых основания, клиентские формулировки, fixtures и три golden reports. | Legal; блокирует §31.2 и клиентское использование. |
+| `OD-02` | После завершённого первого ИИ-review провести review человеком-юристом 25 рисков, 25 базовых правил, 35 правовых оснований, клиентских формулировок, fixtures и трёх golden reports. | Legal; блокирует §31.2 и клиентское использование. |
 | `OD-03` | Формально согласовать пять state machines, идемпотентность, audit/outbox и режим отчёта для каждого critical/manual trigger. | Product/Security/Legal/Operations; блокирует реализацию R1. |
 | `OD-04` | Согласовать снятие временного P0-исключения, owner-bound доступ, lifecycle magic link и neutral error contract. | Owner/Product/Security; блокирует защищённый путь R1. |
 | `OD-05` | Утвердить модель customer account, достаточные доказательства legacy claim, quarantine/dispute policy и срок совместимости v1. | Product/Security/Data owner; блокирует миграцию. |
@@ -138,7 +153,7 @@
 | `OD-10` | Утвердить retention для drafts, reports, documents, tokens, email/audit logs, backups, legal hold и удаления аккаунта. | Privacy/Legal/Data owner/Operations; блокирует автоматическое удаление. |
 | `OD-11` | Выбрать secret manager, workload identity, providers, durable outbox, RTO/RPO, monitoring, dead-letter и incident runbook. | Security/Operations; блокирует production adapters. |
 | `OD-12` | Утвердить customer/admin auth boundary, recovery, rollback authority и дату decommission legacy v1. | Product/Security/Operations; блокирует cutover. |
-| `OD-13` | Юридически и технически подтвердить проектное правило `FALLBACK-REC-001` для clean snapshot; технический schema-разрыв устранён. | Architecture/Legal core custodian; блокирует только формальное утверждение правила. |
+| `OD-13` | Юридически и технически подтвердить clean scoring trace `SCORE-SEGMENT-001`, `SCORE-SEGMENT-006`, `SCORE-GOAL-007` и условие применения `FALLBACK-REC-001` только при отсутствии положительного кандидата. | Architecture/Legal core custodian; блокирует формальное утверждение recommendation trace. |
 
 ## 5. Команды воспроизводимой проверки
 

@@ -9,6 +9,7 @@
     "$schema",
     "catalogId",
     "catalogMeta",
+    "reviewStatus",
     "governance",
     "coverage",
     "riskDefinitions"
@@ -286,6 +287,23 @@
           }
         }
       }
+    },
+    "reviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewedByLawyer",
+        "statement"
+      ],
+      "properties": {
+        "reviewedByLawyer": {
+          "const": false
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   },
   "properties": {
@@ -451,6 +469,9 @@
       "items": {
         "$ref": "#/$defs/riskDefinition"
       }
+    },
+    "reviewStatus": {
+      "$ref": "#/$defs/reviewStatus"
     }
   }
 }

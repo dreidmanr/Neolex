@@ -91,7 +91,7 @@
       "LEGAL-EXPERT-REVIEW",
       "LEGAL-DISPUTE-REVIEW"
     ],
-    "reason": "Критические B2C-условия и платёжный спор требуют экспертного разбора."
+    "reason": "Критические B2C-условия и положительный ответ на объединённый вопрос о спорах, оспариваниях платежей, массовых возвратах или претензиях по оплате требуют экспертного разбора."
   },
   "expectedRecommendationProductCode": "expert_review",
   "expectedReportSections": [
@@ -110,7 +110,9 @@
     "LB-RU-GK-309",
     "LB-RU-GK-437",
     "LB-RU-ZPP-10",
-    "LB-RU-ZPP-13-6"
+    "LB-RU-ZPP-13-6",
+    "LB-RU-ZPP-16-1-4-2",
+    "LB-RU-ZPP-32"
   ],
   "notes": {
     "normativeRequirement": [

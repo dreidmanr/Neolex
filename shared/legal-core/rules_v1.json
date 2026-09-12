@@ -127,7 +127,46 @@
     ],
     "unknownReferencePolicy": "fail_closed_configuration_error",
     "missingAnswerPolicy": "Атомарный предикат ответа возвращает false. Для обязательного активного вопроса неполнота блокирует расчёт отчёта на уровне серверной валидации.",
-    "tracePolicy": "Для каждого результата сохраняются rulesetId, version, ruleId, стадия, истинные атомарные предикаты, questionId, optionId и применённый override."
+    "tracePolicy": "Для каждого результата сохраняются rulesetId, version, ruleId, стадия, истинные атомарные предикаты, questionId, optionId и применённый override.",
+    "evidenceDerivation": {
+      "manualReviewRequired": {
+        "derivationRuleId": "DERIVATION-EVIDENCE-001",
+        "when": {
+          "activeRiskCatalogItemField": "manualReviewRequired",
+          "operator": "equals",
+          "value": true
+        },
+        "inputEvidenceStatus": "questionnaire_based",
+        "outputRiskBlockEvidenceStatus": "manual_review_required",
+        "preserveEvidenceAndProvenanceFields": [
+          "questionnaireAnswerRefs",
+          "documentEvidence",
+          "sourceQuestionIds",
+          "traceAtoms"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "statement": "Для каждого активного риска, чей элемент risk_catalog_v1 имеет manualReviewRequired=true, генератор заменяет только итоговый evidence.status risk block с questionnaire_based на manual_review_required; исходные questionnaire evidence и provenance сохраняются без изменения."
+      }
+    },
+    "escalationQueueAggregation": {
+      "method": "deduplicate_sort_lexicographic",
+      "candidateSource": "queueCode каждого сработавшего escalationRules result",
+      "outputField": "requiredQueueCodes",
+      "beforeQueueEvent": {
+        "queueCode": null,
+        "status": "required_not_routed"
+      },
+      "queueEventRequirement": {
+        "queueCodeRepresents": "single_actual_queue",
+        "statusesRequiringQueueEvent": [
+          "queued",
+          "assigned",
+          "in_progress",
+          "resolved"
+        ]
+      },
+      "statement": "Все коды очередей сработавших escalation rules дедуплицируются и сортируются лексикографически в requiredQueueCodes. Порядок не задаёт primary queue или precedence. До фактического queue event queueCode=null и status=required_not_routed; queued и последующие фактические статусы допустимы только при зафиксированном queue event."
+    }
   },
   "levelModel": {
     "severityOrder": [
@@ -1134,8 +1173,8 @@
           "status": "questionnaire_based",
           "sourceQuestionIds": [
             "b8_q1",
-            "b8_q2",
-            "b7_q2"
+            "b1_q3",
+            "b8_q2"
           ],
           "automaticDocumentConfirmationAllowed": false,
           "requestedDocumentCategoryIds": [

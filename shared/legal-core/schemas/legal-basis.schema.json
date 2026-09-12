@@ -9,6 +9,7 @@
     "$schema",
     "catalogId",
     "catalogMeta",
+    "reviewStatus",
     "governance",
     "coverage",
     "legalBases"
@@ -260,6 +261,23 @@
           }
         }
       }
+    },
+    "reviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewedByLawyer",
+        "statement"
+      ],
+      "properties": {
+        "reviewedByLawyer": {
+          "const": false
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   },
   "properties": {
@@ -340,6 +358,9 @@
       "items": {
         "$ref": "#/$defs/legalBasis"
       }
+    },
+    "reviewStatus": {
+      "$ref": "#/$defs/reviewStatus"
     }
   }
 }

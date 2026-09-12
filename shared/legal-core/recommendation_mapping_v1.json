@@ -331,7 +331,7 @@
       "Добавить бонусы всех уникальных normalizedGoalCodes по goalBoosts; goalCode expert_review обрабатывается только стоп-фактором.",
       "Оставить кандидатов с положительным баллом; если их нет, активировать fallbackRuleId и вернуть fallbackProductCode.",
       "Выбрать максимальный балл; при равенстве выбрать первый productCode из tieBreakOrder.",
-      "Вернуть объект только с одним productCode и трассировкой сработавшего стоп-фактора либо начисленных баллов."
+      "Вернуть объект только с одним productCode и трассировкой сработавшего стоп-фактора либо всех фактически применённых ruleId начисления баллов; fallbackRuleId включается только при отсутствии кандидатов с положительным баллом."
     ],
     "stopFactors": [
       {
@@ -422,69 +422,82 @@
       {
         "segmentCode": "early_saas_b2b",
         "productCode": "start_product",
-        "points": 5
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-001"
       },
       {
         "segmentCode": "b2c_sales",
         "productCode": "safe_sales",
-        "points": 5
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-002"
       },
       {
         "segmentCode": "ip_development",
         "productCode": "rights_and_ip",
-        "points": 5
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-003"
       },
       {
         "segmentCode": "data_intensive",
         "productCode": "data_and_infrastructure",
-        "points": 5
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-004"
       },
       {
         "segmentCode": "investment_enterprise",
         "productCode": "enterprise_readiness",
-        "points": 5
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-005"
       },
       {
         "segmentCode": "general",
         "productCode": "start_product",
-        "points": 1
+        "points": 1,
+        "ruleId": "SCORE-SEGMENT-006"
       }
     ],
     "goalBoosts": [
       {
         "goalCode": "launch",
         "productCode": "start_product",
-        "points": 7
+        "points": 7,
+        "ruleId": "SCORE-GOAL-001"
       },
       {
         "goalCode": "ip",
         "productCode": "rights_and_ip",
-        "points": 7
+        "points": 7,
+        "ruleId": "SCORE-GOAL-002"
       },
       {
         "goalCode": "safe_sales",
         "productCode": "safe_sales",
-        "points": 7
+        "points": 7,
+        "ruleId": "SCORE-GOAL-003"
       },
       {
         "goalCode": "data",
         "productCode": "data_and_infrastructure",
-        "points": 7
+        "points": 7,
+        "ruleId": "SCORE-GOAL-004"
       },
       {
         "goalCode": "partnership",
         "productCode": "enterprise_readiness",
-        "points": 7
+        "points": 7,
+        "ruleId": "SCORE-GOAL-005"
       },
       {
         "goalCode": "investment_enterprise",
         "productCode": "enterprise_readiness",
-        "points": 7
+        "points": 7,
+        "ruleId": "SCORE-GOAL-006"
       },
       {
         "goalCode": "general",
         "productCode": "start_product",
-        "points": 1
+        "points": 1,
+        "ruleId": "SCORE-GOAL-007"
       }
     ],
     "tieBreakOrder": [
@@ -493,7 +506,11 @@
       "safe_sales",
       "enterprise_readiness",
       "start_product"
-    ]
+    ],
+    "fallbackCondition": {
+      "evaluationStage": "after_scoring",
+      "operator": "no_positive_candidates"
+    }
   },
   "riskRouting": [
     {

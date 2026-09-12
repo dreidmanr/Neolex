@@ -149,7 +149,7 @@
       "profileName": "B2C с подпиской и рекуррентными списаниями",
       "releaseTarget": "release_1_pilot",
       "caseKind": "questionnaire",
-      "sha256": "7ae1b5a62ae4d00b79e47cd01685cf73f614e92b1f178c16d1e37294f6b86d5d"
+      "sha256": "0511260e497311d29da3878be910337262b92e6466637c4aef3a9252ff13b7a3"
     },
     {
       "fixtureId": "LEXR0-FIXTURE-005",
@@ -165,7 +165,7 @@
       "profileName": "Продукт с трансграничной инфраструктурой",
       "releaseTarget": "release_1_pilot",
       "caseKind": "questionnaire",
-      "sha256": "1784306aed8d67603a00cc7c094ba2afeb66a3842694b7a6eb1d0a828b9f771c"
+      "sha256": "d295e9ac3c47ee365131f6cf99041d25a015f4346cd1cecbe525ce872f498182"
     },
     {
       "fixtureId": "LEXR0-FIXTURE-007",

@@ -8,7 +8,7 @@
 
 | Файл | Единственный source fixture | Ожидаемый профиль | Эскалация | Ровно одна рекомендация | Зачёт |
 |---|---|---|---|---|---|
-| [`01-clean-b2b-saas.md`](./01-clean-b2b-saas.md) | `LEXR0-FIXTURE-001` / `01-clean-b2b-saas.json` | low, активных рисков нет | Нет | `start_product` | 6 900 RUB, 14 дней; draft |
+| [`01-clean-b2b-saas.md`](./01-clean-b2b-saas.md) | `LEXR0-FIXTURE-001` / `01-clean-b2b-saas.json` | low; по имеющимся ответам индикаторы не активированы | Нет | `start_product` | `creditEntitlement=null`; eligibility только при будущем qualifying server record |
 | [`02-b2c-subscription-critical.md`](./02-b2c-subscription-critical.md) | `LEXR0-FIXTURE-004` / `04-b2c-subscription-recurring.json` | critical, риски 017–019 | Обязательна | `expert_review` | Не применяется |
 | [`03-ai-cross-border-escalation.md`](./03-ai-cross-border-escalation.md) | `LEXR0-FIXTURE-006` / `06-cross-border-infrastructure.json` | critical, риск 010 | Обязательна | `expert_review` | Не применяется |
 
@@ -18,9 +18,11 @@
 
 **Нормативное требование.** До начала production-разработки юридическое ядро, три эталонных отчёта и fixtures должны пройти формальное юридическое согласование. Critical/manual-review сценарий не должен выдавать фиксированный пакет как достаточное решение, а рекомендация должна оставаться единственной.[1] [2]
 
-**Проектное решение.** Markdown-файлы повторяют разделы `report_schema_v1` в человекочитаемом виде. Поля runtime identity, server timestamps, hashes и payment/access provenance описаны как требования к будущему snapshot, но не подделываются в архитектурном документе.
+**Проектное решение.** Markdown-файлы являются человекочитаемыми narrative projections, а не полными JSON Report DTO или schema-valid snapshots. Поля runtime identity, server timestamps, hashes и payment/access provenance описаны как требования к будущему snapshot, но не подделываются в архитектурном документе.
 
-**Проектное решение.** Для clean fixture установлен устойчивый `FALLBACK-REC-001`: он обеспечивает непустую трассировку `activatedRules` и `recommendation.selectionRuleIds`, не создавая фиктивного риска, ветки, эскалации или stop-factor.
+**Проектное решение.** Clean fixture выбирает `start_product` обычным scoring `5+1+1=7` с trace IDs `SCORE-SEGMENT-001`, `SCORE-SEGMENT-006`, `SCORE-GOAL-007`. `FALLBACK-REC-001` разрешён только после scoring при отсутствии кандидата с положительным баллом и в clean fixture не применяется.
+
+**Статус review.** Первый экспертный ИИ-review завершён; выявленные blocker/major-дефекты устранены в draft-конфигурациях и narrative reports. Второй независимый ИИ-review дал `pass_with_notes` по всем трём отчётам без blocker/major. После него закрыты два minor report 006 и B2C metadata wording; post-review closure — `PASS`. Формальное решение человека-юриста остаётся обязательным.[6] [7]
 
 ## Checklist юридического approval
 
@@ -55,8 +57,8 @@
 - [ ] Проверены официальные источники, article references и дата актуальности.
 - [ ] Утверждены клиентские display wording и ограничения применимости.
 - [ ] В clean report подтверждена корректность пустого списка legal basis.
-- [ ] В B2C report утверждены `LB-RU-ZPP-10`, `LB-RU-ZPP-13-6`, `LB-RU-GK-309`, `LB-RU-GK-437`, `LB-RU-ADS-38FZ`.
-- [ ] В cross-border report утверждены `LB-RU-PD-152FZ-18-5`, `LB-RU-PD-152FZ-12`, `LB-RU-ADMIN-13-11`.
+- [ ] В B2C report утверждены `LB-RU-ZPP-10`, `LB-RU-ZPP-13-6`, `LB-RU-GK-309`, `LB-RU-GK-437`, `LB-RU-ADS-38FZ`, `LB-RU-ZPP-16-1-4-2`, `LB-RU-ZPP-32`.
+- [ ] В cross-border report утверждены `LB-RU-PD-152FZ-18-5`, `LB-RU-PD-152FZ-12`, `LB-RU-PD-152FZ-3-11`, `LB-RU-ADMIN-13-11`.
 
 ### E. Бизнес-последствия и roadmap
 
@@ -70,7 +72,8 @@
 
 - [ ] Для B2C утверждены причина и маршруты `LEGAL-DISPUTE-REVIEW` / `LEGAL-EXPERT-REVIEW`.
 - [ ] Для cross-border утверждены причина и маршруты `LEGAL-CROSS-BORDER-REVIEW` / `LEGAL-EXPERT-REVIEW`.
-- [ ] Утверждён порядок выбора одного `queueCode`, если сработали несколько escalation rules.
+- [ ] Подтверждён полный `requiredQueueCodes`; до фактического queue event используются `status=required_not_routed`, `queueCode=null`, `queueEvent=null`.
+- [ ] Подтверждено, что один фактический `queueCode` и статус `queued` появляются только после проверяемого queue event.
 - [ ] Назначены владелец очереди, резервный исполнитель, рабочий календарь и SLA.
 - [ ] В каждом отчёте присутствует ровно один объект recommendation.
 - [ ] Critical/manual-review отчёты рекомендуют только `expert_review` и не предлагают пакет вторым CTA.
@@ -79,7 +82,7 @@
 ### G. Зачёт 6 900 RUB / 14 дней
 
 - [ ] Юридически и коммерчески утверждены клиентская формулировка, eligible product codes и момент выдачи отчёта.
-- [ ] Для clean report подтверждено право 6 900 RUB на 14 календарных дней для `start_product`.
+- [ ] Для clean report подтверждено, что без qualifying server payment/report provenance `creditEntitlement=null`; отдельно утверждена eligibility `start_product` для будущего server record.
 - [ ] Подтверждена timezone `Europe/Moscow` и правило окончания четырнадцатого дня.
 - [ ] Подтверждено, что автоматическое погашение выключено до Release 3.
 - [ ] Для `expert_review` подтверждено `creditEntitlement=null`.
@@ -94,7 +97,7 @@
 
 ### I. Schema, immutable snapshot и parity
 
-- [ ] Юрист и технический custodian подтвердили применение `FALLBACK-REC-001` для clean-case и отсутствие фиктивных риск-срабатываний.
+- [ ] Юрист и технический custodian подтвердили clean scoring trace `SCORE-SEGMENT-001`, `SCORE-SEGMENT-006`, `SCORE-GOAL-007` и неприменение `FALLBACK-REC-001` при положительном score.
 - [ ] Утверждён метод RFC 8785 canonicalization и checksum scope.
 - [ ] JSON snapshot проходит `report_schema_v1` с `additionalProperties=false`.
 - [ ] Повторная генерация создаёт новую immutable version и `supersedesReportId`, а не перезаписывает отчёт.
@@ -116,10 +119,14 @@
 
 Пока checklist не завершён и решение не зафиксировано, все три отчёта остаются **DRAFT**.
 
-## Ссылки
+Для документирования решения подготовлен [шаблон human approval record](../legal-review/human-approval-record-template.md) с точными SHA-256 проверенного набора. Его должен заполнить уполномоченный человек-юрист; сам шаблон и ИИ-review не меняют статусы артефактов.
+
+## References
 
 [1]: ../../../shared/report/report_schema_v1.json "Draft JSON Schema отчёта Lexy Release 0"
 [2]: ../../../fixtures/legal-core/manifest.json "Manifest fixtures юридического ядра Release 0"
 [3]: ../../../shared/legal-core/rules_v1.json "Draft rules_v1"
 [4]: ../../../shared/legal-core/recommendation_mapping_v1.json "Draft recommendation_mapping_v1"
 [5]: ../../../shared/billing/credit_policy_v1.json "Draft credit_policy_v1"
+[6]: ../legal-review/round-1-summary.md "Сводка первого раунда юридической проверки draft golden reports Lexy"
+[7]: ../legal-review/round-2/summary.md "Сводка второго независимого review и post-review closure"

@@ -311,7 +311,9 @@
         "prohibitedPredicateCapabilities",
         "unknownReferencePolicy",
         "missingAnswerPolicy",
-        "tracePolicy"
+        "tracePolicy",
+        "evidenceDerivation",
+        "escalationQueueAggregation"
       ],
       "properties": {
         "deterministic": {
@@ -350,6 +352,12 @@
         "tracePolicy": {
           "type": "string",
           "minLength": 1
+        },
+        "evidenceDerivation": {
+          "$ref": "#/$defs/evidenceDerivation"
+        },
+        "escalationQueueAggregation": {
+          "$ref": "#/$defs/escalationQueueAggregation"
         }
       }
     },
@@ -1394,6 +1402,166 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/categoryId"
+          }
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidenceDerivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manualReviewRequired"
+      ],
+      "properties": {
+        "manualReviewRequired": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "derivationRuleId",
+            "when",
+            "inputEvidenceStatus",
+            "outputRiskBlockEvidenceStatus",
+            "preserveEvidenceAndProvenanceFields",
+            "automaticDocumentConfirmationAllowed",
+            "statement"
+          ],
+          "properties": {
+            "derivationRuleId": {
+              "type": "string",
+              "pattern": "^DERIVATION-EVIDENCE-[0-9]{3}$"
+            },
+            "when": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "activeRiskCatalogItemField",
+                "operator",
+                "value"
+              ],
+              "properties": {
+                "activeRiskCatalogItemField": {
+                  "const": "manualReviewRequired"
+                },
+                "operator": {
+                  "const": "equals"
+                },
+                "value": {
+                  "const": true
+                }
+              }
+            },
+            "inputEvidenceStatus": {
+              "const": "questionnaire_based"
+            },
+            "outputRiskBlockEvidenceStatus": {
+              "const": "manual_review_required"
+            },
+            "preserveEvidenceAndProvenanceFields": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "const": "questionnaireAnswerRefs"
+                },
+                {
+                  "const": "documentEvidence"
+                },
+                {
+                  "const": "sourceQuestionIds"
+                },
+                {
+                  "const": "traceAtoms"
+                }
+              ],
+              "items": false,
+              "minItems": 4,
+              "maxItems": 4,
+              "uniqueItems": true
+            },
+            "automaticDocumentConfirmationAllowed": {
+              "const": false
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "escalationQueueAggregation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "candidateSource",
+        "outputField",
+        "beforeQueueEvent",
+        "queueEventRequirement",
+        "statement"
+      ],
+      "properties": {
+        "method": {
+          "const": "deduplicate_sort_lexicographic"
+        },
+        "candidateSource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputField": {
+          "const": "requiredQueueCodes"
+        },
+        "beforeQueueEvent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "queueCode",
+            "status"
+          ],
+          "properties": {
+            "queueCode": {
+              "type": "null"
+            },
+            "status": {
+              "const": "required_not_routed"
+            }
+          }
+        },
+        "queueEventRequirement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "queueCodeRepresents",
+            "statusesRequiringQueueEvent"
+          ],
+          "properties": {
+            "queueCodeRepresents": {
+              "const": "single_actual_queue"
+            },
+            "statusesRequiringQueueEvent": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "const": "queued"
+                },
+                {
+                  "const": "assigned"
+                },
+                {
+                  "const": "in_progress"
+                },
+                {
+                  "const": "resolved"
+                }
+              ],
+              "items": false,
+              "minItems": 4,
+              "maxItems": 4,
+              "uniqueItems": true
+            }
           }
         },
         "statement": {

@@ -383,11 +383,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "ruleId",
         "segmentCode",
         "productCode",
         "points"
       ],
       "properties": {
+        "ruleId": {
+          "$ref": "#/$defs/scoreRuleId"
+        },
         "segmentCode": {
           "enum": [
             "early_saas_b2b",
@@ -412,11 +416,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "ruleId",
         "goalCode",
         "productCode",
         "points"
       ],
       "properties": {
+        "ruleId": {
+          "$ref": "#/$defs/scoreRuleId"
+        },
         "goalCode": {
           "enum": [
             "launch",
@@ -479,6 +487,10 @@
           "$ref": "#/$defs/status"
         }
       }
+    },
+    "scoreRuleId": {
+      "type": "string",
+      "pattern": "^SCORE-(SEGMENT|GOAL)-[0-9]{3}$"
     }
   },
   "properties": {
@@ -734,6 +746,7 @@
         "failSafeProductCode",
         "fallbackProductCode",
         "fallbackRuleId",
+        "fallbackCondition",
         "executionOrder",
         "stopFactors",
         "severityWeights",
@@ -797,10 +810,18 @@
             "low"
           ],
           "properties": {
-            "critical": { "const": 100 },
-            "high": { "const": 40 },
-            "medium": { "const": 20 },
-            "low": { "const": 10 }
+            "critical": {
+              "const": 100
+            },
+            "high": {
+              "const": 40
+            },
+            "medium": {
+              "const": 20
+            },
+            "low": {
+              "const": 10
+            }
           }
         },
         "segmentBoosts": {
@@ -824,15 +845,42 @@
         "tieBreakOrder": {
           "type": "array",
           "prefixItems": [
-            { "const": "data_and_infrastructure" },
-            { "const": "rights_and_ip" },
-            { "const": "safe_sales" },
-            { "const": "enterprise_readiness" },
-            { "const": "start_product" }
+            {
+              "const": "data_and_infrastructure"
+            },
+            {
+              "const": "rights_and_ip"
+            },
+            {
+              "const": "safe_sales"
+            },
+            {
+              "const": "enterprise_readiness"
+            },
+            {
+              "const": "start_product"
+            }
           ],
           "items": false,
           "minItems": 5,
           "maxItems": 5
+        },
+        "fallbackCondition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evaluationStage",
+            "operator"
+          ],
+          "properties": {
+            "evaluationStage": {
+              "const": "after_scoring"
+            },
+            "operator": {
+              "const": "no_positive_candidates"
+            }
+          },
+          "description": "FALLBACK-REC-001 is eligible only after score aggregation finds no positive candidate."
         }
       }
     },
@@ -859,12 +907,24 @@
         "releaseRestriction"
       ],
       "properties": {
-        "policyId": { "const": "base-diagnostic-credit-6900-rub-v1" },
-        "sourceTariffId": { "const": "lexy-advanced-diagnostic" },
-        "currency": { "const": "RUB" },
-        "creditAmountRub": { "const": 6900 },
-        "eligibilityKey": { "const": "productCode" },
-        "textMatchingForbidden": { "const": true },
+        "policyId": {
+          "const": "base-diagnostic-credit-6900-rub-v1"
+        },
+        "sourceTariffId": {
+          "const": "lexy-advanced-diagnostic"
+        },
+        "currency": {
+          "const": "RUB"
+        },
+        "creditAmountRub": {
+          "const": 6900
+        },
+        "eligibilityKey": {
+          "const": "productCode"
+        },
+        "textMatchingForbidden": {
+          "const": true
+        },
         "entries": {
           "type": "array",
           "minItems": 6,
@@ -877,10 +937,17 @@
             {
               "contains": {
                 "properties": {
-                  "productCode": { "const": "start_product" },
-                  "eligible": { "const": true }
+                  "productCode": {
+                    "const": "start_product"
+                  },
+                  "eligible": {
+                    "const": true
+                  }
                 },
-                "required": ["productCode", "eligible"]
+                "required": [
+                  "productCode",
+                  "eligible"
+                ]
               },
               "minContains": 1,
               "maxContains": 1
@@ -888,10 +955,17 @@
             {
               "contains": {
                 "properties": {
-                  "productCode": { "const": "safe_sales" },
-                  "eligible": { "const": true }
+                  "productCode": {
+                    "const": "safe_sales"
+                  },
+                  "eligible": {
+                    "const": true
+                  }
                 },
-                "required": ["productCode", "eligible"]
+                "required": [
+                  "productCode",
+                  "eligible"
+                ]
               },
               "minContains": 1,
               "maxContains": 1
@@ -899,10 +973,17 @@
             {
               "contains": {
                 "properties": {
-                  "productCode": { "const": "rights_and_ip" },
-                  "eligible": { "const": true }
+                  "productCode": {
+                    "const": "rights_and_ip"
+                  },
+                  "eligible": {
+                    "const": true
+                  }
                 },
-                "required": ["productCode", "eligible"]
+                "required": [
+                  "productCode",
+                  "eligible"
+                ]
               },
               "minContains": 1,
               "maxContains": 1
@@ -910,10 +991,17 @@
             {
               "contains": {
                 "properties": {
-                  "productCode": { "const": "data_and_infrastructure" },
-                  "eligible": { "const": true }
+                  "productCode": {
+                    "const": "data_and_infrastructure"
+                  },
+                  "eligible": {
+                    "const": true
+                  }
                 },
-                "required": ["productCode", "eligible"]
+                "required": [
+                  "productCode",
+                  "eligible"
+                ]
               },
               "minContains": 1,
               "maxContains": 1
@@ -921,10 +1009,17 @@
             {
               "contains": {
                 "properties": {
-                  "productCode": { "const": "enterprise_readiness" },
-                  "eligible": { "const": true }
+                  "productCode": {
+                    "const": "enterprise_readiness"
+                  },
+                  "eligible": {
+                    "const": true
+                  }
                 },
-                "required": ["productCode", "eligible"]
+                "required": [
+                  "productCode",
+                  "eligible"
+                ]
               },
               "minContains": 1,
               "maxContains": 1
@@ -932,10 +1027,17 @@
             {
               "contains": {
                 "properties": {
-                  "productCode": { "const": "expert_review" },
-                  "eligible": { "const": false }
+                  "productCode": {
+                    "const": "expert_review"
+                  },
+                  "eligible": {
+                    "const": false
+                  }
                 },
-                "required": ["productCode", "eligible"]
+                "required": [
+                  "productCode",
+                  "eligible"
+                ]
               },
               "minContains": 1,
               "maxContains": 1
@@ -962,14 +1064,30 @@
         "languageModelAffectsDecision"
       ],
       "properties": {
-        "exactlyOneProduct": { "const": true },
-        "criticalAndManualReviewPrecedeScoring": { "const": true },
-        "investmentAndEnterpriseCannotOverrideStopFactors": { "const": true },
-        "fixedTieBreak": { "const": true },
-        "fixedFallback": { "const": true },
-        "creditUsesProductCodeOnly": { "const": true },
-        "clientDisplayTextAffectsDecision": { "const": false },
-        "languageModelAffectsDecision": { "const": false }
+        "exactlyOneProduct": {
+          "const": true
+        },
+        "criticalAndManualReviewPrecedeScoring": {
+          "const": true
+        },
+        "investmentAndEnterpriseCannotOverrideStopFactors": {
+          "const": true
+        },
+        "fixedTieBreak": {
+          "const": true
+        },
+        "fixedFallback": {
+          "const": true
+        },
+        "creditUsesProductCodeOnly": {
+          "const": true
+        },
+        "clientDisplayTextAffectsDecision": {
+          "const": false
+        },
+        "languageModelAffectsDecision": {
+          "const": false
+        }
       }
     }
   }

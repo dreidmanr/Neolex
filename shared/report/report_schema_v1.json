@@ -54,7 +54,7 @@
     },
     "ruleId": {
       "type": "string",
-      "pattern": "^(RULE-RISK|OVERRIDE-TZ-13-2|BRANCH|CONSISTENCY|FOLLOW-UP|ESCALATION|DOC-REQUEST|STOP-REC|FALLBACK-REC)-[0-9]{2,3}$"
+      "pattern": "^(RULE-RISK|OVERRIDE-TZ-13-2|BRANCH|CONSISTENCY|FOLLOW-UP|ESCALATION|DOC-REQUEST|STOP-REC|FALLBACK-REC|SCORE-(SEGMENT|GOAL)|DERIVATION-EVIDENCE)-[0-9]{2,3}$"
     },
     "documentCategoryId": {
       "type": "string",
@@ -1208,7 +1208,8 @@
             "follow_up",
             "escalation",
             "document_request",
-            "recommendation"
+            "recommendation",
+            "evidence_derivation"
           ]
         },
         "evaluationStage": {
@@ -1803,7 +1804,9 @@
         "required",
         "flags",
         "reasonRuleIds",
+        "requiredQueueCodes",
         "queueCode",
+        "queueEvent",
         "status",
         "responsibleRole",
         "slaDueAt",
@@ -1835,7 +1838,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "pattern": "^(RULE-RISK|OVERRIDE-TZ-13-2|BRANCH|CONSISTENCY|FOLLOW-UP|ESCALATION|DOC-REQUEST|STOP-REC)-[0-9]{2,3}$"
+            "pattern": "^(RULE-RISK|OVERRIDE-TZ-13-2|BRANCH|CONSISTENCY|FOLLOW-UP|ESCALATION|DOC-REQUEST|STOP-REC|FALLBACK-REC|SCORE-(SEGMENT|GOAL)|DERIVATION-EVIDENCE)-[0-9]{2,3}$"
           }
         },
         "queueCode": {
@@ -1848,11 +1851,13 @@
               "minLength": 1,
               "pattern": "^LEGAL-[A-Z0-9-]+$"
             }
-          ]
+          ],
+          "description": "Фактическая одиночная очередь из зафиксированного queue event; до маршрутизации имеет значение null."
         },
         "status": {
           "enum": [
             "not_required",
+            "required_not_routed",
             "queued",
             "assigned",
             "in_progress",
@@ -1917,6 +1922,28 @@
             "full",
             "preliminary_summary_only"
           ]
+        },
+        "requiredQueueCodes": {
+          "type": "array",
+          "minItems": 0,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^LEGAL-[A-Z0-9-]+$"
+          },
+          "description": "Все требуемые коды очередей из сработавших escalation rules; уникальны и отсортированы лексикографически правилами агрегации."
+        },
+        "queueEvent": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/queueEvent"
+            }
+          ],
+          "description": "Фактическое событие постановки в очередь. Не создаётся из ожидаемого маршрута."
         }
       },
       "allOf": [
@@ -1934,11 +1961,19 @@
           "then": {
             "properties": {
               "queueCode": {
-                "type": "string",
-                "pattern": "^LEGAL-[A-Z0-9-]+$"
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^LEGAL-[A-Z0-9-]+$"
+                  }
+                ]
               },
               "status": {
                 "enum": [
+                  "required_not_routed",
                   "queued",
                   "assigned",
                   "in_progress",
@@ -1953,6 +1988,16 @@
               },
               "automaticReportMode": {
                 "const": "preliminary_summary_only"
+              },
+              "requiredQueueCodes": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^LEGAL-[A-Z0-9-]+$"
+                }
               }
             }
           },
@@ -1972,6 +2017,64 @@
               },
               "automaticReportMode": {
                 "const": "full"
+              },
+              "requiredQueueCodes": {
+                "type": "array",
+                "maxItems": 0
+              },
+              "queueEvent": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "required_not_routed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "queueCode": {
+                "type": "null"
+              },
+              "queueEvent": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "queued",
+                  "assigned",
+                  "in_progress",
+                  "resolved"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "queueCode": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^LEGAL-[A-Z0-9-]+$"
+              },
+              "queueEvent": {
+                "$ref": "#/$defs/queueEvent"
               }
             }
           }
@@ -2031,7 +2134,7 @@
           "items": {
             "type": "string",
             "minLength": 1,
-            "pattern": "^(RULE-RISK|OVERRIDE-TZ-13-2|BRANCH|CONSISTENCY|FOLLOW-UP|ESCALATION|DOC-REQUEST|STOP-REC|FALLBACK-REC)-[0-9]{2,3}$"
+            "pattern": "^(RULE-RISK|OVERRIDE-TZ-13-2|BRANCH|CONSISTENCY|FOLLOW-UP|ESCALATION|DOC-REQUEST|STOP-REC|FALLBACK-REC|SCORE-(SEGMENT|GOAL)|DERIVATION-EVIDENCE)-[0-9]{2,3}$"
           }
         },
         "rationale": {
@@ -2854,6 +2957,24 @@
           }
         }
       }
+    },
+    "queueEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "queueEventId",
+        "occurredAt"
+      ],
+      "properties": {
+        "queueEventId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
     }
   },
   "properties": {
@@ -3070,21 +3191,21 @@
       "relativePath": "legal-core/risk_catalog_v1.json",
       "version": "1.0.0-draft.1",
       "status": "draft_pending_legal_approval",
-      "checksumSha256": "c2e065b2ef996ee33c1f88ccf017805524d6c38ea606bc8096b0b9081e0b4652"
+      "checksumSha256": "aa69fe27067f8fc52d3623554567af81f6ad241f590579e1bfd8e6bbbd7c2061"
     },
     {
       "artifactId": "rules_v1",
       "relativePath": "legal-core/rules_v1.json",
       "version": "1.0.0-draft.1",
       "status": "draft_pending_legal_approval",
-      "checksumSha256": "501e9b4bc62ab8a5a3cce1d53cf881d3c4a296bf6813b3fef38e537746a9f22c"
+      "checksumSha256": "91a9a1ee2c6db4fe61095562c62922c21783c3d999b69bc27a1e1924a06b3aff"
     },
     {
       "artifactId": "legal_basis_catalog_v1",
       "relativePath": "legal-core/legal_basis_catalog_v1.json",
       "version": "1.0.0-draft.1",
       "status": "draft_pending_legal_approval",
-      "checksumSha256": "8b4ddcab76028c8a2bfdb2beb33f26b04d12287ebad88c2ea1b2896da8f9510a"
+      "checksumSha256": "a23a152afad501aeebd2d5abfc2c1d7e0d34eecad381e4c08e1483b8694cb4e9"
     },
     {
       "artifactId": "approved_phrases_v1",
@@ -3098,7 +3219,7 @@
       "relativePath": "legal-core/recommendation_mapping_v1.json",
       "version": "1.0.0-draft.1",
       "status": "draft_pending_legal_approval",
-      "checksumSha256": "afe46438f1667bfe696bfd51330f8b4faddda56254c727573bc69dea8ee0d719"
+      "checksumSha256": "788bd346810412b243f1f8bf8e849bc015f710166a623bd1ee5ecfd2718d2780"
     },
     {
       "artifactId": "tariffs_v1",

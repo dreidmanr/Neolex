@@ -740,7 +740,8 @@
       "allowedLegalBasisIds": [
         "LB-RU-PD-152FZ-18-5",
         "LB-RU-PD-152FZ-12",
-        "LB-RU-ADMIN-13-11"
+        "LB-RU-ADMIN-13-11",
+        "LB-RU-PD-152FZ-3-11"
       ],
       "approvedLanguageIds": [
         "PH-RISK-010-V1"
@@ -1107,7 +1108,9 @@
       "allowedLegalBasisIds": [
         "LB-RU-ZPP-10",
         "LB-RU-ZPP-13-6",
-        "LB-RU-GK-309"
+        "LB-RU-GK-309",
+        "LB-RU-ZPP-16-1-4-2",
+        "LB-RU-ZPP-32"
       ],
       "approvedLanguageIds": [
         "PH-RISK-017-V1"
@@ -1160,7 +1163,9 @@
       "allowedLegalBasisIds": [
         "LB-RU-ZPP-10",
         "LB-RU-ZPP-13-6",
-        "LB-RU-GK-437"
+        "LB-RU-GK-437",
+        "LB-RU-ZPP-16-1-4-2",
+        "LB-RU-ZPP-32"
       ],
       "approvedLanguageIds": [
         "PH-RISK-018-V1"
@@ -1536,5 +1541,9 @@
         "expert_review"
       ]
     }
-  ]
+  ],
+  "reviewStatus": {
+    "reviewedByLawyer": false,
+    "statement": "Каталог и связи рисков с правовыми основаниями не проверены и не утверждены юристом."
+  }
 }
