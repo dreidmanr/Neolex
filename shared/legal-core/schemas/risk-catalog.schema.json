@@ -1,0 +1,477 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neolex.local/schemas/legal-core/risk-catalog.schema.json",
+  "title": "Схема каталога рисков Lexy Release 0",
+  "description": "JSON Schema для draft-каталога рисков. Схема не подтверждает юридическую корректность содержания и не заменяет юридическое согласование.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "catalogId",
+    "catalogMeta",
+    "reviewStatus",
+    "governance",
+    "coverage",
+    "riskDefinitions"
+  ],
+  "$defs": {
+    "objectMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "version",
+        "effectiveFrom",
+        "effectiveTo",
+        "status",
+        "updatedBy",
+        "updatedAt",
+        "sourceCommit",
+        "legalReviewNotice"
+      ],
+      "properties": {
+        "releaseId": {
+          "const": "lexy-r0-2026-09-12"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "effectiveFrom": {
+          "type": "null"
+        },
+        "effectiveTo": {
+          "type": "null"
+        },
+        "status": {
+          "const": "draft_pending_legal_approval"
+        },
+        "updatedBy": {
+          "const": "Manus AI"
+        },
+        "updatedAt": {
+          "const": "2026-09-12T18:40:24Z"
+        },
+        "sourceCommit": {
+          "const": "78e2f89e99340a403ce389eada223da6bf336676"
+        },
+        "legalReviewNotice": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "idArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^LEXR0-RISK-[0-9]{3}$"
+      }
+    },
+    "statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "requirement"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^NORM-[A-Z0-9-]+$"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requirement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "decision"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^DESIGN-R0-[0-9]{3}$"
+        },
+        "decision": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "openQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "question"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^OQ-R0-[0-9]{3}$"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "riskDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "objectMeta",
+        "domain",
+        "title",
+        "defaultSeverity",
+        "criticalOverride",
+        "evidenceRequirements",
+        "allowedLegalBasisIds",
+        "approvedLanguageIds",
+        "businessImpacts",
+        "requiredActions",
+        "roadmapPeriod",
+        "manualReviewRequired",
+        "allowedRecommendationProductCodes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^LEXR0-RISK-[0-9]{3}$"
+        },
+        "objectMeta": {
+          "$ref": "#/$defs/objectMeta"
+        },
+        "domain": {
+          "enum": [
+            "ip",
+            "personal_data",
+            "contracts",
+            "payments",
+            "consumer",
+            "marketing",
+            "partners",
+            "regulation",
+            "corporate"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "defaultSeverity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "criticalOverride": {
+          "type": "boolean"
+        },
+        "evidenceRequirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "questionnaireEvidence",
+            "documentEvidence",
+            "automaticDocumentConfirmationAllowed",
+            "defaultEvidenceStatus",
+            "evidencePolicyNote"
+          ],
+          "properties": {
+            "questionnaireEvidence": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^b(1[0-4]|[1-9])_q[1-9][0-9]*$"
+              }
+            },
+            "documentEvidence": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "automaticDocumentConfirmationAllowed": {
+              "const": false
+            },
+            "defaultEvidenceStatus": {
+              "const": "questionnaire_based"
+            },
+            "evidencePolicyNote": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "allowedLegalBasisIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^LB-RU-[A-Z0-9-]+$"
+          }
+        },
+        "approvedLanguageIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^PH-RISK-[0-9]{3}-V1$"
+          }
+        },
+        "businessImpacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requiredActions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "roadmapPeriod": {
+          "enum": [
+            "immediate",
+            "30",
+            "60",
+            "90"
+          ]
+        },
+        "manualReviewRequired": {
+          "type": "boolean"
+        },
+        "allowedRecommendationProductCodes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "start_product",
+              "safe_sales",
+              "rights_and_ip",
+              "data_and_infrastructure",
+              "enterprise_readiness",
+              "expert_review"
+            ]
+          }
+        }
+      }
+    },
+    "reviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewedByLawyer",
+        "statement"
+      ],
+      "properties": {
+        "reviewedByLawyer": {
+          "const": false
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "properties": {
+    "$schema": {
+      "const": "./schemas/risk-catalog.schema.json"
+    },
+    "catalogId": {
+      "const": "risk_catalog_v1"
+    },
+    "catalogMeta": {
+      "$ref": "#/$defs/objectMeta"
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normativeRequirements",
+        "projectDecisions",
+        "openQuestions"
+      ],
+      "properties": {
+        "normativeRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        },
+        "projectDecisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/decision"
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/openQuestion"
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domainCoverage",
+        "criticalTriggerCoverage",
+        "currentQuestionnaireBranchCoverage",
+        "note"
+      ],
+      "properties": {
+        "domainCoverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ip",
+            "personal_data",
+            "contracts",
+            "payments",
+            "consumer",
+            "marketing",
+            "partners",
+            "regulation",
+            "corporate"
+          ],
+          "properties": {
+            "ip": {
+              "$ref": "#/$defs/idArray"
+            },
+            "personal_data": {
+              "$ref": "#/$defs/idArray"
+            },
+            "contracts": {
+              "$ref": "#/$defs/idArray"
+            },
+            "payments": {
+              "$ref": "#/$defs/idArray"
+            },
+            "consumer": {
+              "$ref": "#/$defs/idArray"
+            },
+            "marketing": {
+              "$ref": "#/$defs/idArray"
+            },
+            "partners": {
+              "$ref": "#/$defs/idArray"
+            },
+            "regulation": {
+              "$ref": "#/$defs/idArray"
+            },
+            "corporate": {
+              "$ref": "#/$defs/idArray"
+            }
+          }
+        },
+        "criticalTriggerCoverage": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "requirement",
+              "riskIds"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^CT-TZ-13-2-[0-9]{2}$"
+              },
+              "requirement": {
+                "type": "string",
+                "minLength": 1
+              },
+              "riskIds": {
+                "$ref": "#/$defs/idArray"
+              }
+            }
+          }
+        },
+        "currentQuestionnaireBranchCoverage": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "branchId",
+              "riskIds"
+            ],
+            "properties": {
+              "branchId": {
+                "enum": [
+                  "block_consumer",
+                  "block_investment",
+                  "block_partners",
+                  "block_contractors"
+                ]
+              },
+              "riskIds": {
+                "$ref": "#/$defs/idArray"
+              }
+            }
+          }
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "riskDefinitions": {
+      "type": "array",
+      "minItems": 25,
+      "maxItems": 25,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/riskDefinition"
+      }
+    },
+    "reviewStatus": {
+      "$ref": "#/$defs/reviewStatus"
+    }
+  }
+}

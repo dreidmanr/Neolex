@@ -1,0 +1,693 @@
+{
+  "$schema": "./schemas/recommendation-mapping.schema.json",
+  "mappingId": "recommendation_mapping_v1",
+  "mappingMeta": {
+    "releaseId": "lexy-r0-2026-09-12",
+    "version": "1.0.0-draft.1",
+    "effectiveFrom": null,
+    "effectiveTo": null,
+    "status": "draft_pending_legal_approval",
+    "updatedBy": "Manus AI",
+    "updatedAt": "2026-09-12T18:40:24Z",
+    "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+    "legalReviewNotice": "Юридическая проверка и утверждение не выполнены; конфигурация не должна считаться юридически согласованной."
+  },
+  "governance": {
+    "normativeRequirements": [
+      {
+        "id": "NORM-TZ-3-7",
+        "source": "ТЗ v3 §3, цель 7",
+        "requirement": "По результатам диагностики пользователь направляется ровно к одному наиболее релевантному следующему продукту Neolex."
+      },
+      {
+        "id": "NORM-TZ-5-5",
+        "source": "ТЗ v3 §5.5",
+        "requirement": "Выбор следующего продукта выполняется детерминированно конфигурацией recommendation_mapping_v1 и не определяется языковой моделью."
+      },
+      {
+        "id": "NORM-TZ-13-3",
+        "source": "ТЗ v3 §13.3",
+        "requirement": "При критическом риске или обязательной экспертной квалификации автоматизированный фиксированный пакет не должен предлагаться как достаточное решение; требуется экспертная эскалация."
+      },
+      {
+        "id": "NORM-TZ-21",
+        "source": "ТЗ v3 §21",
+        "requirement": "Профиль риска, сегмент и стоп-факторы должны приводить к ровно одному следующему продукту из версионируемой конфигурации."
+      },
+      {
+        "id": "NORM-TZ-28",
+        "source": "ТЗ v3 §§5.4 и 28",
+        "requirement": "Право на зачёт 6 900 RUB относится к рекомендованному пакету документов; применимость должна определяться устойчивым идентификатором продукта, а не отображаемым текстом."
+      }
+    ],
+    "projectDecisions": [
+      {
+        "id": "DESIGN-R0-REC-001",
+        "decision": "Фиксированный каталог содержит шесть кодов следующего продукта и совпадает с объединением allowedRecommendationProductCodes каталога risk_catalog_v1."
+      },
+      {
+        "id": "DESIGN-R0-REC-002",
+        "decision": "Стоп-факторы проверяются до начисления баллов за сегмент и цель; поэтому критический риск, critical override, обязательная ручная проверка или экспертная эскалация всегда приводят к expert_review и не могут быть обойдены инвестиционной либо Enterprise-целью."
+      },
+      {
+        "id": "DESIGN-R0-REC-003",
+        "decision": "Для обычного сценария риск имеет один основной маршрут, баллы риска имеют больший базовый вес, чем бонусы сегмента и цели, а равенство разрешается фиксированным порядком tieBreakOrder."
+      },
+      {
+        "id": "DESIGN-R0-REC-004",
+        "decision": "При отсутствии положительного балла выбирается start_product; при ошибке входа, отсутствующей ссылке или невозможности безопасно рассчитать кандидата применяется fail-safe маршрут expert_review."
+      },
+      {
+        "id": "DESIGN-R0-REC-005",
+        "decision": "Черновая применимость зачёта задаётся таблицей creditEligibility.entries по productCode. Отображаемое название продукта не участвует в проверке права."
+      }
+    ],
+    "openQuestions": [
+      {
+        "id": "OQ-R0-REC-001",
+        "question": "Требуется юридическое и продуктовое утверждение названий, состава и коммерческих условий пяти пакетных продуктов; наличие кода в этом draft не означает доступность продукта для покупки."
+      },
+      {
+        "id": "OQ-R0-REC-002",
+        "question": "Требуется юридическое и коммерческое утверждение перечня productCode, для которых допускается зачёт 6 900 RUB, а также правил сочетания зачёта с иными скидками и коммерческими предложениями."
+      },
+      {
+        "id": "OQ-R0-REC-003",
+        "question": "Требуется утвердить веса сегментов и целей, порядок tie-break и нормализацию профиля на fixture-наборе до использования конфигурации в клиентском результате."
+      },
+      {
+        "id": "OQ-R0-REC-004",
+        "question": "Требуется утвердить операционный SLA, очередь и ответственного для expert_review; данный файл задаёт только код следующего продукта, но не запускает операционный процесс."
+      }
+    ]
+  },
+  "sourceCatalogs": {
+    "riskCatalog": {
+      "catalogId": "risk_catalog_v1",
+      "path": "./risk_catalog_v1.json",
+      "version": "1.0.0-draft.1",
+      "status": "draft_pending_legal_approval"
+    },
+    "tariffCatalog": {
+      "catalogId": "tariffs_v1",
+      "path": "../billing/tariffs_v1.json",
+      "version": "1.0.0-draft.1",
+      "status": "draft_pending_legal_approval"
+    },
+    "creditPolicy": {
+      "policyId": "base-diagnostic-credit-6900-rub-v1",
+      "path": "../billing/credit_policy_v1.json",
+      "version": "1.0.0-draft.1",
+      "status": "draft_pending_legal_approval"
+    }
+  },
+  "inputContract": {
+    "canonicalSource": "Только серверный детерминированный результат rules_v1 и нормализованный профиль анкеты; клиентский текст и вывод языковой модели не являются входом выбора.",
+    "requiredInputFields": [
+      {
+        "field": "integrityStatus",
+        "type": "enum: valid | invalid",
+        "meaning": "Результат проверки схемы и межфайловых ссылок активной версии юридического ядра."
+      },
+      {
+        "field": "activeRiskIds",
+        "type": "array<riskId>",
+        "meaning": "Уникальные идентификаторы активированных рисков из risk_catalog_v1."
+      },
+      {
+        "field": "effectiveSeveritiesByRiskId",
+        "type": "map<riskId, critical | high | medium | low>",
+        "meaning": "Итоговый уровень каждого активного риска после применения rules_v1."
+      },
+      {
+        "field": "appliedCriticalOverrideRiskIds",
+        "type": "array<riskId>",
+        "meaning": "Риски, для которых rules_v1 применил критический override."
+      },
+      {
+        "field": "manualReviewRequiredRiskIds",
+        "type": "array<riskId>",
+        "meaning": "Активные риски, требующие ручной проверки по каталогу или результату rules_v1."
+      },
+      {
+        "field": "escalationRequired",
+        "type": "boolean",
+        "meaning": "Итоговый серверный флаг обязательной экспертной эскалации."
+      },
+      {
+        "field": "normalizedSegmentCodes",
+        "type": "array<segmentCode>",
+        "meaning": "Нормализованные сервером сегменты бизнеса без использования отображаемых подписей."
+      },
+      {
+        "field": "normalizedGoalCodes",
+        "type": "array<goalCode>",
+        "meaning": "Нормализованные сервером цели пользователя без использования отображаемых подписей."
+      }
+    ],
+    "normalizedSegmentCatalog": [
+      {
+        "segmentCode": "early_saas_b2b",
+        "sourceOptionRefs": [
+          "b1_q2:saas",
+          "b1_q2:b2b_software",
+          "b1_q5:idea",
+          "b1_q5:mvp"
+        ]
+      },
+      {
+        "segmentCode": "b2c_sales",
+        "sourceOptionRefs": [
+          "b1_q3:b2c",
+          "b1_q3:mixed",
+          "b8_q1:yes",
+          "b8_q1:mixed"
+        ]
+      },
+      {
+        "segmentCode": "ip_development",
+        "sourceOptionRefs": [
+          "b1_q2:ai_product",
+          "b4_q1:contractors",
+          "b4_q1:outsource",
+          "b4_q1:mixed"
+        ]
+      },
+      {
+        "segmentCode": "data_intensive",
+        "sourceOptionRefs": [
+          "b5_q1:payment",
+          "b5_q1:geo",
+          "b5_q1:health",
+          "b5_q1:biometric",
+          "b5_q1:children"
+        ]
+      },
+      {
+        "segmentCode": "investment_enterprise",
+        "sourceOptionRefs": [
+          "b1_q3:b2b_enterprise",
+          "b1_q5:pre_investment",
+          "b1_q5:pre_sale",
+          "b1_q6:goal_investment",
+          "b1_q6:goal_sale",
+          "b1_q6:goal_enterprise"
+        ]
+      },
+      {
+        "segmentCode": "general",
+        "sourceOptionRefs": [
+          "b1_q6:goal_general",
+          "b1_q6:goal_other"
+        ]
+      }
+    ],
+    "normalizedGoalCatalog": [
+      {
+        "goalCode": "launch",
+        "sourceOptionRefs": [
+          "b1_q5:idea",
+          "b1_q5:mvp"
+        ]
+      },
+      {
+        "goalCode": "ip",
+        "sourceOptionRefs": [
+          "b1_q6:goal_ip"
+        ]
+      },
+      {
+        "goalCode": "safe_sales",
+        "sourceOptionRefs": [
+          "b1_q6:goal_docs",
+          "b14_q1:doc_package"
+        ]
+      },
+      {
+        "goalCode": "data",
+        "sourceOptionRefs": [
+          "b1_q6:goal_pd"
+        ]
+      },
+      {
+        "goalCode": "partnership",
+        "sourceOptionRefs": [
+          "b1_q6:goal_partner"
+        ]
+      },
+      {
+        "goalCode": "investment_enterprise",
+        "sourceOptionRefs": [
+          "b1_q6:goal_investment",
+          "b1_q6:goal_sale",
+          "b1_q6:goal_enterprise",
+          "b14_q1:investment_prep"
+        ]
+      },
+      {
+        "goalCode": "expert_review",
+        "sourceOptionRefs": [
+          "b14_q1:critical_consult"
+        ]
+      },
+      {
+        "goalCode": "general",
+        "sourceOptionRefs": [
+          "b1_q6:goal_general",
+          "b1_q6:goal_other",
+          "b14_q1:full_report",
+          "b14_q1:priority_table",
+          "b14_q1:roadmap",
+          "b14_q1:doc_list"
+        ]
+      }
+    ]
+  },
+  "productCatalog": [
+    {
+      "productCode": "start_product",
+      "displayName": "Старт продукта",
+      "productKind": "пакет документов и исправлений",
+      "linkedTariffId": null,
+      "availability": "Коммерческая доступность и цена не утверждены в Release 0."
+    },
+    {
+      "productCode": "safe_sales",
+      "displayName": "Безопасные продажи",
+      "productKind": "пакет документов и исправлений",
+      "linkedTariffId": null,
+      "availability": "Коммерческая доступность и цена не утверждены в Release 0."
+    },
+    {
+      "productCode": "rights_and_ip",
+      "displayName": "Права и IP",
+      "productKind": "пакет документов и исправлений",
+      "linkedTariffId": null,
+      "availability": "Коммерческая доступность и цена не утверждены в Release 0."
+    },
+    {
+      "productCode": "data_and_infrastructure",
+      "displayName": "Данные и инфраструктура",
+      "productKind": "пакет документов и исправлений",
+      "linkedTariffId": null,
+      "availability": "Коммерческая доступность и цена не утверждены в Release 0."
+    },
+    {
+      "productCode": "enterprise_readiness",
+      "displayName": "Сделка / Enterprise readiness",
+      "productKind": "пакет документов и сопровождения",
+      "linkedTariffId": null,
+      "availability": "Коммерческая доступность и цена не утверждены в Release 0."
+    },
+    {
+      "productCode": "expert_review",
+      "displayName": "Экспертный разбор отчёта",
+      "productKind": "заявка на экспертный разбор",
+      "linkedTariffId": "lexy-expert-report-review-request",
+      "availability": "Не является самостоятельным самообслуживаемым продуктом; операционный процесс ожидает отдельного согласования."
+    }
+  ],
+  "selectionContract": {
+    "resultCardinality": 1,
+    "resultField": "productCode",
+    "languageModelParticipation": "forbidden",
+    "standardCandidateProductCodes": [
+      "start_product",
+      "safe_sales",
+      "rights_and_ip",
+      "data_and_infrastructure",
+      "enterprise_readiness"
+    ],
+    "failSafeProductCode": "expert_review",
+    "fallbackProductCode": "start_product",
+    "fallbackRuleId": "FALLBACK-REC-001",
+    "executionOrder": [
+      "Проверить JSON Schema, версии и межфайловые ссылки; при ошибке применить соответствующий стоп-фактор.",
+      "Получить уровни, critical override, manual review и escalation только из канонического серверного результата rules_v1 и risk_catalog_v1.",
+      "Последовательно проверить stopFactors по возрастанию priority; первый сработавший фактор немедленно возвращает expert_review и завершает расчёт.",
+      "Инициализировать нулевые баллы только для standardCandidateProductCodes.",
+      "Для каждого активного риска добавить severityWeights его primaryProductCode из riskRouting; expert_review не участвует в обычном скоринге.",
+      "Добавить бонусы всех уникальных normalizedSegmentCodes по segmentBoosts.",
+      "Добавить бонусы всех уникальных normalizedGoalCodes по goalBoosts; goalCode expert_review обрабатывается только стоп-фактором.",
+      "Оставить кандидатов с положительным баллом; если их нет, активировать fallbackRuleId и вернуть fallbackProductCode.",
+      "Выбрать максимальный балл; при равенстве выбрать первый productCode из tieBreakOrder.",
+      "Вернуть объект только с одним productCode и трассировкой сработавшего стоп-фактора либо всех фактически применённых ruleId начисления баллов; fallbackRuleId включается только при отсутствии кандидатов с положительным баллом."
+    ],
+    "stopFactors": [
+      {
+        "stopFactorId": "STOP-REC-001",
+        "priority": 10,
+        "condition": {
+          "field": "integrityStatus",
+          "operator": "equals",
+          "value": "invalid"
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Ошибка схемы, версии или межфайловой ссылки исключает безопасный автоматический выбор пакета."
+      },
+      {
+        "stopFactorId": "STOP-REC-002",
+        "priority": 20,
+        "condition": {
+          "field": "manualReviewRequiredRiskIds",
+          "operator": "non_empty",
+          "value": null
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Хотя бы один активный риск требует ручной юридической квалификации."
+      },
+      {
+        "stopFactorId": "STOP-REC-003",
+        "priority": 30,
+        "condition": {
+          "field": "effectiveSeveritiesByRiskId",
+          "operator": "contains_value",
+          "value": "critical"
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Критический итоговый уровень имеет приоритет над коммерческими, инвестиционными и Enterprise-целями."
+      },
+      {
+        "stopFactorId": "STOP-REC-004",
+        "priority": 40,
+        "condition": {
+          "field": "appliedCriticalOverrideRiskIds",
+          "operator": "non_empty",
+          "value": null
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Применённый critical override не может быть сглажен баллами профиля или цели."
+      },
+      {
+        "stopFactorId": "STOP-REC-005",
+        "priority": 50,
+        "condition": {
+          "field": "escalationRequired",
+          "operator": "equals",
+          "value": true
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Обязательная экспертная эскалация немедленно завершает автоматический выбор пакета."
+      },
+      {
+        "stopFactorId": "STOP-REC-006",
+        "priority": 60,
+        "condition": {
+          "field": "normalizedGoalCodes",
+          "operator": "contains",
+          "value": "expert_review"
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Явный запрос экспертного разбора не заменяется автоматическим пакетом."
+      },
+      {
+        "stopFactorId": "STOP-REC-007",
+        "priority": 70,
+        "condition": {
+          "field": "activeRiskIds",
+          "operator": "contains_unmapped_or_disallowed_risk",
+          "value": null
+        },
+        "resultProductCode": "expert_review",
+        "reason": "Неизвестный риск либо маршрут вне allowedRecommendationProductCodes обрабатывается fail-safe."
+      }
+    ],
+    "severityWeights": {
+      "critical": 100,
+      "high": 40,
+      "medium": 20,
+      "low": 10
+    },
+    "segmentBoosts": [
+      {
+        "segmentCode": "early_saas_b2b",
+        "productCode": "start_product",
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-001"
+      },
+      {
+        "segmentCode": "b2c_sales",
+        "productCode": "safe_sales",
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-002"
+      },
+      {
+        "segmentCode": "ip_development",
+        "productCode": "rights_and_ip",
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-003"
+      },
+      {
+        "segmentCode": "data_intensive",
+        "productCode": "data_and_infrastructure",
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-004"
+      },
+      {
+        "segmentCode": "investment_enterprise",
+        "productCode": "enterprise_readiness",
+        "points": 5,
+        "ruleId": "SCORE-SEGMENT-005"
+      },
+      {
+        "segmentCode": "general",
+        "productCode": "start_product",
+        "points": 1,
+        "ruleId": "SCORE-SEGMENT-006"
+      }
+    ],
+    "goalBoosts": [
+      {
+        "goalCode": "launch",
+        "productCode": "start_product",
+        "points": 7,
+        "ruleId": "SCORE-GOAL-001"
+      },
+      {
+        "goalCode": "ip",
+        "productCode": "rights_and_ip",
+        "points": 7,
+        "ruleId": "SCORE-GOAL-002"
+      },
+      {
+        "goalCode": "safe_sales",
+        "productCode": "safe_sales",
+        "points": 7,
+        "ruleId": "SCORE-GOAL-003"
+      },
+      {
+        "goalCode": "data",
+        "productCode": "data_and_infrastructure",
+        "points": 7,
+        "ruleId": "SCORE-GOAL-004"
+      },
+      {
+        "goalCode": "partnership",
+        "productCode": "enterprise_readiness",
+        "points": 7,
+        "ruleId": "SCORE-GOAL-005"
+      },
+      {
+        "goalCode": "investment_enterprise",
+        "productCode": "enterprise_readiness",
+        "points": 7,
+        "ruleId": "SCORE-GOAL-006"
+      },
+      {
+        "goalCode": "general",
+        "productCode": "start_product",
+        "points": 1,
+        "ruleId": "SCORE-GOAL-007"
+      }
+    ],
+    "tieBreakOrder": [
+      "data_and_infrastructure",
+      "rights_and_ip",
+      "safe_sales",
+      "enterprise_readiness",
+      "start_product"
+    ],
+    "fallbackCondition": {
+      "evaluationStage": "after_scoring",
+      "operator": "no_positive_candidates"
+    }
+  },
+  "riskRouting": [
+    {
+      "riskId": "LEXR0-RISK-001",
+      "primaryProductCode": "expert_review",
+      "rationale": "Обязательная ручная квалификация корпоративной основы."
+    },
+    {
+      "riskId": "LEXR0-RISK-002",
+      "primaryProductCode": "expert_review",
+      "rationale": "Критический разрыв владения активами требует ручной квалификации до выбора пакета."
+    },
+    {
+      "riskId": "LEXR0-RISK-003",
+      "primaryProductCode": "expert_review",
+      "rationale": "Корпоративный конфликт не маршрутизируется в фиксированный пакет автоматически."
+    },
+    {
+      "riskId": "LEXR0-RISK-004",
+      "primaryProductCode": "expert_review",
+      "rationale": "Неоформленные отношения с разработчиками требуют проверки фактов и документов."
+    },
+    {
+      "riskId": "LEXR0-RISK-005",
+      "primaryProductCode": "expert_review",
+      "rationale": "Критический разрыв цепочки исключительных прав требует экспертной квалификации."
+    },
+    {
+      "riskId": "LEXR0-RISK-006",
+      "primaryProductCode": "expert_review",
+      "rationale": "Спор или претензия по интеллектуальной собственности требует индивидуальной оценки."
+    },
+    {
+      "riskId": "LEXR0-RISK-007",
+      "primaryProductCode": "rights_and_ip",
+      "rationale": "Обычный маршрут учёта лицензий и сторонних компонентов относится к пакету «Права и IP»."
+    },
+    {
+      "riskId": "LEXR0-RISK-008",
+      "primaryProductCode": "expert_review",
+      "rationale": "Потеря контроля над критическими доступами является стоп-фактором автоматического пакета."
+    },
+    {
+      "riskId": "LEXR0-RISK-009",
+      "primaryProductCode": "expert_review",
+      "rationale": "Чувствительные категории данных требуют отдельной правовой модели и ручной проверки."
+    },
+    {
+      "riskId": "LEXR0-RISK-010",
+      "primaryProductCode": "expert_review",
+      "rationale": "Локализация и трансграничная архитектура требуют ручной квалификации."
+    },
+    {
+      "riskId": "LEXR0-RISK-011",
+      "primaryProductCode": "data_and_infrastructure",
+      "rationale": "Тематический маршрут относится к данным и инфраструктуре; обязательная ручная проверка до скоринга всё равно переводит итог в expert_review."
+    },
+    {
+      "riskId": "LEXR0-RISK-012",
+      "primaryProductCode": "expert_review",
+      "rationale": "Инцидент, обращение или проверка не допускают автоматический фиксированный пакет."
+    },
+    {
+      "riskId": "LEXR0-RISK-013",
+      "primaryProductCode": "expert_review",
+      "rationale": "Критическое отсутствие ключевых документов требует ручной квалификации состава исправлений."
+    },
+    {
+      "riskId": "LEXR0-RISK-014",
+      "primaryProductCode": "start_product",
+      "rationale": "Обычный сценарий неполной или устаревшей договорной базы направляется в базовый пакет старта."
+    },
+    {
+      "riskId": "LEXR0-RISK-015",
+      "primaryProductCode": "expert_review",
+      "rationale": "Опасные договорные обязательства требуют индивидуального анализа условий."
+    },
+    {
+      "riskId": "LEXR0-RISK-016",
+      "primaryProductCode": "expert_review",
+      "rationale": "Сложная платёжная конструкция требует ручной квалификации ролей и расчётов."
+    },
+    {
+      "riskId": "LEXR0-RISK-017",
+      "primaryProductCode": "expert_review",
+      "rationale": "Критический разрыв условий оплаты и возврата требует экспертной проверки."
+    },
+    {
+      "riskId": "LEXR0-RISK-018",
+      "primaryProductCode": "expert_review",
+      "rationale": "Критическое отсутствие B2C-условий требует ручной квалификации."
+    },
+    {
+      "riskId": "LEXR0-RISK-019",
+      "primaryProductCode": "safe_sales",
+      "rationale": "Обычный риск пользовательского пути относится к пакету «Безопасные продажи»."
+    },
+    {
+      "riskId": "LEXR0-RISK-020",
+      "primaryProductCode": "safe_sales",
+      "rationale": "Обычный рекламный риск относится к пакету «Безопасные продажи»."
+    },
+    {
+      "riskId": "LEXR0-RISK-021",
+      "primaryProductCode": "expert_review",
+      "rationale": "Существенный разрыв партнёрской модели требует ручной квалификации ответственности."
+    },
+    {
+      "riskId": "LEXR0-RISK-022",
+      "primaryProductCode": "enterprise_readiness",
+      "rationale": "Обычная зависимость от партнёра или платформы маршрутизируется в Enterprise readiness."
+    },
+    {
+      "riskId": "LEXR0-RISK-023",
+      "primaryProductCode": "expert_review",
+      "rationale": "Потенциально регулируемая деятельность требует обязательной экспертной квалификации."
+    },
+    {
+      "riskId": "LEXR0-RISK-024",
+      "primaryProductCode": "expert_review",
+      "rationale": "Отсутствие разрешения или неясный специальный режим требует ручной проверки."
+    },
+    {
+      "riskId": "LEXR0-RISK-025",
+      "primaryProductCode": "expert_review",
+      "rationale": "Спор, проверка или предписание требуют индивидуальной стратегии и сметы."
+    }
+  ],
+  "creditEligibility": {
+    "policyId": "base-diagnostic-credit-6900-rub-v1",
+    "sourceTariffId": "lexy-advanced-diagnostic",
+    "currency": "RUB",
+    "creditAmountRub": 6900,
+    "eligibilityKey": "productCode",
+    "textMatchingForbidden": true,
+    "entries": [
+      {
+        "productCode": "start_product",
+        "eligible": true,
+        "status": "draft_pending_legal_approval"
+      },
+      {
+        "productCode": "safe_sales",
+        "eligible": true,
+        "status": "draft_pending_legal_approval"
+      },
+      {
+        "productCode": "rights_and_ip",
+        "eligible": true,
+        "status": "draft_pending_legal_approval"
+      },
+      {
+        "productCode": "data_and_infrastructure",
+        "eligible": true,
+        "status": "draft_pending_legal_approval"
+      },
+      {
+        "productCode": "enterprise_readiness",
+        "eligible": true,
+        "status": "draft_pending_legal_approval"
+      },
+      {
+        "productCode": "expert_review",
+        "eligible": false,
+        "status": "draft_pending_legal_approval"
+      }
+    ],
+    "releaseRestriction": "До юридического и коммерческого утверждения entries не разрешают автоматическое погашение права; Release 1 может только рассчитывать и отображать черновое право согласно отдельной политике."
+  },
+  "deterministicGuarantees": {
+    "exactlyOneProduct": true,
+    "criticalAndManualReviewPrecedeScoring": true,
+    "investmentAndEnterpriseCannotOverrideStopFactors": true,
+    "fixedTieBreak": true,
+    "fixedFallback": true,
+    "creditUsesProductCodeOnly": true,
+    "clientDisplayTextAffectsDecision": false,
+    "languageModelAffectsDecision": false
+  }
+}

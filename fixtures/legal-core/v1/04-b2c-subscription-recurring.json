@@ -1,0 +1,128 @@
+{
+  "id": "LEXR0-FIXTURE-004",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "caseKind": "questionnaire",
+  "releaseTarget": "release_1_pilot",
+  "profile": {
+    "code": "b2c_subscription_recurring",
+    "name": "B2C с подпиской и рекуррентными списаниями",
+    "scenario": "Подписная B2C-модель с неполным раскрытием условий, платёжным спором и манипулятивным интерфейсом.",
+    "source": "ТЗ v3 §29, профиль 4"
+  },
+  "canonicalAnswers": {
+    "b1_q1": "Эталонный цифровой продукт",
+    "b1_q2": "saas",
+    "b1_q3": [
+      "b2c"
+    ],
+    "b1_q4": "russia_only",
+    "b1_q5": "growth",
+    "b1_q6": [
+      "goal_general"
+    ],
+    "b2_q1": "ooo",
+    "b2_q2": "same",
+    "b2_q3": "no",
+    "b2_q5": "no",
+    "b3_q1": [
+      "subscription"
+    ],
+    "b3_q2": [
+      "direct"
+    ],
+    "b3_q3": "no",
+    "b4_q2": "all",
+    "b4_q3": "all",
+    "b4_q7": "no",
+    "b5_q1": [
+      "name",
+      "email"
+    ],
+    "b5_q2": "russia",
+    "b5_q3": "yes",
+    "b5_q4": "yes",
+    "b5_q6": "no",
+    "b6_q1": [
+      "privacy",
+      "b2b_contract"
+    ],
+    "b6_q2": "current",
+    "b7_q1": "direct",
+    "b7_q4": "yes",
+    "b8_q2": "partial",
+    "b10_q1": [
+      "none"
+    ],
+    "b10_q2": "yes",
+    "b11_q1": [
+      "employees"
+    ],
+    "b11_q2": "yes",
+    "b11_q4": "no",
+    "b12_q1": "no",
+    "b12_q3": "no",
+    "b8_q1": "yes",
+    "b8_q3": "yes"
+  },
+  "expectedActiveRiskIds": [
+    "LEXR0-RISK-017",
+    "LEXR0-RISK-018",
+    "LEXR0-RISK-019"
+  ],
+  "expectedForbiddenRiskIds": [
+    "LEXR0-RISK-020",
+    "LEXR0-RISK-021"
+  ],
+  "expectedRiskProfile": "critical",
+  "expectedEscalation": {
+    "required": true,
+    "manualReviewRequired": true,
+    "manualFollowUpRequired": false,
+    "lawyerReviewRequired": true,
+    "expectedEvidenceStatus": "manual_review_required",
+    "expectedQueueCodes": [
+      "LEGAL-EXPERT-REVIEW",
+      "LEGAL-DISPUTE-REVIEW"
+    ],
+    "reason": "Критические B2C-условия и положительный ответ на объединённый вопрос о спорах, оспариваниях платежей, массовых возвратах или претензиях по оплате требуют экспертного разбора."
+  },
+  "expectedRecommendationProductCode": "expert_review",
+  "expectedReportSections": [
+    "questionnaire_facts",
+    "preliminary_summary",
+    "active_risks",
+    "evidence_statuses",
+    "legal_bases",
+    "analysis_limitations",
+    "expert_escalation",
+    "recommendation",
+    "configuration_provenance"
+  ],
+  "allowedLegalBasisIds": [
+    "LB-RU-ADS-38FZ",
+    "LB-RU-GK-309",
+    "LB-RU-GK-437",
+    "LB-RU-ZPP-10",
+    "LB-RU-ZPP-13-6",
+    "LB-RU-ZPP-16-1-4-2",
+    "LB-RU-ZPP-32"
+  ],
+  "notes": {
+    "normativeRequirement": [
+      "ТЗ v3 §§13.2 и 29 требуют не сглаживать критические B2C-условия общим баллом."
+    ],
+    "projectDecision": [
+      "Платёжный спор активирует риск 017, неполное раскрытие — 018, интерфейсная практика — 019."
+    ],
+    "openQuestion": [
+      "Требуется юридическая fixture-проверка трактовки ответа «частично» и состава безопасного предварительного резюме."
+    ]
+  }
+}
