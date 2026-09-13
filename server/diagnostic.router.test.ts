@@ -34,6 +34,8 @@ vi.mock("./_core/notification", () => ({
 function makeCtx(): TrpcContext {
   return {
     user: null,
+    customer: null,
+    requestId: "request_diagnostic_tests_01",
     req: { protocol: "https", headers: {} } as TrpcContext["req"],
     res: { clearCookie: vi.fn() } as unknown as TrpcContext["res"],
   };
