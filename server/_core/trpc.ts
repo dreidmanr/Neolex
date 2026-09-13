@@ -4,6 +4,7 @@ import superjson from "superjson";
 import type { TrpcContext } from "./context";
 import { appendAuditEvent } from "../r1/audit/auditRepository";
 import { requireR1Database } from "../r1/database";
+import { assertTechnicalPilotAllowed } from "../r1/releaseGate";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -38,6 +39,7 @@ const requireCustomer = t.middleware(async opts => {
       message: "Customer session required",
     });
   }
+  assertTechnicalPilotAllowed();
 
   return next({
     ctx: {

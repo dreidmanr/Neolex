@@ -46,3 +46,27 @@ export function getSessionCookieOptions(
     secure: isSecureRequest(req),
   };
 }
+
+export const CUSTOMER_SESSION_COOKIE_NAME = "__Host-lexy-customer-session";
+
+export function getCustomerSessionCookieOptions(
+  expiresAt: Date,
+): Pick<CookieOptions, "expires" | "httpOnly" | "path" | "sameSite" | "secure"> {
+  return {
+    expires: expiresAt,
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    secure: true,
+  };
+}
+
+export function getCustomerSessionClearCookieOptions(): Pick<
+  CookieOptions,
+  "expires" | "httpOnly" | "path" | "sameSite" | "secure"
+> {
+  return {
+    ...getCustomerSessionCookieOptions(new Date(0)),
+    expires: new Date(0),
+  };
+}

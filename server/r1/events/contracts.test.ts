@@ -34,12 +34,53 @@ const outbox = {
     synthetic: true as const,
   },
 };
+const magicLinkAudit = {
+  actorType: "service" as const, actorId: "magic_link_issuer",
+  aggregateType: "magic_link_token" as const, aggregateId: "magic_token_01",
+  eventType: "auth.magic_link_issued" as const, outcome: "succeeded" as const,
+  toStatus: "active" as const, requestId: "request_magic_contract_01",
+  correlationId: "correlation_01",
+  privacySafeMetadata: { identityId: "identity_01", keyVersion: 1, test: true as const, rateLimitCount: 1 },
+};
+const magicLinkOutbox = {
+  aggregateType: "email_delivery" as const, aggregateId: "delivery_01",
+  eventType: "auth.magic_link_delivery_queued" as const,
+  privacySafePayload: {
+    deliveryId: "delivery_01", tokenId: "magic_token_01", identityId: "identity_01",
+    keyVersion: 1, windowMillis: 1767225600000, test: true as const,
+  },
+};
 
 describe("R1 event-specific contracts", () => {
   it("accepts only the exact current synthetic audit/outbox shape", () => {
     expect(parseAuditEvent(audit)).toEqual(audit);
     expect(parseOutboxEvent(outbox)).toEqual(outbox);
     expect(outboxDedupeKey(outbox)).toBe("case-created:case_internal_01:v1");
+  });
+
+  it("accepts only exact privacy-safe Magic Link audit/outbox values", () => {
+    expect(parseAuditEvent(magicLinkAudit)).toEqual(magicLinkAudit);
+    expect(parseOutboxEvent(magicLinkOutbox)).toEqual(magicLinkOutbox);
+    expect(outboxDedupeKey(magicLinkOutbox)).toBe("magic-link-delivery:identity_01:1767225600000:v1");
+  });
+
+  it.each([
+    ["email", { email: "person.test" }],
+    ["raw token", { rawToken: "opaque-token" }],
+    ["token hash", { tokenHash: "a".repeat(64) }],
+    ["url", { url: "https://secret.test/#token" }],
+    ["cookie", { cookie: "session=value" }],
+    ["bearer", { bearer: "Bearer opaque-token" }],
+    ["arbitrary field", { note: "not allowlisted" }],
+  ])("rejects %s injection in every Magic Link event payload", (_label, extra) => {
+    expect(() => parseAuditEvent({
+      ...magicLinkAudit,
+      privacySafeMetadata: { ...magicLinkAudit.privacySafeMetadata, ...extra },
+    })).toThrow();
+    expect(() => parseOutboxEvent({
+      ...magicLinkOutbox,
+      privacySafePayload: { ...magicLinkOutbox.privacySafePayload, ...extra },
+    })).toThrow();
   });
 
   it.each([

@@ -2,11 +2,12 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 import type { User } from "../../drizzle/schema";
 import { ENV } from "./env";
 import { sdk } from "./sdk";
+import { CUSTOMER_SESSION_COOKIE_NAME } from "./cookies";
 import { findActiveCustomerSessionByTokenHash } from "../r1/auth/customerSessionRepository";
 import { hashCustomerSessionToken } from "../r1/auth/customerSessionToken";
 import { newR1Id } from "../r1/ids";
 
-export const CUSTOMER_SESSION_COOKIE_NAME = "__Host-lexy-customer-session";
+export { CUSTOMER_SESSION_COOKIE_NAME } from "./cookies";
 
 export type CustomerPrincipal = {
   accountId: string;

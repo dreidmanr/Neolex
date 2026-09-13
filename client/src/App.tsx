@@ -15,6 +15,8 @@ import Admin from "./pages/Admin";
 import Pilot from "./pages/Pilot";
 import Cabinet from "./pages/Cabinet";
 import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
+import RequestMagicLink from "./pages/RequestMagicLink";
+import MagicLinkConsume from "./pages/MagicLinkConsume";
 import { useLocation } from "wouter";
 
 function Router() {
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/legal/:doc" component={LegalDocs} />
       <Route path="/pilot" component={Pilot} />
       <Route path="/cabinet" component={Cabinet} />
+      <Route path="/auth/request-link" component={RequestMagicLink} />
+      <Route path="/auth/consume" component={MagicLinkConsume} />
       <Route path="/admin/pilot-diagnostics" component={AdminPilotDiagnostics} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
@@ -43,6 +47,7 @@ function App() {
     location.startsWith("/pilot/") ||
     location === "/cabinet" ||
     location.startsWith("/cabinet/") ||
+    location.startsWith("/auth/") ||
     location === "/admin/pilot-diagnostics" ||
     location.startsWith("/admin/pilot-diagnostics/");
 

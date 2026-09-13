@@ -49,11 +49,10 @@ function ClosedCabinet() {
         </span>
         <h2 className="mt-5 font-display text-2xl font-800">Кабинет закрыт</h2>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
-          Для просмотра технического контура требуется действующая защищённая сессия. Вход по
-          magic link будет доступен в следующем increment; на этом экране вход не выполняется.
+          Для просмотра технического контура требуется действующая защищённая сессия.
         </p>
-        <Button asChild variant="outline" className="mt-6 min-h-11">
-          <Link href="/pilot">Вернуться к статусу Pilot</Link>
+        <Button asChild className="mt-6 min-h-11">
+          <Link href="/auth/request-link">Запросить вход</Link>
         </Button>
       </CardContent>
     </Card>
@@ -70,10 +69,11 @@ function CasesSkeleton() {
 }
 
 export default function Cabinet() {
-  const meQuery = trpc.pilot.me.useQuery(undefined, {
+  const meQuery = trpc.pilot.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  const logout = trpc.pilot.auth.logout.useMutation();
   const casesQuery = trpc.pilot.cases.list.useQuery(undefined, {
     enabled: Boolean(meQuery.data),
     retry: false,
@@ -82,6 +82,15 @@ export default function Cabinet() {
 
   const refreshCases = () => {
     void casesQuery.refetch();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout.mutateAsync();
+      window.location.assign("/auth/request-link");
+    } catch {
+      // The existing protected session remains in place; leave the UI available to retry.
+    }
   };
 
   return (
@@ -190,8 +199,19 @@ export default function Cabinet() {
                 <CardTitle className="font-display text-base">Сессия защищена</CardTitle>
               </CardHeader>
               <CardContent className="text-sm leading-relaxed text-muted-foreground">
-                В кабинете не показываются контактные данные, ответы, служебные токены и
-                внутренние идентификаторы.
+                <p>
+                  В кабинете не показываются контактные данные, ответы, служебные токены и
+                  внутренние идентификаторы.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-5 min-h-11 w-full"
+                  onClick={handleLogout}
+                  disabled={logout.isPending}
+                >
+                  {logout.isPending ? "Выход" : "Выйти из кабинета"}
+                </Button>
               </CardContent>
             </Card>
           </aside>

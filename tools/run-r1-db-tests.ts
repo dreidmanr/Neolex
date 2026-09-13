@@ -14,11 +14,20 @@ function requireExact(name: string, expected: string): void {
   }
 }
 
+function requireLongSecret(name: string): string {
+  const secret = process.env[name] ?? "";
+  if (secret.length < 32) {
+    fail(`${name} must contain at least 32 characters`);
+  }
+  return secret;
+}
+
 function validateEnvironment(): void {
   requireExact("NODE_ENV", "test");
   requireExact("LEXY_R1_SYNTHETIC_TEST_MODE", "true");
   requireExact("LEXY_R1_TEST_IDENTITY", "r1-harness");
   requireExact("LEXY_R1_DATABASE_CLASS", "disposable_test");
+  requireExact("LEXY_R1_EMAIL_TRANSPORT", "test");
 
   const rawDatabaseUrl = process.env.DATABASE_URL;
   if (!rawDatabaseUrl) fail("DATABASE_URL is required");
@@ -41,16 +50,23 @@ function validateEnvironment(): void {
     fail("database name must exactly match the disposable lexy_r1_test_<slug> form");
   }
 
-  const customerSecret = process.env.LEXY_CUSTOMER_SESSION_SECRET ?? "";
-  const jwtSecret = process.env.JWT_SECRET ?? "";
-  if (customerSecret.length < 32) {
-    fail("LEXY_CUSTOMER_SESSION_SECRET must contain at least 32 characters");
-  }
-  if (jwtSecret.length < 32) {
-    fail("JWT_SECRET must contain at least 32 characters");
-  }
+  const customerSecret = requireLongSecret("LEXY_CUSTOMER_SESSION_SECRET");
+  const jwtSecret = requireLongSecret("JWT_SECRET");
   if (customerSecret === jwtSecret) {
     fail("LEXY_CUSTOMER_SESSION_SECRET must be dedicated and differ from JWT_SECRET");
+  }
+
+  const magicLinkSecrets = [
+    ["LEXY_R1_MAGIC_LINK_SECRET", requireLongSecret("LEXY_R1_MAGIC_LINK_SECRET")],
+    ["LEXY_R1_EMAIL_IDENTITY_PEPPER", requireLongSecret("LEXY_R1_EMAIL_IDENTITY_PEPPER")],
+    ["LEXY_R1_RATE_LIMIT_PEPPER", requireLongSecret("LEXY_R1_RATE_LIMIT_PEPPER")],
+  ] as const;
+  if (new Set([
+    customerSecret,
+    jwtSecret,
+    ...magicLinkSecrets.map(([, secret]) => secret),
+  ]).size !== 5) {
+    fail("R1 DB secrets and peppers must be pairwise distinct and dedicated");
   }
 }
 
