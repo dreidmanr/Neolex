@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { customerProcedure, publicProcedure, router } from "../../_core/trpc";
 import { appendAuditEvent } from "../audit/auditRepository";
+import { customerAuthRouter } from "../auth/router";
 import { requireR1Database } from "../database";
 import { throwNeutralNotFound } from "../policy/errors";
 import { assertTechnicalPilotAllowed, getReleaseGateStatus } from "../releaseGate";
@@ -11,6 +12,7 @@ import {
 } from "./caseRepository";
 
 export const pilotRouter = router({
+  auth: customerAuthRouter,
   status: publicProcedure.query(() => {
     const gate = getReleaseGateStatus();
     return {

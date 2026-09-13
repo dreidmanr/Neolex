@@ -66,8 +66,40 @@ const adminPurposeDeniedAudit = z.object({
   reasonCode: z.literal("approved_purpose_required"), requestId: requestIdSchema,
   privacySafeMetadata: z.object({ resourceClass: z.literal("pilot_diagnostics") }).strict(), createdAt: z.date().optional(),
 }).strict();
+const magicLinkIssuedAudit = z.object({
+  actorType: z.literal("service"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("magic_link_token"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("auth.magic_link_issued"), outcome: z.literal("succeeded"),
+  toStatus: z.literal("active"), requestId: requestIdSchema, correlationId: opaqueIdSchema,
+  privacySafeMetadata: z.object({
+    identityId: opaqueIdSchema, keyVersion: positiveVersionSchema, test: z.literal(true),
+    rateLimitCount: z.number().int().min(1).max(3),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const magicLinkConsumedAudit = z.object({
+  actorType: z.literal("service"), actorId: z.literal("magic_link_consumer"),
+  aggregateType: z.literal("magic_link_token"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("auth.magic_link_consumed"), outcome: z.literal("succeeded"),
+  fromStatus: z.literal("active"), toStatus: z.literal("consumed"),
+  requestId: requestIdSchema, correlationId: opaqueIdSchema,
+  privacySafeMetadata: z.object({
+    sessionId: opaqueIdSchema, keyVersion: positiveVersionSchema, test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const customerSessionRevokedAudit = z.object({
+  actorType: z.literal("customer_session"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("customer_session"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("auth.customer_session_revoked"), outcome: z.literal("succeeded"),
+  fromStatus: z.literal("active"), toStatus: z.literal("revoked"),
+  reasonCode: z.literal("logout_current"), requestId: requestIdSchema,
+  privacySafeMetadata: z.object({ test: z.literal(true) }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
 export const auditEventSchema = z.discriminatedUnion("eventType", [
   syntheticAudit, transitionAudit, adminListAudit, ownerDeniedAudit, adminRoleDeniedAudit, adminPurposeDeniedAudit,
+  magicLinkIssuedAudit, magicLinkConsumedAudit, customerSessionRevokedAudit,
 ]);
 export type AppendAuditEvent = z.infer<typeof auditEventSchema>;
 
@@ -87,17 +119,31 @@ const transitionOutbox = z.object({
   }).strict(),
   createdAt: z.date().optional(),
 }).strict();
-export const outboxEventSchema = z.discriminatedUnion("eventType", [syntheticOutbox, transitionOutbox]);
+const magicLinkDeliveryQueuedOutbox = z.object({
+  aggregateType: z.literal("email_delivery"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("auth.magic_link_delivery_queued"),
+  privacySafePayload: z.object({
+    deliveryId: opaqueIdSchema, tokenId: opaqueIdSchema, identityId: opaqueIdSchema,
+    keyVersion: positiveVersionSchema, windowMillis: z.number().int().positive(), test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+export const outboxEventSchema = z.discriminatedUnion("eventType", [
+  syntheticOutbox, transitionOutbox, magicLinkDeliveryQueuedOutbox,
+]);
 export type AppendOutboxEvent = z.infer<typeof outboxEventSchema>;
 
 const generatedAuditEnvelopeSchema = z.object({ id: opaqueIdSchema }).strict();
 const generatedOutboxEnvelopeSchema = z.object({
   id: opaqueIdSchema, eventId: opaqueIdSchema,
-  dedupeKey: z.string().max(128).regex(/^(?:case-created|case-transition):[A-Za-z0-9][A-Za-z0-9_-]*:v[1-9][0-9]*$/),
+  dedupeKey: z.string().max(128).regex(/^(?:(?:case-created|case-transition):[A-Za-z0-9][A-Za-z0-9_-]*:v[1-9][0-9]*|magic-link-delivery:[A-Za-z0-9][A-Za-z0-9_-]*:[1-9][0-9]*:v1)$/),
   status: z.literal("pending"), attemptCount: z.literal(0), updatedAt: z.date(),
 }).strict();
 
 export function outboxDedupeKey(event: AppendOutboxEvent): string {
+  if (event.eventType === "auth.magic_link_delivery_queued") {
+    return `magic-link-delivery:${event.privacySafePayload.identityId}:${event.privacySafePayload.windowMillis}:v1`;
+  }
   const prefix = event.eventType === "diagnostic_case.synthetic_created" ? "case-created" : "case-transition";
   return `${prefix}:${event.aggregateId}:v${event.privacySafePayload.stateVersion}`;
 }
@@ -106,7 +152,10 @@ export function parseAuditEvent(value: unknown): AppendAuditEvent {
 }
 export function parseOutboxEvent(value: unknown): AppendOutboxEvent {
   const event = outboxEventSchema.parse(value);
-  if (event.aggregateId !== event.privacySafePayload.caseId) {
+  const payloadAggregateId = event.eventType === "auth.magic_link_delivery_queued"
+    ? event.privacySafePayload.deliveryId
+    : event.privacySafePayload.caseId;
+  if (event.aggregateId !== payloadAggregateId) {
     throw new Error("Aggregate and payload identifiers differ");
   }
   return event;

@@ -9,6 +9,10 @@ export type ReleaseGateStatus = {
   technicalPilotAllowed: boolean;
 };
 
+export type MagicLinkTestGateStatus = ReleaseGateStatus & {
+  magicLinkTestAllowed: boolean;
+};
+
 function explicitlyEnabled(value: string | undefined): boolean {
   return value === "true";
 }
@@ -81,4 +85,39 @@ export function assertSyntheticTestAllowed(): ReleaseGateStatus {
     });
   }
   return status;
+}
+
+export function isMagicLinkTestAllowed(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const status = getReleaseGateStatus(env);
+  if (!status.syntheticTestAllowed || env.LEXY_R1_EMAIL_TRANSPORT !== "test") {
+    return false;
+  }
+
+  const dedicatedSecrets = [
+    env.LEXY_R1_MAGIC_LINK_SECRET ?? "",
+    env.LEXY_R1_EMAIL_IDENTITY_PEPPER ?? "",
+    env.LEXY_R1_RATE_LIMIT_PEPPER ?? "",
+  ];
+  if (dedicatedSecrets.some(secret => secret.length < 32)) return false;
+  if (new Set(dedicatedSecrets).size !== dedicatedSecrets.length) return false;
+
+  const authoritySecrets = new Set([
+    env.LEXY_CUSTOMER_SESSION_SECRET ?? "",
+    env.JWT_SECRET ?? "",
+  ]);
+  return dedicatedSecrets.every(secret => !authoritySecrets.has(secret));
+}
+
+export function assertMagicLinkTestAllowed(): MagicLinkTestGateStatus {
+  const status = getReleaseGateStatus();
+  const magicLinkTestAllowed = isMagicLinkTestAllowed();
+  if (!magicLinkTestAllowed) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Pilot is unavailable",
+    });
+  }
+  return { ...status, magicLinkTestAllowed };
 }

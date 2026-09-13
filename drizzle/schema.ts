@@ -533,3 +533,103 @@ export const migrationReconciliationRecords = mysqlTable("migration_reconciliati
 
 export type MigrationReconciliationRecord = typeof migrationReconciliationRecords.$inferSelect;
 export type InsertMigrationReconciliationRecord = typeof migrationReconciliationRecords.$inferInsert;
+
+// ── RELEASE 1 V2 MAGIC LINK ──────────────────────────────────────────────────
+// Delivery and rate-limit records contain only opaque identifiers and hashes.
+// Raw email addresses, tokens, URLs, and message bodies are never persisted.
+
+export const magicLinkTokens = mysqlTable("magic_link_tokens", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountIdentityId: varchar("customerAccountIdentityId", { length: 64 }).notNull(),
+  tokenHash: varchar("tokenHash", { length: 128 }).notNull(),
+  requestScope: mysqlEnum("requestScope", ["magic_login"]).notNull(),
+  tokenKeyVersion: int("tokenKeyVersion").notNull(),
+  status: mysqlEnum("status", ["active", "consumed", "revoked", "expired"]).default("active").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  consumedAt: timestamp("consumedAt"),
+  revokedAt: timestamp("revokedAt"),
+  revocationReasonCode: varchar("revocationReasonCode", { length: 64 }),
+  consumedByCustomerSessionId: varchar("consumedByCustomerSessionId", { length: 64 }),
+  correlationId: varchar("correlationId", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.customerAccountIdentityId],
+    foreignColumns: [customerAccountIdentities.id],
+    name: "fk_magic_token_identity",
+  }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({
+    columns: [table.consumedByCustomerSessionId],
+    foreignColumns: [customerSessions.id],
+    name: "fk_magic_token_session",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("magic_link_tokens_token_hash_uq").on(table.tokenHash),
+  uniqueIndex("magic_link_tokens_session_uq").on(table.consumedByCustomerSessionId),
+  uniqueIndex("magic_link_tokens_id_identity_uq").on(table.id, table.customerAccountIdentityId),
+  index("magic_link_tokens_identity_status_expiry_idx").on(
+    table.customerAccountIdentityId,
+    table.status,
+    table.expiresAt,
+  ),
+]);
+
+export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
+export type InsertMagicLinkToken = typeof magicLinkTokens.$inferInsert;
+
+export const emailDeliveries = mysqlTable("email_deliveries", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  magicLinkTokenId: varchar("magicLinkTokenId", { length: 64 }).notNull(),
+  customerAccountIdentityId: varchar("customerAccountIdentityId", { length: 64 }).notNull(),
+  deliveryKind: varchar("deliveryKind", { length: 64 }).notNull(),
+  status: mysqlEnum("status", ["queued", "sending", "sent", "failed", "suppressed"]).default("queued").notNull(),
+  dedupeKey: varchar("dedupeKey", { length: 128 }).notNull(),
+  attemptCount: int("attemptCount").default(0).notNull(),
+  leaseOwner: varchar("leaseOwner", { length: 64 }),
+  leaseVersion: int("leaseVersion").default(0).notNull(),
+  leaseExpiresAt: timestamp("leaseExpiresAt"),
+  nextAttemptAt: timestamp("nextAttemptAt"),
+  lastAttemptAt: timestamp("lastAttemptAt"),
+  sentAt: timestamp("sentAt"),
+  terminalAt: timestamp("terminalAt"),
+  lastErrorCode: varchar("lastErrorCode", { length: 64 }),
+  templateVersion: varchar("templateVersion", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.magicLinkTokenId, table.customerAccountIdentityId],
+    foreignColumns: [magicLinkTokens.id, magicLinkTokens.customerAccountIdentityId],
+    name: "fk_email_delivery_token_identity",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("email_deliveries_token_uq").on(table.magicLinkTokenId),
+  uniqueIndex("email_deliveries_dedupe_key_uq").on(table.dedupeKey),
+  index("email_deliveries_status_next_idx").on(table.status, table.nextAttemptAt),
+  index("email_deliveries_lease_expiry_idx").on(table.leaseExpiresAt),
+  index("email_deliveries_identity_created_idx").on(table.customerAccountIdentityId, table.createdAt),
+]);
+
+export type EmailDelivery = typeof emailDeliveries.$inferSelect;
+export type InsertEmailDelivery = typeof emailDeliveries.$inferInsert;
+
+export const authRateLimitBuckets = mysqlTable("auth_rate_limit_buckets", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  scope: varchar("scope", { length: 64 }).notNull(),
+  bucketHash: varchar("bucketHash", { length: 128 }).notNull(),
+  windowStartedAt: timestamp("windowStartedAt").notNull(),
+  count: int("count").default(0).notNull(),
+  blockedUntil: timestamp("blockedUntil"),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  uniqueIndex("auth_rate_limit_scope_bucket_window_uq").on(
+    table.scope,
+    table.bucketHash,
+    table.windowStartedAt,
+  ),
+  index("auth_rate_limit_buckets_expiry_idx").on(table.expiresAt),
+]);
+
+export type AuthRateLimitBucket = typeof authRateLimitBuckets.$inferSelect;
+export type InsertAuthRateLimitBucket = typeof authRateLimitBuckets.$inferInsert;

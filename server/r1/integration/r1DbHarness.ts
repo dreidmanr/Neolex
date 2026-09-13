@@ -2,10 +2,15 @@ import { randomBytes } from "node:crypto";
 import type { TrpcContext } from "../../_core/context";
 import { getDb } from "../../db";
 import {
+  authRateLimitBuckets,
   auditEvents,
+  customerAccountIdentities,
   customerAccounts,
+  customerSessions,
   diagnosticCases,
+  emailDeliveries,
   idempotencyRecords,
+  magicLinkTokens,
   outboxEvents,
   type User,
 } from "../../../drizzle/schema";
@@ -51,6 +56,18 @@ export function assertSafeTestEnvironment(): void {
   if (customerSecret.length < 32 || jwtSecret.length < 32 || customerSecret === jwtSecret) {
     throw new Error("R1 integration secrets must be long and dedicated");
   }
+  const magicSecrets = [
+    process.env.LEXY_R1_MAGIC_LINK_SECRET ?? "",
+    process.env.LEXY_R1_EMAIL_IDENTITY_PEPPER ?? "",
+    process.env.LEXY_R1_RATE_LIMIT_PEPPER ?? "",
+  ];
+  if (
+    process.env.LEXY_R1_EMAIL_TRANSPORT !== "test" ||
+    magicSecrets.some(secret => secret.length < 32) ||
+    new Set([...magicSecrets, customerSecret, jwtSecret]).size !== 5
+  ) {
+    throw new Error("R1 Magic Link integration secrets must be long and dedicated");
+  }
 }
 
 export async function db() {
@@ -62,12 +79,24 @@ export async function db() {
 
 export async function cleanRunData(): Promise<void> {
   const database = await db();
-  await database.delete(outboxEvents).where(like(outboxEvents.aggregateId, `${RUN_PREFIX}%`));
+  const identities = await database
+    .select({ accountId: customerAccountIdentities.customerAccountId })
+    .from(customerAccountIdentities);
+  const magicAccountIds = identities.map(row => row.accountId);
+  await database.delete(outboxEvents).where(
+    or(
+      like(outboxEvents.aggregateId, `${RUN_PREFIX}%`),
+      eq(outboxEvents.eventType, "auth.magic_link_delivery_queued"),
+    ),
+  );
   await database.delete(auditEvents).where(
     or(
       like(auditEvents.aggregateId, `${RUN_PREFIX}%`),
       like(auditEvents.actorId, `${RUN_PREFIX}%`),
       like(auditEvents.requestId, `${RUN_PREFIX}%`),
+      eq(auditEvents.eventType, "auth.magic_link_issued"),
+      eq(auditEvents.eventType, "auth.magic_link_consumed"),
+      eq(auditEvents.eventType, "auth.customer_session_revoked"),
     ),
   );
   await database.delete(idempotencyRecords).where(
@@ -77,6 +106,14 @@ export async function cleanRunData(): Promise<void> {
     ),
   );
   await database.delete(diagnosticCases).where(like(diagnosticCases.id, `${RUN_PREFIX}%`));
+  await database.delete(emailDeliveries);
+  await database.delete(magicLinkTokens);
+  await database.delete(customerSessions);
+  await database.delete(customerAccountIdentities);
+  await database.delete(authRateLimitBuckets);
+  for (const accountId of magicAccountIds) {
+    await database.delete(customerAccounts).where(eq(customerAccounts.id, accountId));
+  }
   await database.delete(customerAccounts).where(like(customerAccounts.id, `${RUN_PREFIX}%`));
 }
 
