@@ -23,6 +23,8 @@ import { calculateScore, CONSENT_VERSIONS } from "../shared/diagnosticData";
 import { invokeLLM } from "./_core/llm";
 import { paidRouter } from "./paidRouter";
 import { adminRouter } from "./adminRouter";
+import { pilotRouter } from "./r1/cases/router";
+import { pilotAdminRouter } from "./r1/admin/router";
 
 export const appRouter = router({
   system: systemRouter,
@@ -37,6 +39,8 @@ export const appRouter = router({
 
   paid: paidRouter,
   admin: adminRouter,
+  pilot: pilotRouter,
+  pilotAdmin: pilotAdminRouter,
 
   feedback: router({
     submit: publicProcedure

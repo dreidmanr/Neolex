@@ -36,6 +36,13 @@
       "when": 1782572366703,
       "tag": "0004_first_sersi",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1789248826260,
+      "tag": "0005_r1_access_control_expand",
+      "breakpoints": true
     }
   ]
 }

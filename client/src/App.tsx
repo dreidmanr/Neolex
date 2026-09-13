@@ -12,6 +12,10 @@ import PaidResults from "./pages/PaidResults";
 import LexyWidget from "./components/LexyWidget";
 import LegalDocs from "./pages/LegalDocs";
 import Admin from "./pages/Admin";
+import Pilot from "./pages/Pilot";
+import Cabinet from "./pages/Cabinet";
+import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
+import { useLocation } from "wouter";
 
 function Router() {
   return (
@@ -22,6 +26,9 @@ function Router() {
       <Route path="/paid" component={PaidDiagnostic} />
       <Route path="/paid/results/:token" component={PaidResults} />
       <Route path="/legal/:doc" component={LegalDocs} />
+      <Route path="/pilot" component={Pilot} />
+      <Route path="/cabinet" component={Cabinet} />
+      <Route path="/admin/pilot-diagnostics" component={AdminPilotDiagnostics} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
@@ -30,13 +37,22 @@ function Router() {
 }
 
 function App() {
+  const [location] = useLocation();
+  const isPilotRoute =
+    location === "/pilot" ||
+    location.startsWith("/pilot/") ||
+    location === "/cabinet" ||
+    location.startsWith("/cabinet/") ||
+    location === "/admin/pilot-diagnostics" ||
+    location.startsWith("/admin/pilot-diagnostics/");
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
-          <LexyWidget />
+          {!isPilotRoute && <LexyWidget />}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
