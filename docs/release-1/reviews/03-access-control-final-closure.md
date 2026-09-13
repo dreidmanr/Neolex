@@ -50,7 +50,7 @@ No regression was identified by static inspection of the previously closed findi
 | Finding | Result | Current evidence |
 |---|---|---|
 | **M-02 — transition idempotency, CAS, and atomic side effects** | **No regression** | Keyed request/key hashes, idempotency claim, owner-scoped lookup, CAS, audit, outbox, and completion remain inside one transaction. Existing real-DB coverage exercises replay, different-command conflict, race, stale rollback, audit rollback, outbox rollback, and ownership isolation.[8] [9] |
-| **M-03 — real DB evidence** | **No regression** | The isolated profile includes only integration tests, has no setup mocks, runs in one fork, and validates a safe DB target before loading.[4] The latest recorded full validation result is **102 unit tests plus 15 real-DB integration tests**. The DB suite was not rerun for this final check, as instructed. |
+| **M-03 — real DB evidence** | **No regression** | The isolated profile includes only integration tests, has no setup mocks, runs in one fork, and validates a safe DB target before loading.[4] The final validation run passed **102 unit tests plus 15 real-DB integration tests**. |
 | **M-04 — denial audit and request correlation** | **No regression** | Context supplies a server-generated request ID. Owner, role, and purpose denials retain minimal audited contracts without raw resource locator or raw purpose; real-DB tests assert neutral denial behavior and safe audit contents.[10] [11] [12] [13] |
 | **M-05 — strict audit/outbox privacy contracts** | **No regression** | Strict discriminated event schemas and complete generated-envelope validation remain in place before persistence; arbitrary/nested free-form fields are rejected.[14] [15] [16] |
 | **m-01 — secret domain separation** | **No regression** | Customer-session secret has no JWT fallback; gate/wrapper enforce separation and strength.[1] [3] [17] |
@@ -70,7 +70,7 @@ The seven explicit foreign-key names are **22–28 characters**, below the MySQL
 | `pnpm test` | **PASS** | **13 test files, 102 unit tests passed**. The default profile intentionally excludes `server/r1/integration/**`.[21] |
 | `git diff --check` | **PASS** | No whitespace errors were reported. |
 | M-01 runtime/wrapper/profile inspection | **PASS** | Verified MySQL/MariaDB, loopback-only, exact database regex, test identity/profile values, dedicated secrets, client-off invariant, remote/HTTPS/suffix denial, and no public synthetic writer.[1] [2] [3] [4] [5] [6] [7] |
-| `pnpm test:r1:db` | **Not rerun, by instruction** | The latest recorded full result is **15 real-DB integration tests passed**, in addition to the 102 current unit tests. This review does not present that DB result as a fresh execution. |
+| `pnpm test:r1:db` | **PASS** | Migrations applied to the local loopback disposable MariaDB; **3 test files, 15 real-DB integration tests passed**. |
 
 ## 6. Residual global limitation
 
