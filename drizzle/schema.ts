@@ -407,6 +407,9 @@ export const outboxEvents = mysqlTable("outbox_events", {
   privacySafePayload: json("privacySafePayload"),
   status: mysqlEnum("status", ["pending", "processing", "published", "failed", "cancelled"]).default("pending").notNull(),
   attemptCount: int("attemptCount").default(0).notNull(),
+  leaseOwner: varchar("leaseOwner", { length: 64 }),
+  leaseVersion: int("leaseVersion").default(0).notNull(),
+  leaseExpiresAt: timestamp("leaseExpiresAt"),
   nextAttemptAt: timestamp("nextAttemptAt"),
   lastAttemptAt: timestamp("lastAttemptAt"),
   publishedAt: timestamp("publishedAt"),
@@ -417,7 +420,17 @@ export const outboxEvents = mysqlTable("outbox_events", {
   uniqueIndex("outbox_events_event_id_uq").on(table.eventId),
   uniqueIndex("outbox_events_dedupe_key_uq").on(table.dedupeKey),
   index("outbox_events_status_next_attempt_idx").on(table.status, table.nextAttemptAt),
+  index("outbox_events_lease_expiry_idx").on(table.leaseExpiresAt),
   index("outbox_events_aggregate_created_idx").on(table.aggregateType, table.aggregateId, table.createdAt),
+  check("chk_outbox_event_attempt_count_nonnegative", sql`${table.attemptCount} >= 0`),
+  check("chk_outbox_event_lease_version_nonnegative", sql`${table.leaseVersion} >= 0`),
+  check(
+    "chk_outbox_event_lease_lifecycle",
+    sql`(
+      (${table.status} = 'processing' AND ${table.leaseOwner} IS NOT NULL AND ${table.leaseExpiresAt} IS NOT NULL)
+      OR (${table.status} <> 'processing' AND ${table.leaseOwner} IS NULL AND ${table.leaseExpiresAt} IS NULL)
+    )`,
+  ),
 ]);
 
 export type OutboxEvent = typeof outboxEvents.$inferSelect;
@@ -872,6 +885,10 @@ export const questionnaireSubmissions = mysqlTable("questionnaire_submissions", 
   questionnaireReleaseId: varchar("questionnaireReleaseId", { length: 64 }).notNull(),
   questionnaireVersion: varchar("questionnaireVersion", { length: 64 }).notNull(),
   questionnaireContentHash: varchar("questionnaireContentHash", { length: 64 }).notNull(),
+  legalCoreReleaseId: varchar("legalCoreReleaseId", { length: 64 }).notNull(),
+  legalCoreVersion: varchar("legalCoreVersion", { length: 64 }).notNull(),
+  rulesetId: varchar("rulesetId", { length: 64 }).notNull(),
+  rulesetBundleHash: varchar("rulesetBundleHash", { length: 64 }).notNull(),
   visibleQuestionIds: json("visibleQuestionIds").notNull(),
   visibleSetHash: varchar("visibleSetHash", { length: 64 }).notNull(),
   manualFollowUpRequired: boolean("manualFollowUpRequired").notNull(),
@@ -898,13 +915,131 @@ export const questionnaireSubmissions = mysqlTable("questionnaire_submissions", 
     table.diagnosticCaseId,
     table.inputSnapshotHash,
   ),
+  uniqueIndex("questionnaire_submissions_id_owner_case_uq").on(
+    table.id,
+    table.customerAccountId,
+    table.diagnosticCaseId,
+  ),
   index("questionnaire_submissions_owner_case_submitted_idx").on(
     table.customerAccountId,
     table.diagnosticCaseId,
     table.submittedAt,
   ),
   check("chk_questionnaire_submission_version_positive", sql`${table.submissionVersion} > 0`),
+  check(
+    "chk_questionnaire_submission_legal_core_identity",
+    sql`(
+      ${table.legalCoreReleaseId} REGEXP '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'
+      AND ${table.legalCoreVersion} REGEXP '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'
+      AND ${table.rulesetId} REGEXP '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'
+      AND ${table.rulesetBundleHash} REGEXP '^[a-f0-9]{64}$'
+    )`,
+  ),
 ]);
 
 export type QuestionnaireSubmission = typeof questionnaireSubmissions.$inferSelect;
 export type InsertQuestionnaireSubmission = typeof questionnaireSubmissions.$inferInsert;
+
+// ── RELEASE 1 V2 RULES ENGINE PERSISTENCE ─────────────────────────────────────
+// Evaluations reference the immutable submission instead of duplicating its raw
+// answer snapshot. Result JSON is internal-only and every write remains fenced
+// to the submission owner/case plus the exact leased source outbox row.
+
+export const questionnaireRuleEvaluations = mysqlTable("questionnaire_rule_evaluations", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  questionnaireSubmissionId: varchar("questionnaireSubmissionId", { length: 64 }).notNull(),
+  sourceOutboxEventId: varchar("sourceOutboxEventId", { length: 64 }).notNull(),
+  submittedCaseStateVersion: int("submittedCaseStateVersion").notNull(),
+  rulesetId: varchar("rulesetId", { length: 64 }).notNull(),
+  rulesetVersion: varchar("rulesetVersion", { length: 64 }).notNull(),
+  rulesetHash: varchar("rulesetHash", { length: 64 }).notNull(),
+  inputSnapshotHash: varchar("inputSnapshotHash", { length: 64 }).notNull(),
+  status: mysqlEnum("status", [
+    "pending",
+    "succeeded",
+    "manual_review_required",
+    "failed",
+  ]).default("pending").notNull(),
+  outcomeJson: json("outcomeJson"),
+  outcomeHash: varchar("outcomeHash", { length: 64 }),
+  manualReviewRequired: boolean("manualReviewRequired").default(false).notNull(),
+  failureCode: varchar("failureCode", { length: 64 }),
+  startedAt: timestamp("startedAt").notNull(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.customerAccountId],
+    foreignColumns: [customerAccounts.id],
+    name: "fk_questionnaire_rule_evaluation_owner",
+  }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({
+    columns: [table.diagnosticCaseId, table.customerAccountId],
+    foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+    name: "fk_questionnaire_rule_evaluation_case_owner",
+  }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({
+    columns: [
+      table.questionnaireSubmissionId,
+      table.customerAccountId,
+      table.diagnosticCaseId,
+    ],
+    foreignColumns: [
+      questionnaireSubmissions.id,
+      questionnaireSubmissions.customerAccountId,
+      questionnaireSubmissions.diagnosticCaseId,
+    ],
+    name: "fk_questionnaire_rule_evaluation_submission_owner_case",
+  }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({
+    columns: [table.sourceOutboxEventId],
+    foreignColumns: [outboxEvents.id],
+    name: "fk_questionnaire_rule_evaluation_source_outbox",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("questionnaire_rule_evaluations_source_outbox_uq").on(
+    table.sourceOutboxEventId,
+  ),
+  uniqueIndex("questionnaire_rule_evaluations_submission_ruleset_uq").on(
+    table.questionnaireSubmissionId,
+    table.rulesetHash,
+  ),
+  uniqueIndex("questionnaire_rule_evaluations_id_owner_case_submission_uq").on(
+    table.id,
+    table.customerAccountId,
+    table.diagnosticCaseId,
+    table.questionnaireSubmissionId,
+  ),
+  index("questionnaire_rule_evaluations_owner_case_status_idx").on(
+    table.customerAccountId,
+    table.diagnosticCaseId,
+    table.status,
+    table.createdAt,
+  ),
+  check(
+    "chk_questionnaire_rule_evaluation_state_version_positive",
+    sql`${table.submittedCaseStateVersion} > 0`,
+  ),
+  check(
+    "chk_questionnaire_rule_evaluation_hashes",
+    sql`(
+      ${table.rulesetHash} REGEXP '^[a-f0-9]{64}$'
+      AND ${table.inputSnapshotHash} REGEXP '^[a-f0-9]{64}$'
+      AND (${table.outcomeHash} IS NULL OR ${table.outcomeHash} REGEXP '^[a-f0-9]{64}$')
+    )`,
+  ),
+  check(
+    "chk_questionnaire_rule_evaluation_lifecycle",
+    sql`(
+      (${table.status} = 'pending' AND ${table.outcomeJson} IS NULL AND ${table.outcomeHash} IS NULL AND ${table.manualReviewRequired} = false AND ${table.failureCode} IS NULL AND ${table.completedAt} IS NULL)
+      OR (${table.status} = 'succeeded' AND ${table.outcomeJson} IS NOT NULL AND ${table.outcomeHash} IS NOT NULL AND ${table.manualReviewRequired} = false AND ${table.failureCode} IS NULL AND ${table.completedAt} IS NOT NULL)
+      OR (${table.status} = 'manual_review_required' AND ${table.outcomeJson} IS NOT NULL AND ${table.outcomeHash} IS NOT NULL AND ${table.manualReviewRequired} = true AND ${table.failureCode} IS NULL AND ${table.completedAt} IS NOT NULL)
+      OR (${table.status} = 'failed' AND ${table.outcomeJson} IS NULL AND ${table.outcomeHash} IS NULL AND ${table.manualReviewRequired} = false AND ${table.failureCode} IS NOT NULL AND ${table.completedAt} IS NOT NULL)
+    )`,
+  ),
+]);
+
+export type QuestionnaireRuleEvaluation = typeof questionnaireRuleEvaluations.$inferSelect;
+export type InsertQuestionnaireRuleEvaluation = typeof questionnaireRuleEvaluations.$inferInsert;

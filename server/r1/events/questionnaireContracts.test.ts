@@ -52,6 +52,35 @@ const scoringOutbox = {
     submissionId: "qsubmit_questionnaire_01",
     submissionVersion: 1 as const,
     inputSnapshotHash: "d".repeat(64),
+    submittedCaseStateVersion: 4,
+    legalCoreReleaseId: "lexy-r0-2026-09-12",
+    legalCoreVersion: "1.0.0-draft.1",
+    rulesetId: "rules_v1",
+    rulesetBundleHash: "e".repeat(64),
+    test: true as const,
+  },
+};
+
+const evaluationCompletedAudit = {
+  actorType: "service" as const,
+  actorId: "rules_worker_01",
+  aggregateType: "questionnaire_rule_evaluation" as const,
+  aggregateId: "ruleeval_questionnaire_01",
+  eventType: "rules_engine.evaluation_completed" as const,
+  outcome: "succeeded" as const,
+  fromStatus: "pending" as const,
+  toStatus: "manual_review_required" as const,
+  correlationId: "event_questionnaire_01",
+  privacySafeMetadata: {
+    caseId: "case_questionnaire_01",
+    submissionId: "qsubmit_questionnaire_01",
+    sourceOutboxEventId: "outbox_questionnaire_01",
+    submittedCaseStateVersion: 4,
+    rulesetId: "rules_v1",
+    rulesetHash: "e".repeat(64),
+    inputSnapshotHash: "d".repeat(64),
+    outcomeHash: "f".repeat(64),
+    manualReviewRequired: true,
     test: true as const,
   },
 };
@@ -76,6 +105,7 @@ describe("questionnaire event contracts", () => {
     expect(parseAuditEvent(saveAudit)).toEqual(saveAudit);
     expect(parseAuditEvent(submitAudit)).toEqual(submitAudit);
     expect(parseAuditEvent(deniedAudit)).toEqual(deniedAudit);
+    expect(parseAuditEvent(evaluationCompletedAudit)).toEqual(evaluationCompletedAudit);
     expect(parseOutboxEvent(scoringOutbox)).toEqual(scoringOutbox);
     expect(outboxDedupeKey(scoringOutbox)).toBe(
       "questionnaire-submission:qsubmit_questionnaire_01:v1",
@@ -101,6 +131,10 @@ describe("questionnaire event contracts", () => {
       ...scoringOutbox,
       privacySafePayload: { ...scoringOutbox.privacySafePayload, ...extra },
     })).toThrow();
+    expect(() => parseAuditEvent({
+      ...evaluationCompletedAudit,
+      privacySafeMetadata: { ...evaluationCompletedAudit.privacySafeMetadata, ...extra },
+    })).toThrow();
   });
 
   it("rejects aggregate mismatch and non-v1 submissions", () => {
@@ -112,5 +146,13 @@ describe("questionnaire event contracts", () => {
       ...scoringOutbox,
       privacySafePayload: { ...scoringOutbox.privacySafePayload, submissionVersion: 2 },
     })).toThrow();
+    expect(() => parseOutboxEvent({
+      ...scoringOutbox,
+      privacySafePayload: { ...scoringOutbox.privacySafePayload, submittedCaseStateVersion: 0 },
+    })).toThrow();
+    expect(() => parseAuditEvent({
+      ...evaluationCompletedAudit,
+      toStatus: "succeeded",
+    })).toThrow(/status and manual review flag differ/);
   });
 });

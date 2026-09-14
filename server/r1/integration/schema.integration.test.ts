@@ -64,11 +64,14 @@ const R1_0008_TABLES = [
   "questionnaire_submissions",
 ] as const;
 
+const R1_0009_TABLES = ["questionnaire_rule_evaluations"] as const;
+
 const V2_TABLES = [
   ...R1_0005_TABLES,
   ...R1_0006_TABLES,
   ...R1_0007_TABLES,
   ...R1_0008_TABLES,
+  ...R1_0009_TABLES,
 ] as const;
 
 const LEGACY_TABLES = [
@@ -105,6 +108,10 @@ const REQUIRED_FOREIGN_KEYS = [
   "fk_questionnaire_draft_case_owner",
   "fk_questionnaire_answer_revision_draft_owner_case",
   "fk_questionnaire_submission_draft_owner_case",
+  "fk_questionnaire_rule_evaluation_owner",
+  "fk_questionnaire_rule_evaluation_case_owner",
+  "fk_questionnaire_rule_evaluation_submission_owner_case",
+  "fk_questionnaire_rule_evaluation_source_outbox",
 ] as const;
 
 const REQUIRED_INDEXES = [
@@ -165,7 +172,13 @@ const REQUIRED_INDEXES = [
   "questionnaire_answer_revisions_case_revision_idx",
   "questionnaire_submissions_case_version_uq",
   "questionnaire_submissions_case_input_hash_uq",
+  "questionnaire_submissions_id_owner_case_uq",
   "questionnaire_submissions_owner_case_submitted_idx",
+  "questionnaire_rule_evaluations_source_outbox_uq",
+  "questionnaire_rule_evaluations_submission_ruleset_uq",
+  "questionnaire_rule_evaluations_id_owner_case_submission_uq",
+  "questionnaire_rule_evaluations_owner_case_status_idx",
+  "outbox_events_lease_expiry_idx",
 ] as const;
 
 const PRE_R1_MIGRATION_NAMES = [
@@ -179,12 +192,14 @@ const R1_0005_MIGRATION_NAME = "0005_r1_access_control_expand.sql";
 const R1_0006_MIGRATION_NAME = "0006_r1_magic_link_expand.sql";
 const R1_0007_MIGRATION_NAME = "0007_r1_promo_access_expand.sql";
 const R1_0008_MIGRATION_NAME = "0008_r1_questionnaire_expand.sql";
+const R1_0009_MIGRATION_NAME = "0009_r1_rules_engine_foundation.sql";
 const MIGRATION_NAMES = [
   ...PRE_R1_MIGRATION_NAMES,
   R1_0005_MIGRATION_NAME,
   R1_0006_MIGRATION_NAME,
   R1_0007_MIGRATION_NAME,
   R1_0008_MIGRATION_NAME,
+  R1_0009_MIGRATION_NAME,
 ] as const;
 
 type NamedRow = { TABLE_NAME: string };
@@ -245,7 +260,7 @@ describe("R1 disposable database schema and constraints", () => {
     await cleanRunData();
   });
 
-  it("has exactly the expected 21 v2 tables, 18 foreign keys, and required indexes", async () => {
+  it("has exactly the expected 22 v2 tables, 22 foreign keys, and required indexes", async () => {
     const database = await db();
     const tableResult = await database.execute(sql`
       SELECT TABLE_NAME
@@ -258,7 +273,7 @@ describe("R1 disposable database schema and constraints", () => {
       !tableName.startsWith("__drizzle"),
     );
     expect(sorted(actualV2Tables)).toEqual(sorted(V2_TABLES));
-    expect(V2_TABLES).toHaveLength(21);
+    expect(V2_TABLES).toHaveLength(22);
 
     const fkResult = await database.execute(sql`
       SELECT CONSTRAINT_NAME
@@ -267,7 +282,7 @@ describe("R1 disposable database schema and constraints", () => {
     `);
     const foreignKeyNames = (fkResult[0] as ForeignKeyRow[]).map(row => row.CONSTRAINT_NAME);
     expect(sorted(foreignKeyNames)).toEqual(sorted(REQUIRED_FOREIGN_KEYS));
-    expect(foreignKeyNames).toHaveLength(18);
+    expect(foreignKeyNames).toHaveLength(22);
 
     const indexResult = await database.execute(sql`
       SELECT DISTINCT INDEX_NAME
@@ -295,7 +310,7 @@ describe("R1 disposable database schema and constraints", () => {
     }
   });
 
-  it("keeps R1 migrations add-only and scopes 0006/0007/0008 to their additive targets", async () => {
+  it("keeps R1 migrations add-only and scopes 0006/0007/0008/0009 to their additive targets", async () => {
     const migrationDirectory = path.resolve(import.meta.dirname, "../../../drizzle");
     const migrationsByName = new Map(
       await Promise.all(
@@ -309,15 +324,18 @@ describe("R1 disposable database schema and constraints", () => {
     const magicLinkSql = migrationsByName.get(R1_0006_MIGRATION_NAME) ?? "";
     const promoSql = migrationsByName.get(R1_0007_MIGRATION_NAME) ?? "";
     const questionnaireSql = migrationsByName.get(R1_0008_MIGRATION_NAME) ?? "";
+    const rulesSql = migrationsByName.get(R1_0009_MIGRATION_NAME) ?? "";
     expect(r1Sql).not.toBe("");
     expect(magicLinkSql).not.toBe("");
     expect(promoSql).not.toBe("");
     expect(questionnaireSql).not.toBe("");
+    expect(rulesSql).not.toBe("");
     const destructiveSql = /(?:^|;)\s*(?:DROP\b|DELETE\b|TRUNCATE\b|RENAME\b|UPDATE\b|INSERT\b|REPLACE\b)|ALTER\s+TABLE\b[^;]*\b(?:DROP|MODIFY|CHANGE|RENAME)\b/im;
     expect(r1Sql).not.toMatch(destructiveSql);
     expect(magicLinkSql).not.toMatch(destructiveSql);
     expect(promoSql).not.toMatch(destructiveSql);
     expect(questionnaireSql).not.toMatch(destructiveSql);
+    expect(rulesSql).not.toMatch(destructiveSql);
 
     const alterTargets = [...r1Sql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi)].map(match => match[1]);
     expect(alterTargets).toHaveLength(7);
@@ -392,6 +410,25 @@ describe("R1 disposable database schema and constraints", () => {
     for (const target of questionnaireIndexTargets) {
       expect(R1_0008_TABLES).toContain(target as typeof R1_0008_TABLES[number]);
     }
+
+    const rulesStatements = migrationStatements(rulesSql);
+    for (const statement of rulesStatements) {
+      expect(statement).toMatch(/^(?:CREATE\s+TABLE|ALTER\s+TABLE|CREATE\s+INDEX)\b/i);
+    }
+    const rulesCreateTargets = [
+      ...rulesSql.matchAll(/CREATE\s+TABLE\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    expect(sorted(rulesCreateTargets)).toEqual(sorted(R1_0009_TABLES));
+    const rulesAlterTargets = [
+      ...rulesSql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    expect(new Set(rulesAlterTargets)).toEqual(new Set([
+      "outbox_events",
+      "questionnaire_submissions",
+      "questionnaire_rule_evaluations",
+    ]));
+    expect(rulesSql).toContain("ADD `leaseVersion` int DEFAULT 0 NOT NULL");
+    expect(rulesSql).not.toContain("`inputSnapshotJson` json");
 
     const legacyDefinitions = PRE_R1_MIGRATION_NAMES
       .map(name => migrationsByName.get(name) ?? "")
@@ -617,6 +654,10 @@ describe("R1 disposable database schema and constraints", () => {
     })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
 
     const inputSnapshotHash = opaqueHash();
+    const legalCoreReleaseId = "lexy-r0-2026-09-12";
+    const legalCoreVersion = "1.0.0-draft.1";
+    const rulesetId = "rules_v1";
+    const rulesetBundleHash = opaqueHash();
     await expect(database.insert(questionnaireSubmissions).values({
       id: opaqueId("submission_cross_owner"),
       customerAccountId: ACCOUNT_B,
@@ -626,6 +667,10 @@ describe("R1 disposable database schema and constraints", () => {
       questionnaireReleaseId: releaseId,
       questionnaireVersion,
       questionnaireContentHash,
+      legalCoreReleaseId,
+      legalCoreVersion,
+      rulesetId,
+      rulesetBundleHash,
       visibleQuestionIds: [questionId],
       visibleSetHash,
       manualFollowUpRequired: false,
@@ -645,6 +690,10 @@ describe("R1 disposable database schema and constraints", () => {
       questionnaireReleaseId: releaseId,
       questionnaireVersion,
       questionnaireContentHash,
+      legalCoreReleaseId,
+      legalCoreVersion,
+      rulesetId,
+      rulesetBundleHash,
       visibleQuestionIds: [questionId],
       visibleSetHash,
       manualFollowUpRequired: false,
@@ -664,6 +713,10 @@ describe("R1 disposable database schema and constraints", () => {
       questionnaireReleaseId: releaseId,
       questionnaireVersion,
       questionnaireContentHash,
+      legalCoreReleaseId,
+      legalCoreVersion,
+      rulesetId,
+      rulesetBundleHash,
       visibleQuestionIds: [questionId],
       visibleSetHash,
       manualFollowUpRequired: false,
@@ -683,6 +736,10 @@ describe("R1 disposable database schema and constraints", () => {
       questionnaireReleaseId: releaseId,
       questionnaireVersion,
       questionnaireContentHash,
+      legalCoreReleaseId,
+      legalCoreVersion,
+      rulesetId,
+      rulesetBundleHash,
       visibleQuestionIds: [questionId],
       visibleSetHash,
       manualFollowUpRequired: false,
@@ -702,6 +759,10 @@ describe("R1 disposable database schema and constraints", () => {
       questionnaireReleaseId: releaseId,
       questionnaireVersion,
       questionnaireContentHash,
+      legalCoreReleaseId,
+      legalCoreVersion,
+      rulesetId,
+      rulesetBundleHash,
       visibleQuestionIds: [questionId],
       visibleSetHash,
       manualFollowUpRequired: false,

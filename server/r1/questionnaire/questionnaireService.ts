@@ -26,6 +26,10 @@ import {
 import { newR1Id } from "../ids";
 import { appendOutboxEvent } from "../outbox/outboxRepository";
 import { throwConflict, throwNeutralNotFound } from "../policy/errors";
+import {
+  TECHNICAL_LEGAL_CORE_RULESET_BUNDLE_HASH,
+  technicalLegalCoreConfigBundle,
+} from "../scoring/core/configBundle";
 import { canonicalSerialize, sha256Hex, type CanonicalJsonValue } from "./canonicalJson";
 import { buildQuestionnaireSnapshot } from "./canonicalSnapshot";
 import {
@@ -781,7 +785,9 @@ async function replaySubmission(
   pointer: SubmitPointer,
 ): Promise<SubmitQuestionnaireResponseDto> {
   if (
-    caseRow.status !== "submitted" ||
+    !(["submitted", "scoring", "manual_review_required", "failed"] as const).includes(
+      caseRow.status as "submitted" | "scoring" | "manual_review_required" | "failed",
+    ) ||
     draft.status !== "submitted" ||
     pointer.draftId !== draft.id ||
     pointer.draftRevision !== draft.draftRevision
@@ -799,7 +805,11 @@ async function replaySubmission(
     submission.submissionVersion !== 1 ||
     submission.questionnaireReleaseId !== bundle.releaseId ||
     submission.questionnaireVersion !== bundle.version ||
-    submission.questionnaireContentHash !== bundle.contentHash
+    submission.questionnaireContentHash !== bundle.contentHash ||
+    submission.legalCoreReleaseId !== technicalLegalCoreConfigBundle.releaseId ||
+    submission.legalCoreVersion !== technicalLegalCoreConfigBundle.version ||
+    submission.rulesetId !== technicalLegalCoreConfigBundle.rules.rulesetId ||
+    submission.rulesetBundleHash !== TECHNICAL_LEGAL_CORE_RULESET_BUNDLE_HASH
   ) {
     throw new QuestionnairePersistenceError("completed submission is missing");
   }
@@ -932,6 +942,10 @@ export async function submitQuestionnaire(
         questionnaireReleaseId: bundle.releaseId,
         questionnaireVersion: bundle.version,
         questionnaireContentHash: bundle.contentHash,
+        legalCoreReleaseId: technicalLegalCoreConfigBundle.releaseId,
+        legalCoreVersion: technicalLegalCoreConfigBundle.version,
+        rulesetId: technicalLegalCoreConfigBundle.rules.rulesetId,
+        rulesetBundleHash: TECHNICAL_LEGAL_CORE_RULESET_BUNDLE_HASH,
         visibleQuestionIds: [...snapshot.visibleQuestionIds],
         visibleSetHash: snapshot.visibleSetHash,
         manualFollowUpRequired: state.manualFollowUpRequired,
@@ -1017,6 +1031,11 @@ export async function submitQuestionnaire(
           submissionId,
           submissionVersion: 1,
           inputSnapshotHash: snapshot.inputSnapshotHash,
+          submittedCaseStateVersion: nextCaseStateVersion,
+          legalCoreReleaseId: technicalLegalCoreConfigBundle.releaseId,
+          legalCoreVersion: technicalLegalCoreConfigBundle.version,
+          rulesetId: technicalLegalCoreConfigBundle.rules.rulesetId,
+          rulesetBundleHash: TECHNICAL_LEGAL_CORE_RULESET_BUNDLE_HASH,
           test: true,
         },
         createdAt: now,
