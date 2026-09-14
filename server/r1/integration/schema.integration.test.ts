@@ -5,8 +5,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { sql } from "drizzle-orm";
 import {
   authRateLimitBuckets,
+  caseConsents,
   customerAccountIdentities,
   customerAccounts,
+  customerSessions,
   diagnosticCases,
   emailDeliveries,
   idempotencyRecords,
@@ -18,6 +20,8 @@ import {
   CASE_A,
   PUBLIC_A,
   RUN_PREFIX,
+  SESSION_A,
+  SESSION_B,
   cleanRunData,
   db,
   seedOwners,
@@ -43,7 +47,14 @@ const R1_0006_TABLES = [
   "magic_link_tokens",
 ] as const;
 
-const V2_TABLES = [...R1_0005_TABLES, ...R1_0006_TABLES] as const;
+const R1_0007_TABLES = [
+  "access_grants",
+  "case_consents",
+  "payment_records",
+  "tariff_snapshots",
+] as const;
+
+const V2_TABLES = [...R1_0005_TABLES, ...R1_0006_TABLES, ...R1_0007_TABLES] as const;
 
 const LEGACY_TABLES = [
   "users",
@@ -71,11 +82,17 @@ const REQUIRED_FOREIGN_KEYS = [
   "fk_email_delivery_token_identity",
   "fk_magic_token_identity",
   "fk_magic_token_session",
+  "fk_access_grant_payment_owner_case",
+  "fk_case_consent_case_owner",
+  "fk_case_consent_actor_owner",
+  "fk_payment_record_case_owner",
+  "fk_payment_record_tariff_snapshot",
 ] as const;
 
 const REQUIRED_INDEXES = [
   "customer_account_identities_type_hash_uq",
   "customer_sessions_token_hash_uq",
+  "customer_sessions_id_account_uq",
   "diagnostic_cases_public_id_uq",
   "idempotency_records_account_scope_key_uq",
   "legacy_ownership_cases_source_uq",
@@ -111,6 +128,16 @@ const REQUIRED_INDEXES = [
   "email_deliveries_lease_expiry_idx",
   "email_deliveries_identity_created_idx",
   "magic_link_tokens_identity_status_expiry_idx",
+  "diagnostic_cases_id_account_uq",
+  "access_grants_case_payment_uq",
+  "access_grants_payment_record_uq",
+  "access_grants_owner_case_status_expiry_idx",
+  "case_consents_assertion_uq",
+  "case_consents_owner_case_accepted_idx",
+  "case_consents_actor_idx",
+  "payment_records_redemption_scope_uq",
+  "payment_records_id_account_case_uq",
+  "payment_records_owner_case_idx",
 ] as const;
 
 const PRE_R1_MIGRATION_NAMES = [
@@ -122,10 +149,12 @@ const PRE_R1_MIGRATION_NAMES = [
 ] as const;
 const R1_0005_MIGRATION_NAME = "0005_r1_access_control_expand.sql";
 const R1_0006_MIGRATION_NAME = "0006_r1_magic_link_expand.sql";
+const R1_0007_MIGRATION_NAME = "0007_r1_promo_access_expand.sql";
 const MIGRATION_NAMES = [
   ...PRE_R1_MIGRATION_NAMES,
   R1_0005_MIGRATION_NAME,
   R1_0006_MIGRATION_NAME,
+  R1_0007_MIGRATION_NAME,
 ] as const;
 
 type NamedRow = { TABLE_NAME: string };
@@ -172,7 +201,7 @@ describe("R1 disposable database schema and constraints", () => {
     await cleanRunData();
   });
 
-  it("has exactly the expected 14 v2 tables, ten foreign keys, and required indexes", async () => {
+  it("has exactly the expected 18 v2 tables, 15 foreign keys, and required indexes", async () => {
     const database = await db();
     const tableResult = await database.execute(sql`
       SELECT TABLE_NAME
@@ -185,7 +214,7 @@ describe("R1 disposable database schema and constraints", () => {
       !tableName.startsWith("__drizzle"),
     );
     expect(sorted(actualV2Tables)).toEqual(sorted(V2_TABLES));
-    expect(V2_TABLES).toHaveLength(14);
+    expect(V2_TABLES).toHaveLength(18);
 
     const fkResult = await database.execute(sql`
       SELECT CONSTRAINT_NAME
@@ -194,7 +223,7 @@ describe("R1 disposable database schema and constraints", () => {
     `);
     const foreignKeyNames = (fkResult[0] as ForeignKeyRow[]).map(row => row.CONSTRAINT_NAME);
     expect(sorted(foreignKeyNames)).toEqual(sorted(REQUIRED_FOREIGN_KEYS));
-    expect(foreignKeyNames).toHaveLength(10);
+    expect(foreignKeyNames).toHaveLength(15);
 
     const indexResult = await database.execute(sql`
       SELECT DISTINCT INDEX_NAME
@@ -222,7 +251,7 @@ describe("R1 disposable database schema and constraints", () => {
     }
   });
 
-  it("keeps the R1 migrations add-only and scopes 0006 changes to its three new tables", async () => {
+  it("keeps R1 migrations add-only and scopes 0006/0007 to their additive targets", async () => {
     const migrationDirectory = path.resolve(import.meta.dirname, "../../../drizzle");
     const migrationsByName = new Map(
       await Promise.all(
@@ -234,11 +263,14 @@ describe("R1 disposable database schema and constraints", () => {
     );
     const r1Sql = migrationsByName.get(R1_0005_MIGRATION_NAME) ?? "";
     const magicLinkSql = migrationsByName.get(R1_0006_MIGRATION_NAME) ?? "";
+    const promoSql = migrationsByName.get(R1_0007_MIGRATION_NAME) ?? "";
     expect(r1Sql).not.toBe("");
     expect(magicLinkSql).not.toBe("");
+    expect(promoSql).not.toBe("");
     const destructiveSql = /(?:^|;)\s*(?:DROP\b|DELETE\b|TRUNCATE\b|RENAME\b|UPDATE\b|INSERT\b|REPLACE\b)|ALTER\s+TABLE\b[^;]*\b(?:DROP|MODIFY|CHANGE|RENAME)\b/im;
     expect(r1Sql).not.toMatch(destructiveSql);
     expect(magicLinkSql).not.toMatch(destructiveSql);
+    expect(promoSql).not.toMatch(destructiveSql);
 
     const alterTargets = [...r1Sql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi)].map(match => match[1]);
     expect(alterTargets).toHaveLength(7);
@@ -273,12 +305,40 @@ describe("R1 disposable database schema and constraints", () => {
       expect(R1_0006_TABLES).toContain(target as typeof R1_0006_TABLES[number]);
     }
 
+    const promoStatements = migrationStatements(promoSql);
+    for (const statement of promoStatements) {
+      expect(statement).toMatch(/^(?:CREATE\s+TABLE|ALTER\s+TABLE|CREATE\s+INDEX)\b/i);
+    }
+    const promoCreateTargets = [...promoSql.matchAll(/CREATE\s+TABLE\s+`([^`]+)`/gi)].map(match => match[1]);
+    expect(sorted(promoCreateTargets)).toEqual(sorted(R1_0007_TABLES));
+    const promoAlterTargets = [...promoSql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi)].map(match => match[1]);
+    expect(promoAlterTargets).toEqual(expect.arrayContaining(["customer_sessions", "diagnostic_cases", ...R1_0007_TABLES.slice(0, 3)]));
+    for (const statement of promoStatements.filter(statement => /^ALTER\s+TABLE\b/i.test(statement))) {
+      expect(statement).toMatch(/^ALTER\s+TABLE\s+`[^`]+`\s+ADD\s+CONSTRAINT\s+`[^`]+`/i);
+    }
+    const promoIndexTargets = [...promoSql.matchAll(/CREATE\s+INDEX\s+`[^`]+`\s+ON\s+`([^`]+)`/gi)].map(match => match[1]);
+    for (const target of promoIndexTargets) expect(R1_0007_TABLES).toContain(target as typeof R1_0007_TABLES[number]);
+
     const legacyDefinitions = PRE_R1_MIGRATION_NAMES
       .map(name => migrationsByName.get(name) ?? "")
       .join("\n");
     for (const tableName of LEGACY_TABLES) {
       expect(legacyDefinitions).toMatch(new RegExp(`CREATE\\s+TABLE\\s+\\\`${tableName}\\\``, "i"));
     }
+  });
+
+  it("keeps promo tables free of raw promo, provider, legal body, URL, and numeric price columns", async () => {
+    const database = await db();
+    const columnResult = await database.execute(sql`
+      SELECT TABLE_NAME, COLUMN_NAME
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME IN ('access_grants', 'case_consents', 'payment_records', 'tariff_snapshots')
+    `);
+    const normalized = (columnResult[0] as ColumnRow[]).map(row => row.COLUMN_NAME.replaceAll("_", "").toLowerCase());
+    expect(normalized.filter(name => /promovalue|verifier|pepper|email|legalbody|documentbody|url/.test(name))).toEqual([]);
+    expect(normalized.filter(name => /price|priceamount/.test(name))).toEqual([]);
+    expect(normalized).toContain("chargedamount");
   });
 
   it("enforces owner FK, publicId uniqueness, and idempotency scope/key uniqueness", async () => {
@@ -321,6 +381,50 @@ describe("R1 disposable database schema and constraints", () => {
     expect(caseRows).toHaveLength(1);
     const accountRows = await database.select().from(customerAccounts).where(sql`${customerAccounts.id} = ${ACCOUNT_A}`);
     expect(accountRows).toHaveLength(1);
+  });
+
+  it("rejects a consent actor session owned by another customer account", async () => {
+    await cleanRunData();
+    await seedOwners();
+    const database = await db();
+    const now = new Date("2026-02-01T00:00:00.000Z");
+
+    await expect(database.insert(caseConsents).values({
+      id: opaqueId("cross_owner_consent"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      documentId: "termsdraft",
+      documentVersion: "drafttestv1",
+      contentHash: opaqueHash(),
+      consentType: "terms",
+      accepted: true,
+      actorCustomerSessionId: SESSION_B,
+      acceptedAt: now,
+      createdAt: now,
+    })).rejects.toMatchObject({
+      cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }),
+    });
+
+    await expect(database.insert(caseConsents).values({
+      id: opaqueId("owned_consent"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      documentId: "termsdraft",
+      documentVersion: "drafttestv1",
+      contentHash: opaqueHash(),
+      consentType: "terms",
+      accepted: true,
+      actorCustomerSessionId: SESSION_A,
+      acceptedAt: now,
+      createdAt: now,
+    })).resolves.toBeDefined();
+
+    expect(await database.select().from(customerSessions)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: SESSION_A, customerAccountId: ACCOUNT_A }),
+        expect.objectContaining({ id: SESSION_B, customerAccountId: ACCOUNT_B }),
+      ])
+    );
   });
 
   it("enforces Magic Link opaque-data FKs and uniqueness constraints", async () => {

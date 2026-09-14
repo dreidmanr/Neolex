@@ -1,9 +1,13 @@
 import { randomBytes } from "node:crypto";
+import { hashNormalizedEmailIdentity } from "../auth/customerAccountRepository";
+import { hashMagicLinkRateLimitBucket } from "../auth/rateLimitStore";
 import type { TrpcContext } from "../../_core/context";
 import { getDb } from "../../db";
 import {
+  accessGrants,
   authRateLimitBuckets,
   auditEvents,
+  caseConsents,
   customerAccountIdentities,
   customerAccounts,
   customerSessions,
@@ -12,6 +16,8 @@ import {
   idempotencyRecords,
   magicLinkTokens,
   outboxEvents,
+  paymentRecords,
+  tariffSnapshots,
   type User,
 } from "../../../drizzle/schema";
 import { and, eq, like, or } from "drizzle-orm";
@@ -26,6 +32,22 @@ export const PUBLIC_A = `${RUN_PREFIX}_public_case_a`;
 export const PUBLIC_B = `${RUN_PREFIX}_public_case_b`;
 export const SESSION_A = `${RUN_PREFIX}_session_a`;
 export const SESSION_B = `${RUN_PREFIX}_session_b`;
+
+const runEmails = new Set([
+  `${RUN_PREFIX}@example.test`,
+  `${RUN_PREFIX}_unknown@example.test`,
+  `${RUN_PREFIX}_logout@example.test`,
+  `${RUN_PREFIX}_lease@example.test`,
+  `${RUN_PREFIX}_worker@example.test`,
+]);
+
+export function registerRunEmail(email: string): string {
+  if (!email.startsWith(`${RUN_PREFIX}_`) || !email.endsWith("@example.test")) {
+    throw new Error("R1 integration cleanup email is outside the current run");
+  }
+  runEmails.add(email);
+  return email;
+}
 
 export function assertSafeTestEnvironment(): void {
   const raw = process.env.DATABASE_URL;
@@ -61,12 +83,18 @@ export function assertSafeTestEnvironment(): void {
     process.env.LEXY_R1_EMAIL_IDENTITY_PEPPER ?? "",
     process.env.LEXY_R1_RATE_LIMIT_PEPPER ?? "",
   ];
+  const promoSecrets = [
+    process.env.LEXY_R1_PROMO_VERIFIER ?? "",
+    process.env.LEXY_R1_PROMO_VERIFIER_PEPPER ?? "",
+  ];
   if (
     process.env.LEXY_R1_EMAIL_TRANSPORT !== "test" ||
-    magicSecrets.some(secret => secret.length < 32) ||
-    new Set([...magicSecrets, customerSecret, jwtSecret]).size !== 5
+    process.env.LEXY_R1_PAYMENT_PROVIDER !== "disabled" ||
+    !/^[A-Za-z][A-Za-z0-9_-]{2,63}$/.test(process.env.LEXY_R1_PROMO_CAMPAIGN_ID ?? "") ||
+    [...magicSecrets, ...promoSecrets].some(secret => secret.length < 32) ||
+    new Set([...magicSecrets, ...promoSecrets, customerSecret, jwtSecret]).size !== 7
   ) {
-    throw new Error("R1 Magic Link integration secrets must be long and dedicated");
+    throw new Error("R1 integration authority secrets must be long and dedicated");
   }
 }
 
@@ -79,42 +107,69 @@ export async function db() {
 
 export async function cleanRunData(): Promise<void> {
   const database = await db();
-  const identities = await database
-    .select({ accountId: customerAccountIdentities.customerAccountId })
-    .from(customerAccountIdentities);
-  const magicAccountIds = identities.map(row => row.accountId);
-  await database.delete(outboxEvents).where(
-    or(
-      like(outboxEvents.aggregateId, `${RUN_PREFIX}%`),
-      eq(outboxEvents.eventType, "auth.magic_link_delivery_queued"),
-    ),
+  const identityHashes = new Set(Array.from(runEmails, email =>
+    hashNormalizedEmailIdentity(email, process.env.LEXY_R1_EMAIL_IDENTITY_PEPPER!),
+  ));
+  const bucketHashes = new Set(Array.from(runEmails, email =>
+    hashMagicLinkRateLimitBucket(email, process.env.LEXY_R1_RATE_LIMIT_PEPPER!),
+  ));
+  const allIdentities = await database.select().from(customerAccountIdentities);
+  const runIdentities = allIdentities.filter(row =>
+    identityHashes.has(row.identityHash) ||
+    row.customerAccountId === ACCOUNT_A ||
+    row.customerAccountId === ACCOUNT_B
   );
-  await database.delete(auditEvents).where(
-    or(
-      like(auditEvents.aggregateId, `${RUN_PREFIX}%`),
-      like(auditEvents.actorId, `${RUN_PREFIX}%`),
-      like(auditEvents.requestId, `${RUN_PREFIX}%`),
-      eq(auditEvents.eventType, "auth.magic_link_issued"),
-      eq(auditEvents.eventType, "auth.magic_link_consumed"),
-      eq(auditEvents.eventType, "auth.customer_session_revoked"),
-    ),
-  );
-  await database.delete(idempotencyRecords).where(
-    or(
-      like(idempotencyRecords.id, `${RUN_PREFIX}%`),
-      like(idempotencyRecords.customerAccountId, `${RUN_PREFIX}%`),
-    ),
-  );
-  await database.delete(diagnosticCases).where(like(diagnosticCases.id, `${RUN_PREFIX}%`));
-  await database.delete(emailDeliveries);
-  await database.delete(magicLinkTokens);
-  await database.delete(customerSessions);
-  await database.delete(customerAccountIdentities);
-  await database.delete(authRateLimitBuckets);
-  for (const accountId of magicAccountIds) {
+  const runAccountIds = new Set([ACCOUNT_A, ACCOUNT_B, ...runIdentities.map(row => row.customerAccountId)]);
+  const runIdentityIds = new Set(runIdentities.map(row => row.id));
+
+  const allDeliveries = await database.select().from(emailDeliveries);
+  const runDeliveries = allDeliveries.filter(row => runIdentityIds.has(row.customerAccountIdentityId));
+  const allTokens = await database.select().from(magicLinkTokens);
+  const runTokens = allTokens.filter(row => runIdentityIds.has(row.customerAccountIdentityId));
+  const allCases = await database.select().from(diagnosticCases);
+  const runCases = allCases.filter(row => runAccountIds.has(row.customerAccountId));
+  const allPayments = await database.select().from(paymentRecords);
+  const runPayments = allPayments.filter(row => runAccountIds.has(row.customerAccountId));
+  const allGrants = await database.select().from(accessGrants);
+  const runGrants = allGrants.filter(row => runAccountIds.has(row.customerAccountId));
+
+  const aggregateIds = new Set([
+    ...runDeliveries.map(row => row.id), ...runTokens.map(row => row.id),
+    ...runCases.map(row => row.id), ...runPayments.map(row => row.id), ...runGrants.map(row => row.id),
+  ]);
+  for (const aggregateId of Array.from(aggregateIds)) {
+    await database.delete(outboxEvents).where(eq(outboxEvents.aggregateId, aggregateId));
+  }
+  await database.delete(outboxEvents).where(like(outboxEvents.aggregateId, `${RUN_PREFIX}%`));
+  await database.delete(auditEvents).where(or(
+    like(auditEvents.aggregateId, `${RUN_PREFIX}%`),
+    like(auditEvents.actorId, `${RUN_PREFIX}%`),
+    like(auditEvents.requestId, `${RUN_PREFIX}%`),
+  ));
+
+  for (const accountId of Array.from(runAccountIds)) {
+    await database.delete(idempotencyRecords).where(eq(idempotencyRecords.customerAccountId, accountId));
+    await database.delete(accessGrants).where(eq(accessGrants.customerAccountId, accountId));
+    await database.delete(paymentRecords).where(eq(paymentRecords.customerAccountId, accountId));
+    await database.delete(caseConsents).where(eq(caseConsents.customerAccountId, accountId));
+    await database.delete(diagnosticCases).where(eq(diagnosticCases.customerAccountId, accountId));
+  }
+  for (const identityId of Array.from(runIdentityIds)) {
+    await database.delete(emailDeliveries).where(eq(emailDeliveries.customerAccountIdentityId, identityId));
+    await database.delete(magicLinkTokens).where(eq(magicLinkTokens.customerAccountIdentityId, identityId));
+  }
+  for (const accountId of Array.from(runAccountIds)) {
+    await database.delete(customerSessions).where(eq(customerSessions.customerAccountId, accountId));
+    await database.delete(customerAccountIdentities).where(eq(customerAccountIdentities.customerAccountId, accountId));
     await database.delete(customerAccounts).where(eq(customerAccounts.id, accountId));
   }
-  await database.delete(customerAccounts).where(like(customerAccounts.id, `${RUN_PREFIX}%`));
+  const allBuckets = await database.select().from(authRateLimitBuckets);
+  for (const bucket of allBuckets.filter(row => bucketHashes.has(row.bucketHash))) {
+    await database.delete(authRateLimitBuckets).where(eq(authRateLimitBuckets.id, bucket.id));
+  }
+  for (const payment of runPayments) {
+    await database.delete(tariffSnapshots).where(eq(tariffSnapshots.id, payment.tariffSnapshotId));
+  }
 }
 
 export async function seedOwners(): Promise<void> {
@@ -123,6 +178,10 @@ export async function seedOwners(): Promise<void> {
   await database.insert(customerAccounts).values([
     { id: ACCOUNT_A, status: "active", createdAt: now, updatedAt: now },
     { id: ACCOUNT_B, status: "active", createdAt: now, updatedAt: now },
+  ]);
+  await database.insert(customerSessions).values([
+    { id: SESSION_A, customerAccountId: ACCOUNT_A, tokenHash: `${RUN_PREFIX}_token_hash_a`, status: "active", expiresAt: new Date(now.getTime() + 60 * 60_000), createdAt: now },
+    { id: SESSION_B, customerAccountId: ACCOUNT_B, tokenHash: `${RUN_PREFIX}_token_hash_b`, status: "active", expiresAt: new Date(now.getTime() + 60 * 60_000), createdAt: now },
   ]);
   await database.insert(diagnosticCases).values([
     {

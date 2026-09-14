@@ -51,6 +51,14 @@ function enableSyntheticHarness() {
   process.env.DATABASE_URL = "mysql://test:test@localhost/lexy_r1_test_router";
   process.env.LEXY_CUSTOMER_SESSION_SECRET = "customer-session-secret-32-bytes-minimum";
   process.env.JWT_SECRET = "separate-oauth-secret-32-bytes-minimum";
+  process.env.LEXY_R1_EMAIL_TRANSPORT = "test";
+  process.env.LEXY_R1_MAGIC_LINK_SECRET = "router-magic-secret-material-32-bytes";
+  process.env.LEXY_R1_EMAIL_IDENTITY_PEPPER = "router-identity-pepper-material-32-bytes";
+  process.env.LEXY_R1_RATE_LIMIT_PEPPER = "router-rate-pepper-material-32-bytes";
+  process.env.LEXY_R1_PAYMENT_PROVIDER = "disabled";
+  process.env.LEXY_R1_PROMO_VERIFIER = "router-promo-verifier-material-32-bytes";
+  process.env.LEXY_R1_PROMO_VERIFIER_PEPPER = "router-promo-pepper-material-32-bytes";
+  process.env.LEXY_R1_PROMO_CAMPAIGN_ID = "router_test_campaign";
 }
 
 describe("pilot router", () => {
@@ -98,6 +106,21 @@ describe("pilot router", () => {
     expect(caller.cases).not.toHaveProperty("createSynthetic");
   });
 
+  it("exposes only the exact safe promo availability decision", async () => {
+    await expect(pilotRouter.createCaller(context()).status()).resolves.toEqual({
+      available: true,
+      mode: "synthetic",
+      promoAccessAvailable: true,
+    });
+
+    process.env.LEXY_R1_PAYMENT_PROVIDER = "provider";
+    await expect(pilotRouter.createCaller(context()).status()).resolves.toEqual({
+      available: true,
+      mode: "synthetic",
+      promoAccessAvailable: false,
+    });
+  });
+
   it.each([false, true])("returns neutral NOT_FOUND after owner miss when audit fails=%s", async auditFails => {
     mocks.findOwnedCaseByPublicId.mockResolvedValue(null);
     if (auditFails) mocks.appendAudit.mockRejectedValue(new Error("audit unavailable"));
@@ -127,7 +150,11 @@ describe("pilot router", () => {
     process.env.LEXY_R1_SYNTHETIC_TEST_MODE = "false";
     process.env.LEXY_R1_APPROVED_BUNDLE_HASH = "must-not-leak";
     const result = await pilotRouter.createCaller(context()).status();
-    expect(result).toEqual({ available: false, mode: "closed" });
+    expect(result).toEqual({
+      available: false,
+      mode: "closed",
+      promoAccessAvailable: false,
+    });
     expect(JSON.stringify(result)).not.toContain("must-not-leak");
   });
 });

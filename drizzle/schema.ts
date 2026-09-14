@@ -11,7 +11,9 @@ import {
   foreignKey,
   index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/mysql-core";
+import { sql } from "drizzle-orm";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -299,6 +301,10 @@ export const customerSessions = mysqlTable("customer_sessions", {
     name: "fk_customer_session_account",
   }).onDelete("restrict").onUpdate("restrict"),
   uniqueIndex("customer_sessions_token_hash_uq").on(table.tokenHash),
+  uniqueIndex("customer_sessions_id_account_uq").on(
+    table.id,
+    table.customerAccountId,
+  ),
   index("customer_sessions_account_status_expiry_idx").on(table.customerAccountId, table.status, table.expiresAt),
 ]);
 
@@ -331,6 +337,7 @@ export const diagnosticCases = mysqlTable("diagnostic_cases", {
     name: "fk_diagnostic_case_account",
   }).onDelete("restrict").onUpdate("restrict"),
   uniqueIndex("diagnostic_cases_public_id_uq").on(table.publicId),
+  uniqueIndex("diagnostic_cases_id_account_uq").on(table.id, table.customerAccountId),
   index("diagnostic_cases_owner_status_updated_idx").on(table.customerAccountId, table.status, table.updatedAt),
 ]);
 
@@ -633,3 +640,134 @@ export const authRateLimitBuckets = mysqlTable("auth_rate_limit_buckets", {
 
 export type AuthRateLimitBucket = typeof authRateLimitBuckets.$inferSelect;
 export type InsertAuthRateLimitBucket = typeof authRateLimitBuckets.$inferInsert;
+
+// ── RELEASE 1 V2 PROMO ACCESS ─────────────────────────────────────────────────
+// Tariff provenance, consent assertions, promo redemption records, and access
+// grants are append-only records. They contain no provider or legal prose.
+
+export const tariffSnapshots = mysqlTable("tariff_snapshots", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  tariffCode: varchar("tariffCode", { length: 64 }).notNull(),
+  serviceTier: varchar("serviceTier", { length: 64 }).notNull(),
+  provenanceStatus: mysqlEnum("provenanceStatus", ["draft_test_only"]).notNull(),
+  catalogVersion: varchar("catalogVersion", { length: 64 }).notNull(),
+  currency: mysqlEnum("currency", ["RUB"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TariffSnapshot = typeof tariffSnapshots.$inferSelect;
+export type InsertTariffSnapshot = typeof tariffSnapshots.$inferInsert;
+
+export const caseConsents = mysqlTable("case_consents", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  documentId: varchar("documentId", { length: 64 }).notNull(),
+  documentVersion: varchar("documentVersion", { length: 64 }).notNull(),
+  contentHash: varchar("contentHash", { length: 64 }).notNull(),
+  consentType: mysqlEnum("consentType", ["terms", "data_processing", "marketing"]).notNull(),
+  accepted: boolean("accepted").notNull(),
+  actorCustomerSessionId: varchar("actorCustomerSessionId", { length: 64 }).notNull(),
+  acceptedAt: timestamp("acceptedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.diagnosticCaseId, table.customerAccountId],
+    foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+    name: "fk_case_consent_case_owner",
+  }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({
+    columns: [table.actorCustomerSessionId, table.customerAccountId],
+    foreignColumns: [customerSessions.id, customerSessions.customerAccountId],
+    name: "fk_case_consent_actor_owner",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("case_consents_assertion_uq").on(
+    table.diagnosticCaseId,
+    table.documentId,
+    table.documentVersion,
+    table.consentType,
+    table.actorCustomerSessionId,
+  ),
+  index("case_consents_owner_case_accepted_idx").on(
+    table.customerAccountId,
+    table.diagnosticCaseId,
+    table.accepted,
+  ),
+  index("case_consents_actor_idx").on(table.actorCustomerSessionId),
+]);
+
+export type CaseConsent = typeof caseConsents.$inferSelect;
+export type InsertCaseConsent = typeof caseConsents.$inferInsert;
+
+export const paymentRecords = mysqlTable("payment_records", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  tariffSnapshotId: varchar("tariffSnapshotId", { length: 64 }).notNull(),
+  tariffCode: varchar("tariffCode", { length: 64 }).notNull(),
+  campaignId: varchar("campaignId", { length: 64 }).notNull(),
+  sourceType: mysqlEnum("sourceType", ["promo"]).notNull(),
+  status: mysqlEnum("status", ["promo_granted"]).notNull(),
+  chargedAmount: int("chargedAmount").default(0).notNull(),
+  currency: mysqlEnum("currency", ["RUB"]).notNull(),
+  correlationId: varchar("correlationId", { length: 64 }).notNull(),
+  grantedAt: timestamp("grantedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.diagnosticCaseId, table.customerAccountId],
+    foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+    name: "fk_payment_record_case_owner",
+  }).onDelete("restrict").onUpdate("restrict"),
+  foreignKey({
+    columns: [table.tariffSnapshotId],
+    foreignColumns: [tariffSnapshots.id],
+    name: "fk_payment_record_tariff_snapshot",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("payment_records_redemption_scope_uq").on(
+    table.customerAccountId,
+    table.campaignId,
+    table.tariffCode,
+  ),
+  uniqueIndex("payment_records_id_account_case_uq").on(
+    table.id,
+    table.customerAccountId,
+    table.diagnosticCaseId,
+  ),
+  index("payment_records_owner_case_idx").on(table.customerAccountId, table.diagnosticCaseId),
+  check("chk_payment_records_zero_charge", sql`${table.chargedAmount} = 0`),
+]);
+
+export type PaymentRecord = typeof paymentRecords.$inferSelect;
+export type InsertPaymentRecord = typeof paymentRecords.$inferInsert;
+
+export const accessGrants = mysqlTable("access_grants", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  paymentRecordId: varchar("paymentRecordId", { length: 64 }).notNull(),
+  status: mysqlEnum("status", ["active", "revoked", "expired"]).notNull(),
+  grantedAt: timestamp("grantedAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"),
+  revokedAt: timestamp("revokedAt"),
+  revocationReasonCode: varchar("revocationReasonCode", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.paymentRecordId, table.customerAccountId, table.diagnosticCaseId],
+    foreignColumns: [paymentRecords.id, paymentRecords.customerAccountId, paymentRecords.diagnosticCaseId],
+    name: "fk_access_grant_payment_owner_case",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("access_grants_case_payment_uq").on(table.diagnosticCaseId, table.paymentRecordId),
+  uniqueIndex("access_grants_payment_record_uq").on(table.paymentRecordId),
+  index("access_grants_owner_case_status_expiry_idx").on(
+    table.customerAccountId,
+    table.diagnosticCaseId,
+    table.status,
+    table.expiresAt,
+  ),
+]);
+
+export type AccessGrant = typeof accessGrants.$inferSelect;
+export type InsertAccessGrant = typeof accessGrants.$inferInsert;

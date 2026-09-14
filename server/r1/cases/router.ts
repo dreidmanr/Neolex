@@ -2,9 +2,14 @@ import { z } from "zod";
 import { customerProcedure, publicProcedure, router } from "../../_core/trpc";
 import { appendAuditEvent } from "../audit/auditRepository";
 import { customerAuthRouter } from "../auth/router";
+import { pilotAccessRouter, pilotConsentsRouter } from "../billing/router";
 import { requireR1Database } from "../database";
 import { throwNeutralNotFound } from "../policy/errors";
-import { assertTechnicalPilotAllowed, getReleaseGateStatus } from "../releaseGate";
+import {
+  assertTechnicalPilotAllowed,
+  getReleaseGateStatus,
+  isPromoAccessTestAllowed,
+} from "../releaseGate";
 import {
   findOwnedCaseByPublicId,
   listOwnedCases,
@@ -13,11 +18,14 @@ import {
 
 export const pilotRouter = router({
   auth: customerAuthRouter,
+  access: pilotAccessRouter,
+  consents: pilotConsentsRouter,
   status: publicProcedure.query(() => {
     const gate = getReleaseGateStatus();
     return {
       available: gate.technicalPilotAllowed,
       mode: gate.mode,
+      promoAccessAvailable: isPromoAccessTestAllowed(),
     };
   }),
   me: customerProcedure.query(({ ctx }) => {

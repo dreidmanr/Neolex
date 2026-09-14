@@ -87,12 +87,14 @@ export default function Pilot() {
                 Среда доступна только для контролируемой технической проверки. Материалы и
                 действия для клиентского использования на этой странице не предоставляются.
               </p>
-              <Button asChild className="mt-5 min-h-11" size="lg">
-                <Link href="/cabinet">
-                  Перейти в кабинет
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </Button>
+              {statusQuery.data?.promoAccessAvailable === true && (
+                <Button asChild className="mt-5 min-h-11" size="lg">
+                  <Link href="/pilot/access">
+                    Открыть доступ R1
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              )}
             </StatusPanel>
           )}
         </section>

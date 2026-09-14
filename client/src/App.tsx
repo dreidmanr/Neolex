@@ -1,38 +1,47 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { isControlledClientRoute } from "@/lib/controlledRoutes";
+import {
+  removeLegacyAnalyticsScripts,
+  synchronizeLegacyAnalyticsScript,
+} from "@/lib/legacyAnalytics";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import LexyWidget from "./components/LexyWidget";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import Admin from "./pages/Admin";
+import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
+import Cabinet from "./pages/Cabinet";
 import Diagnostic from "./pages/Diagnostic";
-import Results from "./pages/Results";
+import Home from "./pages/Home";
+import LegalDocs from "./pages/LegalDocs";
+import MagicLinkConsume from "./pages/MagicLinkConsume";
 import PaidDiagnostic from "./pages/PaidDiagnostic";
 import PaidResults from "./pages/PaidResults";
-import LexyWidget from "./components/LexyWidget";
-import LegalDocs from "./pages/LegalDocs";
-import Admin from "./pages/Admin";
 import Pilot from "./pages/Pilot";
-import Cabinet from "./pages/Cabinet";
-import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
+import PilotAccess from "./pages/PilotAccess";
+import R1LegalMetadata from "./pages/R1LegalMetadata";
 import RequestMagicLink from "./pages/RequestMagicLink";
-import MagicLinkConsume from "./pages/MagicLinkConsume";
-import { useLocation } from "wouter";
+import Results from "./pages/Results";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/r1/legal/:documentId" component={R1LegalMetadata} />
+      <Route path="/pilot/access" component={PilotAccess} />
+      <Route path="/pilot" component={Pilot} />
+      <Route path="/cabinet" component={Cabinet} />
+      <Route path="/auth/request-link" component={RequestMagicLink} />
+      <Route path="/auth/consume" component={MagicLinkConsume} />
+      <Route path="/admin/pilot-diagnostics" component={AdminPilotDiagnostics} />
       <Route path="/" component={Home} />
       <Route path="/diagnostic" component={Diagnostic} />
       <Route path="/results/:token" component={Results} />
       <Route path="/paid" component={PaidDiagnostic} />
       <Route path="/paid/results/:token" component={PaidResults} />
       <Route path="/legal/:doc" component={LegalDocs} />
-      <Route path="/pilot" component={Pilot} />
-      <Route path="/cabinet" component={Cabinet} />
-      <Route path="/auth/request-link" component={RequestMagicLink} />
-      <Route path="/auth/consume" component={MagicLinkConsume} />
-      <Route path="/admin/pilot-diagnostics" component={AdminPilotDiagnostics} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
@@ -40,24 +49,31 @@ function Router() {
   );
 }
 
+function LegacyAnalytics({ controlled }: { controlled: boolean }) {
+  useEffect(() => {
+    synchronizeLegacyAnalyticsScript(document, controlled, {
+      endpoint: import.meta.env.VITE_ANALYTICS_ENDPOINT,
+      websiteId: import.meta.env.VITE_ANALYTICS_WEBSITE_ID,
+    });
+
+    return () => removeLegacyAnalyticsScripts(document);
+  }, [controlled]);
+
+  return null;
+}
+
 function App() {
   const [location] = useLocation();
-  const isPilotRoute =
-    location === "/pilot" ||
-    location.startsWith("/pilot/") ||
-    location === "/cabinet" ||
-    location.startsWith("/cabinet/") ||
-    location.startsWith("/auth/") ||
-    location === "/admin/pilot-diagnostics" ||
-    location.startsWith("/admin/pilot-diagnostics/");
+  const isControlledRoute = isControlledClientRoute(location);
 
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
+          <LegacyAnalytics controlled={isControlledRoute} />
           <Toaster />
           <Router />
-          {!isPilotRoute && <LexyWidget />}
+          {!isControlledRoute && <LexyWidget />}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
