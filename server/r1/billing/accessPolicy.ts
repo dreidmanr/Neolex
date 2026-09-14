@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { and, eq, gt, isNull, or, sql } from "drizzle-orm";
 import {
   accessGrants,
   paymentRecords,
@@ -59,6 +59,42 @@ export async function findActiveOwnedAccessGrant(
   return isActiveOwnedAccessGrant(customerAccountId, diagnosticCaseId, candidate, now)
     ? candidate
     : null;
+}
+
+/**
+ * Used only after the owned diagnostic-case row has been locked. The joined
+ * grant/payment lock is the second step in the shared questionnaire/revocation
+ * lock order, and active expiry is deliberately evaluated by MariaDB NOW().
+ */
+export async function findActiveOwnedAccessGrantForUpdate(
+  executor: R1Executor,
+  customerAccountId: string,
+  diagnosticCaseId: string,
+): Promise<AccessGrantCandidate | null> {
+  const rows = await executor
+    .select({ grant: accessGrants, payment: paymentRecords })
+    .from(accessGrants)
+    .innerJoin(
+      paymentRecords,
+      and(
+        eq(paymentRecords.id, accessGrants.paymentRecordId),
+        eq(paymentRecords.customerAccountId, accessGrants.customerAccountId),
+        eq(paymentRecords.diagnosticCaseId, accessGrants.diagnosticCaseId),
+      ),
+    )
+    .where(
+      and(
+        eq(accessGrants.customerAccountId, customerAccountId),
+        eq(accessGrants.diagnosticCaseId, diagnosticCaseId),
+        eq(accessGrants.status, "active"),
+        isNull(accessGrants.revokedAt),
+        or(isNull(accessGrants.expiresAt), gt(accessGrants.expiresAt, sql`CURRENT_TIMESTAMP`)),
+        eq(paymentRecords.status, "promo_granted"),
+      ),
+    )
+    .for("update")
+    .limit(1);
+  return rows[0] ?? null;
 }
 
 export async function requireActiveOwnedAccessGrant(

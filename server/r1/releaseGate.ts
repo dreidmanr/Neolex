@@ -17,6 +17,10 @@ export type PromoAccessTestGateStatus = MagicLinkTestGateStatus & {
   promoAccessTestAllowed: boolean;
 };
 
+export type QuestionnaireTestGateStatus = PromoAccessTestGateStatus & {
+  questionnaireTestAllowed: boolean;
+};
+
 function explicitlyEnabled(value: string | undefined): boolean {
   return value === "true";
 }
@@ -160,4 +164,34 @@ export function assertPromoAccessTestAllowed(): PromoAccessTestGateStatus {
     });
   }
   return { ...status, magicLinkTestAllowed, promoAccessTestAllowed };
+}
+
+export function isQuestionnaireTestAllowed(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  if (!isPromoAccessTestAllowed(env)) return false;
+  const questionnairePepper = env.LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER ?? "";
+  if (questionnairePepper.length < 32) return false;
+  const existingSecrets = new Set([
+    env.LEXY_CUSTOMER_SESSION_SECRET ?? "",
+    env.JWT_SECRET ?? "",
+    env.LEXY_R1_MAGIC_LINK_SECRET ?? "",
+    env.LEXY_R1_EMAIL_IDENTITY_PEPPER ?? "",
+    env.LEXY_R1_RATE_LIMIT_PEPPER ?? "",
+    env.LEXY_R1_PROMO_VERIFIER ?? "",
+    env.LEXY_R1_PROMO_VERIFIER_PEPPER ?? "",
+  ]);
+  return !existingSecrets.has(questionnairePepper);
+}
+
+export function assertQuestionnaireTestAllowed(): QuestionnaireTestGateStatus {
+  const status = assertPromoAccessTestAllowed();
+  const questionnaireTestAllowed = isQuestionnaireTestAllowed();
+  if (!questionnaireTestAllowed) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Pilot is unavailable",
+    });
+  }
+  return { ...status, questionnaireTestAllowed };
 }

@@ -122,10 +122,50 @@ const accessRevokedAudit = z.object({
   }).strict(),
   createdAt: z.date().optional(),
 }).strict();
+const questionnaireAnswerSavedAudit = z.object({
+  actorType: z.literal("customer_session"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("questionnaire_draft"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("questionnaire.answer_saved"), outcome: z.literal("succeeded"),
+  requestId: requestIdSchema, idempotencyKeyHash: hashSchema,
+  privacySafeMetadata: z.object({
+    caseId: opaqueIdSchema, questionId: opaqueIdSchema,
+    draftRevision: positiveVersionSchema, visibleSetHash: hashSchema,
+    activeAnsweredCount: z.number().int().min(0).max(63),
+    requiredActiveCount: z.number().int().min(0).max(63),
+    manualFollowUpRequired: z.boolean(), test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const questionnaireSubmittedAudit = z.object({
+  actorType: z.literal("customer_session"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("questionnaire_draft"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("questionnaire.submitted"), outcome: z.literal("succeeded"),
+  requestId: requestIdSchema, idempotencyKeyHash: hashSchema,
+  privacySafeMetadata: z.object({
+    caseId: opaqueIdSchema, submissionId: opaqueIdSchema,
+    submissionVersion: z.literal(1), inputSnapshotHash: hashSchema,
+    activeAnsweredCount: z.number().int().min(0).max(63),
+    requiredActiveCount: z.number().int().min(0).max(63),
+    manualFollowUpRequired: z.boolean(), test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const questionnaireAccessDeniedAudit = z.object({
+  actorType: z.literal("customer_session"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("diagnostic_case"), aggregateId: z.literal("unresolved_case"),
+  eventType: z.literal("questionnaire.access_denied"), outcome: z.literal("denied"),
+  reasonCode: z.literal("owner_or_entitlement_miss"), requestId: requestIdSchema,
+  privacySafeMetadata: z.object({
+    resourceClass: z.literal("questionnaire"),
+    action: z.enum(["get_draft", "save_answer", "submit"]),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
 export const auditEventSchema = z.discriminatedUnion("eventType", [
   syntheticAudit, transitionAudit, adminListAudit, ownerDeniedAudit, adminRoleDeniedAudit, adminPurposeDeniedAudit,
   magicLinkIssuedAudit, magicLinkConsumedAudit, customerSessionRevokedAudit, promoGrantedAudit,
-  accessRevokedAudit,
+  accessRevokedAudit, questionnaireAnswerSavedAudit, questionnaireSubmittedAudit,
+  questionnaireAccessDeniedAudit,
 ]);
 export type AppendAuditEvent = z.infer<typeof auditEventSchema>;
 
@@ -173,16 +213,26 @@ const accessRevokedOutbox = z.object({
   }).strict(),
   createdAt: z.date().optional(),
 }).strict();
+const questionnaireSubmittedForScoringOutbox = z.object({
+  aggregateType: z.literal("questionnaire_submission"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("questionnaire.submitted_for_scoring"),
+  privacySafePayload: z.object({
+    caseId: opaqueIdSchema, submissionId: opaqueIdSchema,
+    submissionVersion: z.literal(1), inputSnapshotHash: hashSchema,
+    test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
 export const outboxEventSchema = z.discriminatedUnion("eventType", [
   syntheticOutbox, transitionOutbox, magicLinkDeliveryQueuedOutbox, promoGrantedOutbox,
-  accessRevokedOutbox,
+  accessRevokedOutbox, questionnaireSubmittedForScoringOutbox,
 ]);
 export type AppendOutboxEvent = z.infer<typeof outboxEventSchema>;
 
 const generatedAuditEnvelopeSchema = z.object({ id: opaqueIdSchema }).strict();
 const generatedOutboxEnvelopeSchema = z.object({
   id: opaqueIdSchema, eventId: opaqueIdSchema,
-  dedupeKey: z.string().max(128).regex(/^(?:(?:case-created|case-transition):[A-Za-z0-9][A-Za-z0-9_-]*:v[1-9][0-9]*|magic-link-delivery:[A-Za-z0-9][A-Za-z0-9_-]*:[1-9][0-9]*:v1|promo-payment:[A-Za-z0-9][A-Za-z0-9_-]*:v1|access-revocation:[A-Za-z0-9][A-Za-z0-9_-]*:v1)$/),
+  dedupeKey: z.string().max(128).regex(/^(?:(?:case-created|case-transition):[A-Za-z0-9][A-Za-z0-9_-]*:v[1-9][0-9]*|magic-link-delivery:[A-Za-z0-9][A-Za-z0-9_-]*:[1-9][0-9]*:v1|promo-payment:[A-Za-z0-9][A-Za-z0-9_-]*:v1|access-revocation:[A-Za-z0-9][A-Za-z0-9_-]*:v1|questionnaire-submission:[A-Za-z0-9][A-Za-z0-9_-]*:v1)$/),
   status: z.literal("pending"), attemptCount: z.literal(0), updatedAt: z.date(),
 }).strict();
 
@@ -195,6 +245,9 @@ export function outboxDedupeKey(event: AppendOutboxEvent): string {
   }
   if (event.eventType === "billing.access_revoked") {
     return `access-revocation:${event.privacySafePayload.grantId}:v1`;
+  }
+  if (event.eventType === "questionnaire.submitted_for_scoring") {
+    return `questionnaire-submission:${event.privacySafePayload.submissionId}:v1`;
   }
   const prefix = event.eventType === "diagnostic_case.synthetic_created" ? "case-created" : "case-transition";
   return `${prefix}:${event.aggregateId}:v${event.privacySafePayload.stateVersion}`;
@@ -210,7 +263,9 @@ export function parseOutboxEvent(value: unknown): AppendOutboxEvent {
       ? event.privacySafePayload.paymentId
       : event.eventType === "billing.access_revoked"
         ? event.privacySafePayload.grantId
-        : event.privacySafePayload.caseId;
+        : event.eventType === "questionnaire.submitted_for_scoring"
+          ? event.privacySafePayload.submissionId
+          : event.privacySafePayload.caseId;
   if (event.aggregateId !== payloadAggregateId) {
     throw new Error("Aggregate and payload identifiers differ");
   }

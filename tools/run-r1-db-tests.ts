@@ -66,12 +66,16 @@ function validateEnvironment(): void {
     ["LEXY_R1_PROMO_VERIFIER", requireLongSecret("LEXY_R1_PROMO_VERIFIER")],
     ["LEXY_R1_PROMO_VERIFIER_PEPPER", requireLongSecret("LEXY_R1_PROMO_VERIFIER_PEPPER")],
   ] as const;
+  const questionnairePepper = requireLongSecret(
+    "LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER",
+  );
   if (new Set([
     customerSecret,
     jwtSecret,
     ...magicLinkSecrets.map(([, secret]) => secret),
     ...promoSecrets.map(([, secret]) => secret),
-  ]).size !== 7) {
+    questionnairePepper,
+  ]).size !== 8) {
     fail("R1 DB secrets and peppers must be pairwise distinct and dedicated");
   }
   const campaignId = process.env.LEXY_R1_PROMO_CAMPAIGN_ID ?? "";

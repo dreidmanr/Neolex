@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, or } from "drizzle-orm";
+import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import {
   diagnosticCases,
   type DiagnosticCase,
@@ -77,6 +77,25 @@ export async function findOwnedCaseByPublicId(
   return rows[0] ?? null;
 }
 
+export async function findOwnedCaseByPublicIdForUpdate(
+  executor: R1Executor,
+  customerAccountId: string,
+  publicId: string,
+): Promise<DiagnosticCase | null> {
+  const rows = await executor
+    .select()
+    .from(diagnosticCases)
+    .where(
+      and(
+        eq(diagnosticCases.publicId, publicId),
+        eq(diagnosticCases.customerAccountId, customerAccountId),
+      ),
+    )
+    .for("update")
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 export async function findOwnedCaseById(
   executor: R1Executor,
   customerAccountId: string,
@@ -91,6 +110,25 @@ export async function findOwnedCaseById(
         eq(diagnosticCases.customerAccountId, customerAccountId),
       ),
     )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function findOwnedCaseByIdForUpdate(
+  executor: R1Executor,
+  customerAccountId: string,
+  id: string,
+): Promise<DiagnosticCase | null> {
+  const rows = await executor
+    .select()
+    .from(diagnosticCases)
+    .where(
+      and(
+        eq(diagnosticCases.id, id),
+        eq(diagnosticCases.customerAccountId, customerAccountId),
+      ),
+    )
+    .for("update")
     .limit(1);
   return rows[0] ?? null;
 }
@@ -118,6 +156,36 @@ export async function compareAndSwapCaseStatus(
         eq(diagnosticCases.id, input.id),
         eq(diagnosticCases.customerAccountId, input.customerAccountId),
         eq(diagnosticCases.status, input.fromStatus),
+        eq(diagnosticCases.stateVersion, input.expectedStateVersion),
+      ),
+  );
+  return Number(result[0].affectedRows) === 1;
+}
+
+/**
+ * Fences an accepted mutation to the exact locked case state without advancing
+ * workflow state. This deliberately bumps only updatedAt for in-progress saves.
+ */
+export async function touchCaseAtStateVersion(
+  executor: R1Executor,
+  input: {
+    id: string;
+    customerAccountId: string;
+    status: CaseStatus;
+    expectedStateVersion: number;
+    now: Date;
+  },
+): Promise<boolean> {
+  const result = await executor
+    .update(diagnosticCases)
+    .set({
+      updatedAt: sql`GREATEST(CURRENT_TIMESTAMP, DATE_ADD(${diagnosticCases.updatedAt}, INTERVAL 1 SECOND))`,
+    })
+    .where(
+      and(
+        eq(diagnosticCases.id, input.id),
+        eq(diagnosticCases.customerAccountId, input.customerAccountId),
+        eq(diagnosticCases.status, input.status),
         eq(diagnosticCases.stateVersion, input.expectedStateVersion),
       ),
     );

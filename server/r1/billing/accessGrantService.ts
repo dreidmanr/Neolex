@@ -1,9 +1,10 @@
 import { appendAuditEvent } from "../audit/auditRepository";
+import { findOwnedCaseByIdForUpdate } from "../cases/caseRepository";
 import { requireR1Database } from "../database";
 import { appendOutboxEvent } from "../outbox/outboxRepository";
 import { throwConflict, throwNeutralNotFound } from "../policy/errors";
 import { assertPromoAccessTestAllowed } from "../releaseGate";
-import { findActiveOwnedAccessGrant } from "./accessPolicy";
+import { findActiveOwnedAccessGrantForUpdate } from "./accessPolicy";
 import { conditionallyRevokeAccessGrant } from "./paymentRepository";
 
 export async function revokeAccessGrant(input: {
@@ -19,11 +20,17 @@ export async function revokeAccessGrant(input: {
   const database = await requireR1Database();
   const now = input.now ?? new Date();
   return database.transaction(async tx => {
-    const candidate = await findActiveOwnedAccessGrant(
+    // Stable order shared with Questionnaire: case row, then grant/payment.
+    const caseRow = await findOwnedCaseByIdForUpdate(
       tx,
       input.customerAccountId,
       input.diagnosticCaseId,
-      now,
+    );
+    if (!caseRow) throwNeutralNotFound();
+    const candidate = await findActiveOwnedAccessGrantForUpdate(
+      tx,
+      input.customerAccountId,
+      input.diagnosticCaseId,
     );
     if (!candidate || candidate.grant.id !== input.accessGrantId) throwNeutralNotFound();
     const revoked = await conditionallyRevokeAccessGrant(tx, {

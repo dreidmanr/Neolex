@@ -771,3 +771,140 @@ export const accessGrants = mysqlTable("access_grants", {
 
 export type AccessGrant = typeof accessGrants.$inferSelect;
 export type InsertAccessGrant = typeof accessGrants.$inferInsert;
+
+// ── RELEASE 1 V2 QUESTIONNAIRE PERSISTENCE ────────────────────────────────────
+// Drafts, immutable answer revisions, and immutable submissions retain only
+// opaque identifiers, hashes, structured values, and privacy-safe state.
+
+export const questionnaireDrafts = mysqlTable("questionnaire_drafts", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  questionnaireReleaseId: varchar("questionnaireReleaseId", { length: 64 }).notNull(),
+  questionnaireVersion: varchar("questionnaireVersion", { length: 64 }).notNull(),
+  questionnaireContentHash: varchar("questionnaireContentHash", { length: 64 }).notNull(),
+  status: mysqlEnum("status", ["open", "submitted"]).default("open").notNull(),
+  draftRevision: int("draftRevision").default(0).notNull(),
+  currentQuestionId: varchar("currentQuestionId", { length: 64 }),
+  visibleQuestionIds: json("visibleQuestionIds").notNull(),
+  visibleSetHash: varchar("visibleSetHash", { length: 64 }).notNull(),
+  manualFollowUpRequired: boolean("manualFollowUpRequired").default(false).notNull(),
+  manualFollowUpTriggerIds: json("manualFollowUpTriggerIds").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.diagnosticCaseId, table.customerAccountId],
+    foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+    name: "fk_questionnaire_draft_case_owner",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("questionnaire_drafts_case_uq").on(table.diagnosticCaseId),
+  uniqueIndex("questionnaire_drafts_id_owner_case_uq").on(
+    table.id,
+    table.customerAccountId,
+    table.diagnosticCaseId,
+  ),
+  index("questionnaire_drafts_owner_case_status_updated_idx").on(
+    table.customerAccountId,
+    table.diagnosticCaseId,
+    table.status,
+    table.updatedAt,
+  ),
+  check("chk_questionnaire_draft_revision_nonnegative", sql`${table.draftRevision} >= 0`),
+]);
+
+export type QuestionnaireDraft = typeof questionnaireDrafts.$inferSelect;
+export type InsertQuestionnaireDraft = typeof questionnaireDrafts.$inferInsert;
+
+export const questionnaireAnswerRevisions = mysqlTable("questionnaire_answer_revisions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  questionnaireDraftId: varchar("questionnaireDraftId", { length: 64 }).notNull(),
+  questionId: varchar("questionId", { length: 64 }).notNull(),
+  draftRevision: int("draftRevision").notNull(),
+  valueJson: json("valueJson"),
+  answerState: mysqlEnum("answerState", ["active", "inactive"]).notNull(),
+  source: mysqlEnum("source", ["customer", "system_branch_recompute"]).notNull(),
+  clientMutationIdHash: varchar("clientMutationIdHash", { length: 128 }).notNull(),
+  deactivationReasonCode: varchar("deactivationReasonCode", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.questionnaireDraftId, table.customerAccountId, table.diagnosticCaseId],
+    foreignColumns: [
+      questionnaireDrafts.id,
+      questionnaireDrafts.customerAccountId,
+      questionnaireDrafts.diagnosticCaseId,
+    ],
+    name: "fk_questionnaire_answer_revision_draft_owner_case",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("questionnaire_answer_revisions_draft_question_revision_uq").on(
+    table.questionnaireDraftId,
+    table.questionId,
+    table.draftRevision,
+  ),
+  uniqueIndex("questionnaire_answer_revisions_draft_mutation_uq").on(
+    table.questionnaireDraftId,
+    table.clientMutationIdHash,
+  ),
+  index("questionnaire_answer_revisions_draft_question_revision_idx").on(
+    table.questionnaireDraftId,
+    table.questionId,
+    table.draftRevision,
+  ),
+  index("questionnaire_answer_revisions_case_revision_idx").on(
+    table.diagnosticCaseId,
+    table.draftRevision,
+  ),
+  check("chk_questionnaire_answer_revision_positive", sql`${table.draftRevision} > 0`),
+]);
+
+export type QuestionnaireAnswerRevision = typeof questionnaireAnswerRevisions.$inferSelect;
+export type InsertQuestionnaireAnswerRevision = typeof questionnaireAnswerRevisions.$inferInsert;
+
+export const questionnaireSubmissions = mysqlTable("questionnaire_submissions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+  diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+  questionnaireDraftId: varchar("questionnaireDraftId", { length: 64 }).notNull(),
+  submissionVersion: int("submissionVersion").notNull(),
+  questionnaireReleaseId: varchar("questionnaireReleaseId", { length: 64 }).notNull(),
+  questionnaireVersion: varchar("questionnaireVersion", { length: 64 }).notNull(),
+  questionnaireContentHash: varchar("questionnaireContentHash", { length: 64 }).notNull(),
+  visibleQuestionIds: json("visibleQuestionIds").notNull(),
+  visibleSetHash: varchar("visibleSetHash", { length: 64 }).notNull(),
+  manualFollowUpRequired: boolean("manualFollowUpRequired").notNull(),
+  manualFollowUpTriggerIds: json("manualFollowUpTriggerIds").notNull(),
+  inputSnapshotJson: json("inputSnapshotJson").notNull(),
+  inputSnapshotHash: varchar("inputSnapshotHash", { length: 64 }).notNull(),
+  submittedAt: timestamp("submittedAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  foreignKey({
+    columns: [table.questionnaireDraftId, table.customerAccountId, table.diagnosticCaseId],
+    foreignColumns: [
+      questionnaireDrafts.id,
+      questionnaireDrafts.customerAccountId,
+      questionnaireDrafts.diagnosticCaseId,
+    ],
+    name: "fk_questionnaire_submission_draft_owner_case",
+  }).onDelete("restrict").onUpdate("restrict"),
+  uniqueIndex("questionnaire_submissions_case_version_uq").on(
+    table.diagnosticCaseId,
+    table.submissionVersion,
+  ),
+  uniqueIndex("questionnaire_submissions_case_input_hash_uq").on(
+    table.diagnosticCaseId,
+    table.inputSnapshotHash,
+  ),
+  index("questionnaire_submissions_owner_case_submitted_idx").on(
+    table.customerAccountId,
+    table.diagnosticCaseId,
+    table.submittedAt,
+  ),
+  check("chk_questionnaire_submission_version_positive", sql`${table.submissionVersion} > 0`),
+]);
+
+export type QuestionnaireSubmission = typeof questionnaireSubmissions.$inferSelect;
+export type InsertQuestionnaireSubmission = typeof questionnaireSubmissions.$inferInsert;

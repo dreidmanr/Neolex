@@ -13,11 +13,15 @@ import {
   emailDeliveries,
   idempotencyRecords,
   magicLinkTokens,
+  questionnaireAnswerRevisions,
+  questionnaireDrafts,
+  questionnaireSubmissions,
 } from "../../../drizzle/schema";
 import {
   ACCOUNT_A,
   ACCOUNT_B,
   CASE_A,
+  CASE_B,
   PUBLIC_A,
   RUN_PREFIX,
   SESSION_A,
@@ -54,7 +58,18 @@ const R1_0007_TABLES = [
   "tariff_snapshots",
 ] as const;
 
-const V2_TABLES = [...R1_0005_TABLES, ...R1_0006_TABLES, ...R1_0007_TABLES] as const;
+const R1_0008_TABLES = [
+  "questionnaire_answer_revisions",
+  "questionnaire_drafts",
+  "questionnaire_submissions",
+] as const;
+
+const V2_TABLES = [
+  ...R1_0005_TABLES,
+  ...R1_0006_TABLES,
+  ...R1_0007_TABLES,
+  ...R1_0008_TABLES,
+] as const;
 
 const LEGACY_TABLES = [
   "users",
@@ -87,6 +102,9 @@ const REQUIRED_FOREIGN_KEYS = [
   "fk_case_consent_actor_owner",
   "fk_payment_record_case_owner",
   "fk_payment_record_tariff_snapshot",
+  "fk_questionnaire_draft_case_owner",
+  "fk_questionnaire_answer_revision_draft_owner_case",
+  "fk_questionnaire_submission_draft_owner_case",
 ] as const;
 
 const REQUIRED_INDEXES = [
@@ -138,6 +156,16 @@ const REQUIRED_INDEXES = [
   "payment_records_redemption_scope_uq",
   "payment_records_id_account_case_uq",
   "payment_records_owner_case_idx",
+  "questionnaire_drafts_case_uq",
+  "questionnaire_drafts_id_owner_case_uq",
+  "questionnaire_drafts_owner_case_status_updated_idx",
+  "questionnaire_answer_revisions_draft_question_revision_uq",
+  "questionnaire_answer_revisions_draft_mutation_uq",
+  "questionnaire_answer_revisions_draft_question_revision_idx",
+  "questionnaire_answer_revisions_case_revision_idx",
+  "questionnaire_submissions_case_version_uq",
+  "questionnaire_submissions_case_input_hash_uq",
+  "questionnaire_submissions_owner_case_submitted_idx",
 ] as const;
 
 const PRE_R1_MIGRATION_NAMES = [
@@ -150,11 +178,13 @@ const PRE_R1_MIGRATION_NAMES = [
 const R1_0005_MIGRATION_NAME = "0005_r1_access_control_expand.sql";
 const R1_0006_MIGRATION_NAME = "0006_r1_magic_link_expand.sql";
 const R1_0007_MIGRATION_NAME = "0007_r1_promo_access_expand.sql";
+const R1_0008_MIGRATION_NAME = "0008_r1_questionnaire_expand.sql";
 const MIGRATION_NAMES = [
   ...PRE_R1_MIGRATION_NAMES,
   R1_0005_MIGRATION_NAME,
   R1_0006_MIGRATION_NAME,
   R1_0007_MIGRATION_NAME,
+  R1_0008_MIGRATION_NAME,
 ] as const;
 
 type NamedRow = { TABLE_NAME: string };
@@ -183,6 +213,20 @@ function opaqueHash(): string {
   return createHash("sha256").update(randomBytes(32)).digest("hex");
 }
 
+async function expectCheckConstraintFailure(
+  operation: PromiseLike<unknown>,
+  constraintName: string,
+): Promise<void> {
+  let rejection: unknown;
+  try {
+    await operation;
+  } catch (error) {
+    rejection = error;
+  }
+  expect(rejection).toBeDefined();
+  expect((rejection as { cause?: { message?: string } }).cause?.message).toContain(constraintName);
+}
+
 describe("R1 disposable database schema and constraints", () => {
   let legacyCounts: Map<string, number>;
 
@@ -201,7 +245,7 @@ describe("R1 disposable database schema and constraints", () => {
     await cleanRunData();
   });
 
-  it("has exactly the expected 18 v2 tables, 15 foreign keys, and required indexes", async () => {
+  it("has exactly the expected 21 v2 tables, 18 foreign keys, and required indexes", async () => {
     const database = await db();
     const tableResult = await database.execute(sql`
       SELECT TABLE_NAME
@@ -214,7 +258,7 @@ describe("R1 disposable database schema and constraints", () => {
       !tableName.startsWith("__drizzle"),
     );
     expect(sorted(actualV2Tables)).toEqual(sorted(V2_TABLES));
-    expect(V2_TABLES).toHaveLength(18);
+    expect(V2_TABLES).toHaveLength(21);
 
     const fkResult = await database.execute(sql`
       SELECT CONSTRAINT_NAME
@@ -223,7 +267,7 @@ describe("R1 disposable database schema and constraints", () => {
     `);
     const foreignKeyNames = (fkResult[0] as ForeignKeyRow[]).map(row => row.CONSTRAINT_NAME);
     expect(sorted(foreignKeyNames)).toEqual(sorted(REQUIRED_FOREIGN_KEYS));
-    expect(foreignKeyNames).toHaveLength(15);
+    expect(foreignKeyNames).toHaveLength(18);
 
     const indexResult = await database.execute(sql`
       SELECT DISTINCT INDEX_NAME
@@ -251,7 +295,7 @@ describe("R1 disposable database schema and constraints", () => {
     }
   });
 
-  it("keeps R1 migrations add-only and scopes 0006/0007 to their additive targets", async () => {
+  it("keeps R1 migrations add-only and scopes 0006/0007/0008 to their additive targets", async () => {
     const migrationDirectory = path.resolve(import.meta.dirname, "../../../drizzle");
     const migrationsByName = new Map(
       await Promise.all(
@@ -264,13 +308,16 @@ describe("R1 disposable database schema and constraints", () => {
     const r1Sql = migrationsByName.get(R1_0005_MIGRATION_NAME) ?? "";
     const magicLinkSql = migrationsByName.get(R1_0006_MIGRATION_NAME) ?? "";
     const promoSql = migrationsByName.get(R1_0007_MIGRATION_NAME) ?? "";
+    const questionnaireSql = migrationsByName.get(R1_0008_MIGRATION_NAME) ?? "";
     expect(r1Sql).not.toBe("");
     expect(magicLinkSql).not.toBe("");
     expect(promoSql).not.toBe("");
+    expect(questionnaireSql).not.toBe("");
     const destructiveSql = /(?:^|;)\s*(?:DROP\b|DELETE\b|TRUNCATE\b|RENAME\b|UPDATE\b|INSERT\b|REPLACE\b)|ALTER\s+TABLE\b[^;]*\b(?:DROP|MODIFY|CHANGE|RENAME)\b/im;
     expect(r1Sql).not.toMatch(destructiveSql);
     expect(magicLinkSql).not.toMatch(destructiveSql);
     expect(promoSql).not.toMatch(destructiveSql);
+    expect(questionnaireSql).not.toMatch(destructiveSql);
 
     const alterTargets = [...r1Sql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi)].map(match => match[1]);
     expect(alterTargets).toHaveLength(7);
@@ -318,6 +365,33 @@ describe("R1 disposable database schema and constraints", () => {
     }
     const promoIndexTargets = [...promoSql.matchAll(/CREATE\s+INDEX\s+`[^`]+`\s+ON\s+`([^`]+)`/gi)].map(match => match[1]);
     for (const target of promoIndexTargets) expect(R1_0007_TABLES).toContain(target as typeof R1_0007_TABLES[number]);
+
+    const questionnaireStatements = migrationStatements(questionnaireSql);
+    for (const statement of questionnaireStatements) {
+      expect(statement).toMatch(/^(?:CREATE\s+TABLE|ALTER\s+TABLE|CREATE\s+INDEX)\b/i);
+    }
+    const questionnaireCreateTargets = [
+      ...questionnaireSql.matchAll(/CREATE\s+TABLE\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    expect(sorted(questionnaireCreateTargets)).toEqual(sorted(R1_0008_TABLES));
+    const questionnaireAlterTargets = [
+      ...questionnaireSql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    expect(questionnaireAlterTargets).toHaveLength(3);
+    for (const target of questionnaireAlterTargets) {
+      expect(R1_0008_TABLES).toContain(target as typeof R1_0008_TABLES[number]);
+    }
+    for (const statement of questionnaireStatements.filter(statement => /^ALTER\s+TABLE\b/i.test(statement))) {
+      expect(statement).toMatch(
+        /^ALTER\s+TABLE\s+`[^`]+`\s+ADD\s+CONSTRAINT\s+`[^`]+`\s+FOREIGN\s+KEY\b/i,
+      );
+    }
+    const questionnaireIndexTargets = [
+      ...questionnaireSql.matchAll(/CREATE\s+INDEX\s+`[^`]+`\s+ON\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    for (const target of questionnaireIndexTargets) {
+      expect(R1_0008_TABLES).toContain(target as typeof R1_0008_TABLES[number]);
+    }
 
     const legacyDefinitions = PRE_R1_MIGRATION_NAMES
       .map(name => migrationsByName.get(name) ?? "")
@@ -381,6 +455,278 @@ describe("R1 disposable database schema and constraints", () => {
     expect(caseRows).toHaveLength(1);
     const accountRows = await database.select().from(customerAccounts).where(sql`${customerAccounts.id} = ${ACCOUNT_A}`);
     expect(accountRows).toHaveLength(1);
+  });
+
+  it("enforces Questionnaire v2 ownership, revision, submission, and opaque-data constraints", async () => {
+    await cleanRunData();
+    await seedOwners();
+    const database = await db();
+    const now = new Date("2026-02-01T00:00:00.000Z");
+    const draftId = opaqueId("questionnaire_draft");
+    const releaseId = opaqueId("questionnaire_release");
+    const questionnaireVersion = "questionnaire_v2";
+    const questionnaireContentHash = opaqueHash();
+    const visibleSetHash = opaqueHash();
+
+    await expect(database.insert(questionnaireDrafts).values({
+      id: opaqueId("draft_cross_owner"),
+      customerAccountId: ACCOUNT_B,
+      diagnosticCaseId: CASE_A,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      draftRevision: 0,
+      visibleQuestionIds: ["question_a"],
+      visibleSetHash,
+      manualFollowUpTriggerIds: [],
+      createdAt: now,
+      updatedAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }) });
+
+    await expectCheckConstraintFailure(database.insert(questionnaireDrafts).values({
+      id: opaqueId("draft_negative_revision"),
+      customerAccountId: ACCOUNT_B,
+      diagnosticCaseId: CASE_B,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      draftRevision: -1,
+      visibleQuestionIds: ["question_a"],
+      visibleSetHash,
+      manualFollowUpTriggerIds: [],
+      createdAt: now,
+      updatedAt: now,
+    }), "chk_questionnaire_draft_revision_nonnegative");
+
+    await database.insert(questionnaireDrafts).values({
+      id: draftId,
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      draftRevision: 1,
+      currentQuestionId: "question_a",
+      visibleQuestionIds: ["question_a", "question_b"],
+      visibleSetHash,
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await expect(database.insert(questionnaireDrafts).values({
+      id: opaqueId("duplicate_case_draft"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      visibleQuestionIds: ["question_a"],
+      visibleSetHash,
+      manualFollowUpTriggerIds: [],
+      createdAt: now,
+      updatedAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
+
+    const questionId = "question_a";
+    const mutationHash = opaqueHash();
+    await expect(database.insert(questionnaireAnswerRevisions).values({
+      id: opaqueId("revision_missing_draft"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: opaqueId("absent_draft"),
+      questionId,
+      draftRevision: 1,
+      valueJson: { choiceId: "choice_a" },
+      answerState: "active",
+      source: "customer",
+      clientMutationIdHash: opaqueHash(),
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }) });
+
+    await expect(database.insert(questionnaireAnswerRevisions).values({
+      id: opaqueId("revision_cross_owner"),
+      customerAccountId: ACCOUNT_B,
+      diagnosticCaseId: CASE_B,
+      questionnaireDraftId: draftId,
+      questionId,
+      draftRevision: 1,
+      valueJson: { choiceId: "choice_a" },
+      answerState: "active",
+      source: "customer",
+      clientMutationIdHash: opaqueHash(),
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }) });
+
+    await expectCheckConstraintFailure(database.insert(questionnaireAnswerRevisions).values({
+      id: opaqueId("revision_zero"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      questionId,
+      draftRevision: 0,
+      valueJson: null,
+      answerState: "inactive",
+      source: "system_branch_recompute",
+      clientMutationIdHash: opaqueHash(),
+      deactivationReasonCode: "branch_hidden",
+      createdAt: now,
+    }), "chk_questionnaire_answer_revision_positive");
+
+    await database.insert(questionnaireAnswerRevisions).values({
+      id: opaqueId("revision_valid"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      questionId,
+      draftRevision: 1,
+      valueJson: { choiceId: "choice_a" },
+      answerState: "active",
+      source: "customer",
+      clientMutationIdHash: mutationHash,
+      createdAt: now,
+    });
+
+    await expect(database.insert(questionnaireAnswerRevisions).values({
+      id: opaqueId("revision_duplicate_question"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      questionId,
+      draftRevision: 1,
+      valueJson: { choiceId: "choice_b" },
+      answerState: "active",
+      source: "customer",
+      clientMutationIdHash: opaqueHash(),
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
+
+    await expect(database.insert(questionnaireAnswerRevisions).values({
+      id: opaqueId("revision_duplicate_mutation"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      questionId: "question_b",
+      draftRevision: 2,
+      valueJson: { choiceId: "choice_b" },
+      answerState: "active",
+      source: "customer",
+      clientMutationIdHash: mutationHash,
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
+
+    const inputSnapshotHash = opaqueHash();
+    await expect(database.insert(questionnaireSubmissions).values({
+      id: opaqueId("submission_cross_owner"),
+      customerAccountId: ACCOUNT_B,
+      diagnosticCaseId: CASE_B,
+      questionnaireDraftId: draftId,
+      submissionVersion: 1,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      visibleQuestionIds: [questionId],
+      visibleSetHash,
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      inputSnapshotJson: { [questionId]: { choiceId: "choice_a" } },
+      inputSnapshotHash,
+      submittedAt: now,
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }) });
+
+    await expectCheckConstraintFailure(database.insert(questionnaireSubmissions).values({
+      id: opaqueId("submission_nonpositive"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      submissionVersion: 0,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      visibleQuestionIds: [questionId],
+      visibleSetHash,
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      inputSnapshotJson: { [questionId]: { choiceId: "choice_a" } },
+      inputSnapshotHash: opaqueHash(),
+      submittedAt: now,
+      createdAt: now,
+    }), "chk_questionnaire_submission_version_positive");
+
+    await database.insert(questionnaireSubmissions).values({
+      id: opaqueId("submission_valid"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      submissionVersion: 1,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      visibleQuestionIds: [questionId],
+      visibleSetHash,
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      inputSnapshotJson: { [questionId]: { choiceId: "choice_a" } },
+      inputSnapshotHash,
+      submittedAt: now,
+      createdAt: now,
+    });
+
+    await expect(database.insert(questionnaireSubmissions).values({
+      id: opaqueId("submission_duplicate_version"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      submissionVersion: 1,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      visibleQuestionIds: [questionId],
+      visibleSetHash,
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      inputSnapshotJson: { [questionId]: { choiceId: "choice_b" } },
+      inputSnapshotHash: opaqueHash(),
+      submittedAt: now,
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
+
+    await expect(database.insert(questionnaireSubmissions).values({
+      id: opaqueId("submission_duplicate_hash"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      submissionVersion: 2,
+      questionnaireReleaseId: releaseId,
+      questionnaireVersion,
+      questionnaireContentHash,
+      visibleQuestionIds: [questionId],
+      visibleSetHash,
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      inputSnapshotJson: { [questionId]: { choiceId: "choice_a" } },
+      inputSnapshotHash,
+      submittedAt: now,
+      createdAt: now,
+    })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
+
+    const columnResult = await database.execute(sql`
+      SELECT TABLE_NAME, COLUMN_NAME
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME IN (
+          'questionnaire_drafts',
+          'questionnaire_answer_revisions',
+          'questionnaire_submissions'
+        )
+    `);
+    const normalizedColumnNames = (columnResult[0] as ColumnRow[])
+      .map(row => row.COLUMN_NAME.replaceAll("_", "").toLowerCase());
+    expect(normalizedColumnNames.filter(name =>
+      /rawtoken|tokenvalue|email|legalbody|documentbody|url|promo|price/.test(name)
+    )).toEqual([]);
   });
 
   it("rejects a consent actor session owned by another customer account", async () => {

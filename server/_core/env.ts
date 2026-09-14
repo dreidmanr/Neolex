@@ -10,6 +10,8 @@ export const ENV = {
   promoVerifier: process.env.LEXY_R1_PROMO_VERIFIER ?? "",
   promoVerifierPepper: process.env.LEXY_R1_PROMO_VERIFIER_PEPPER ?? "",
   promoCampaignId: process.env.LEXY_R1_PROMO_CAMPAIGN_ID ?? "",
+  questionnaireIdempotencyPepper:
+    process.env.LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER ?? "",
   databaseUrl: process.env.DATABASE_URL ?? "",
   oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
   ownerOpenId: process.env.OWNER_OPEN_ID ?? "",

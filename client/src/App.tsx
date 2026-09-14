@@ -14,6 +14,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Admin from "./pages/Admin";
 import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
 import Cabinet from "./pages/Cabinet";
+import CaseQuestionnaire from "./pages/CaseQuestionnaire";
 import Diagnostic from "./pages/Diagnostic";
 import Home from "./pages/Home";
 import LegalDocs from "./pages/LegalDocs";
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/r1/legal/:documentId" component={R1LegalMetadata} />
       <Route path="/pilot/access" component={PilotAccess} />
       <Route path="/pilot" component={Pilot} />
+      <Route path="/cabinet/diagnostics/:publicCaseId/questionnaire" component={CaseQuestionnaire} />
       <Route path="/cabinet" component={Cabinet} />
       <Route path="/auth/request-link" component={RequestMagicLink} />
       <Route path="/auth/consume" component={MagicLinkConsume} />
