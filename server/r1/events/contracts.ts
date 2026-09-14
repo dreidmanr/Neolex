@@ -14,6 +14,7 @@ export const adminPurposeCodeSchema = z.enum([
 ]);
 export const transitionReasonCodeSchema = z.enum([
   "workflow_progression", "manual_review", "system_failure", "archive_requested", "test_harness",
+  "promo_redemption",
 ]);
 
 const syntheticAudit = z.object({
@@ -97,9 +98,34 @@ const customerSessionRevokedAudit = z.object({
   privacySafeMetadata: z.object({ test: z.literal(true) }).strict(),
   createdAt: z.date().optional(),
 }).strict();
+const promoGrantedAudit = z.object({
+  actorType: z.literal("customer_session"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("payment_record"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("billing.promo_granted"), outcome: z.literal("succeeded"),
+  toStatus: z.literal("promo_granted"), requestId: requestIdSchema,
+  correlationId: opaqueIdSchema, idempotencyKeyHash: hashSchema,
+  privacySafeMetadata: z.object({
+    paymentId: opaqueIdSchema, caseId: opaqueIdSchema, grantId: opaqueIdSchema,
+    tariffCode: z.literal("base_diagnostic"), chargedAmount: z.literal(0),
+    currency: z.literal("RUB"), campaignId: opaqueIdSchema, test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const accessRevokedAudit = z.object({
+  actorType: z.literal("service"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("access_grant"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("billing.access_revoked"), outcome: z.literal("succeeded"),
+  fromStatus: z.literal("active"), toStatus: z.literal("revoked"),
+  reasonCode: z.literal("test_revocation"), requestId: requestIdSchema,
+  privacySafeMetadata: z.object({
+    paymentId: opaqueIdSchema, caseId: opaqueIdSchema, test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
 export const auditEventSchema = z.discriminatedUnion("eventType", [
   syntheticAudit, transitionAudit, adminListAudit, ownerDeniedAudit, adminRoleDeniedAudit, adminPurposeDeniedAudit,
-  magicLinkIssuedAudit, magicLinkConsumedAudit, customerSessionRevokedAudit,
+  magicLinkIssuedAudit, magicLinkConsumedAudit, customerSessionRevokedAudit, promoGrantedAudit,
+  accessRevokedAudit,
 ]);
 export type AppendAuditEvent = z.infer<typeof auditEventSchema>;
 
@@ -128,21 +154,47 @@ const magicLinkDeliveryQueuedOutbox = z.object({
   }).strict(),
   createdAt: z.date().optional(),
 }).strict();
+const promoGrantedOutbox = z.object({
+  aggregateType: z.literal("payment_record"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("billing.promo_granted"),
+  privacySafePayload: z.object({
+    paymentId: opaqueIdSchema, caseId: opaqueIdSchema, grantId: opaqueIdSchema,
+    tariffCode: z.literal("base_diagnostic"), chargedAmount: z.literal(0),
+    currency: z.literal("RUB"), campaignId: opaqueIdSchema, test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const accessRevokedOutbox = z.object({
+  aggregateType: z.literal("access_grant"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("billing.access_revoked"),
+  privacySafePayload: z.object({
+    grantId: opaqueIdSchema, paymentId: opaqueIdSchema, caseId: opaqueIdSchema,
+    reasonCode: z.literal("test_revocation"), test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
 export const outboxEventSchema = z.discriminatedUnion("eventType", [
-  syntheticOutbox, transitionOutbox, magicLinkDeliveryQueuedOutbox,
+  syntheticOutbox, transitionOutbox, magicLinkDeliveryQueuedOutbox, promoGrantedOutbox,
+  accessRevokedOutbox,
 ]);
 export type AppendOutboxEvent = z.infer<typeof outboxEventSchema>;
 
 const generatedAuditEnvelopeSchema = z.object({ id: opaqueIdSchema }).strict();
 const generatedOutboxEnvelopeSchema = z.object({
   id: opaqueIdSchema, eventId: opaqueIdSchema,
-  dedupeKey: z.string().max(128).regex(/^(?:(?:case-created|case-transition):[A-Za-z0-9][A-Za-z0-9_-]*:v[1-9][0-9]*|magic-link-delivery:[A-Za-z0-9][A-Za-z0-9_-]*:[1-9][0-9]*:v1)$/),
+  dedupeKey: z.string().max(128).regex(/^(?:(?:case-created|case-transition):[A-Za-z0-9][A-Za-z0-9_-]*:v[1-9][0-9]*|magic-link-delivery:[A-Za-z0-9][A-Za-z0-9_-]*:[1-9][0-9]*:v1|promo-payment:[A-Za-z0-9][A-Za-z0-9_-]*:v1|access-revocation:[A-Za-z0-9][A-Za-z0-9_-]*:v1)$/),
   status: z.literal("pending"), attemptCount: z.literal(0), updatedAt: z.date(),
 }).strict();
 
 export function outboxDedupeKey(event: AppendOutboxEvent): string {
   if (event.eventType === "auth.magic_link_delivery_queued") {
     return `magic-link-delivery:${event.privacySafePayload.identityId}:${event.privacySafePayload.windowMillis}:v1`;
+  }
+  if (event.eventType === "billing.promo_granted") {
+    return `promo-payment:${event.privacySafePayload.paymentId}:v1`;
+  }
+  if (event.eventType === "billing.access_revoked") {
+    return `access-revocation:${event.privacySafePayload.grantId}:v1`;
   }
   const prefix = event.eventType === "diagnostic_case.synthetic_created" ? "case-created" : "case-transition";
   return `${prefix}:${event.aggregateId}:v${event.privacySafePayload.stateVersion}`;
@@ -154,7 +206,11 @@ export function parseOutboxEvent(value: unknown): AppendOutboxEvent {
   const event = outboxEventSchema.parse(value);
   const payloadAggregateId = event.eventType === "auth.magic_link_delivery_queued"
     ? event.privacySafePayload.deliveryId
-    : event.privacySafePayload.caseId;
+    : event.eventType === "billing.promo_granted"
+      ? event.privacySafePayload.paymentId
+      : event.eventType === "billing.access_revoked"
+        ? event.privacySafePayload.grantId
+        : event.privacySafePayload.caseId;
   if (event.aggregateId !== payloadAggregateId) {
     throw new Error("Aggregate and payload identifiers differ");
   }

@@ -28,6 +28,7 @@ function validateEnvironment(): void {
   requireExact("LEXY_R1_TEST_IDENTITY", "r1-harness");
   requireExact("LEXY_R1_DATABASE_CLASS", "disposable_test");
   requireExact("LEXY_R1_EMAIL_TRANSPORT", "test");
+  requireExact("LEXY_R1_PAYMENT_PROVIDER", "disabled");
 
   const rawDatabaseUrl = process.env.DATABASE_URL;
   if (!rawDatabaseUrl) fail("DATABASE_URL is required");
@@ -61,12 +62,21 @@ function validateEnvironment(): void {
     ["LEXY_R1_EMAIL_IDENTITY_PEPPER", requireLongSecret("LEXY_R1_EMAIL_IDENTITY_PEPPER")],
     ["LEXY_R1_RATE_LIMIT_PEPPER", requireLongSecret("LEXY_R1_RATE_LIMIT_PEPPER")],
   ] as const;
+  const promoSecrets = [
+    ["LEXY_R1_PROMO_VERIFIER", requireLongSecret("LEXY_R1_PROMO_VERIFIER")],
+    ["LEXY_R1_PROMO_VERIFIER_PEPPER", requireLongSecret("LEXY_R1_PROMO_VERIFIER_PEPPER")],
+  ] as const;
   if (new Set([
     customerSecret,
     jwtSecret,
     ...magicLinkSecrets.map(([, secret]) => secret),
-  ]).size !== 5) {
+    ...promoSecrets.map(([, secret]) => secret),
+  ]).size !== 7) {
     fail("R1 DB secrets and peppers must be pairwise distinct and dedicated");
+  }
+  const campaignId = process.env.LEXY_R1_PROMO_CAMPAIGN_ID ?? "";
+  if (!/^[A-Za-z][A-Za-z0-9_-]{2,63}$/.test(campaignId)) {
+    fail("LEXY_R1_PROMO_CAMPAIGN_ID must be an opaque identifier");
   }
 }
 

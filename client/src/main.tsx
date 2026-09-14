@@ -6,52 +6,20 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { isControlledClientRoute } from "./lib/controlledRoutes";
 import "./index.css";
 
 const queryClient = new QueryClient();
 
-const isControlledPilotRoute = () => {
+const isCurrentRouteControlled = () => {
   if (typeof window === "undefined") return false;
-
-  const { pathname } = window.location;
-  return (
-    pathname === "/pilot" ||
-    pathname.startsWith("/pilot/") ||
-    pathname === "/cabinet" ||
-    pathname.startsWith("/cabinet/") ||
-    pathname.startsWith("/auth/")
-  );
+  return isControlledClientRoute(window.location.pathname);
 };
-
-function mountLegacyAnalytics(): void {
-  // The controlled customer routes intentionally have no third-party scripts:
-  // a magic-link fragment must never be observable by analytics code.
-  if (isControlledPilotRoute()) return;
-
-  const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
-  const websiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
-  if (
-    typeof endpoint !== "string" ||
-    !/^https:\/\/[^\s]+$/.test(endpoint) ||
-    typeof websiteId !== "string" ||
-    websiteId.length === 0
-  ) {
-    return;
-  }
-
-  const script = document.createElement("script");
-  script.defer = true;
-  script.src = `${endpoint.replace(/\/$/, "")}/umami`;
-  script.dataset.websiteId = websiteId;
-  document.head.append(script);
-}
-
-mountLegacyAnalytics();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-  if (isControlledPilotRoute()) return;
+  if (isCurrentRouteControlled()) return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
@@ -63,7 +31,7 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
-    if (isControlledPilotRoute()) return;
+    if (isCurrentRouteControlled()) return;
     redirectToLoginIfUnauthorized(error);
     console.error("[API Query Error]", error);
   }
@@ -72,7 +40,7 @@ queryClient.getQueryCache().subscribe(event => {
 queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
-    if (isControlledPilotRoute()) return;
+    if (isCurrentRouteControlled()) return;
     redirectToLoginIfUnauthorized(error);
     console.error("[API Mutation Error]", error);
   }
@@ -84,7 +52,7 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
-        if (isControlledPilotRoute()) return {};
+        if (isCurrentRouteControlled()) return {};
 
         // Preview auto-login fallback: when the browser blocks iframe cookies
         // (Safari ITP / private browsing / WebView), the runtime mirrors the

@@ -50,6 +50,13 @@
       "when": 1789325048177,
       "tag": "0006_r1_magic_link_expand",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1789329474597,
+      "tag": "0007_r1_promo_access_expand",
+      "breakpoints": true
     }
   ]
 }
