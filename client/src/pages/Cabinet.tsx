@@ -184,6 +184,13 @@ export default function Cabinet() {
                             {status.label}
                           </Badge>
                         </div>
+                        {(item.status === "access_granted" || item.status === "in_progress") && (
+                          <Button asChild className="mt-4 min-h-11 w-full sm:w-auto">
+                            <Link href={`/cabinet/diagnostics/${encodeURIComponent(item.publicId)}/questionnaire`}>
+                              Продолжить анкету
+                            </Link>
+                          </Button>
+                        )}
                       </li>
                     );
                   })}

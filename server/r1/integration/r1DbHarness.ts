@@ -17,6 +17,9 @@ import {
   magicLinkTokens,
   outboxEvents,
   paymentRecords,
+  questionnaireAnswerRevisions,
+  questionnaireDrafts,
+  questionnaireSubmissions,
   tariffSnapshots,
   type User,
 } from "../../../drizzle/schema";
@@ -87,12 +90,19 @@ export function assertSafeTestEnvironment(): void {
     process.env.LEXY_R1_PROMO_VERIFIER ?? "",
     process.env.LEXY_R1_PROMO_VERIFIER_PEPPER ?? "",
   ];
+  const questionnairePepper = process.env.LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER ?? "";
   if (
     process.env.LEXY_R1_EMAIL_TRANSPORT !== "test" ||
     process.env.LEXY_R1_PAYMENT_PROVIDER !== "disabled" ||
     !/^[A-Za-z][A-Za-z0-9_-]{2,63}$/.test(process.env.LEXY_R1_PROMO_CAMPAIGN_ID ?? "") ||
-    [...magicSecrets, ...promoSecrets].some(secret => secret.length < 32) ||
-    new Set([...magicSecrets, ...promoSecrets, customerSecret, jwtSecret]).size !== 7
+    [...magicSecrets, ...promoSecrets, questionnairePepper].some(secret => secret.length < 32) ||
+    new Set([
+      ...magicSecrets,
+      ...promoSecrets,
+      questionnairePepper,
+      customerSecret,
+      jwtSecret,
+    ]).size !== 8
   ) {
     throw new Error("R1 integration authority secrets must be long and dedicated");
   }
@@ -132,13 +142,34 @@ export async function cleanRunData(): Promise<void> {
   const runPayments = allPayments.filter(row => runAccountIds.has(row.customerAccountId));
   const allGrants = await database.select().from(accessGrants);
   const runGrants = allGrants.filter(row => runAccountIds.has(row.customerAccountId));
+  const runCaseIds = new Set(runCases.map(row => row.id));
+  const allDrafts = await database.select().from(questionnaireDrafts);
+  const runDrafts = allDrafts.filter(row =>
+    runAccountIds.has(row.customerAccountId) && runCaseIds.has(row.diagnosticCaseId)
+  );
+  const runDraftIds = new Set(runDrafts.map(row => row.id));
+  const allAnswerRevisions = await database.select().from(questionnaireAnswerRevisions);
+  const runAnswerRevisions = allAnswerRevisions.filter(row =>
+    runAccountIds.has(row.customerAccountId) &&
+    runCaseIds.has(row.diagnosticCaseId) &&
+    runDraftIds.has(row.questionnaireDraftId)
+  );
+  const allSubmissions = await database.select().from(questionnaireSubmissions);
+  const runSubmissions = allSubmissions.filter(row =>
+    runAccountIds.has(row.customerAccountId) &&
+    runCaseIds.has(row.diagnosticCaseId) &&
+    runDraftIds.has(row.questionnaireDraftId)
+  );
 
   const aggregateIds = new Set([
     ...runDeliveries.map(row => row.id), ...runTokens.map(row => row.id),
     ...runCases.map(row => row.id), ...runPayments.map(row => row.id), ...runGrants.map(row => row.id),
+    ...runDrafts.map(row => row.id), ...runAnswerRevisions.map(row => row.id),
+    ...runSubmissions.map(row => row.id),
   ]);
   for (const aggregateId of Array.from(aggregateIds)) {
     await database.delete(outboxEvents).where(eq(outboxEvents.aggregateId, aggregateId));
+    await database.delete(auditEvents).where(eq(auditEvents.aggregateId, aggregateId));
   }
   await database.delete(outboxEvents).where(like(outboxEvents.aggregateId, `${RUN_PREFIX}%`));
   await database.delete(auditEvents).where(or(
@@ -152,6 +183,12 @@ export async function cleanRunData(): Promise<void> {
     await database.delete(accessGrants).where(eq(accessGrants.customerAccountId, accountId));
     await database.delete(paymentRecords).where(eq(paymentRecords.customerAccountId, accountId));
     await database.delete(caseConsents).where(eq(caseConsents.customerAccountId, accountId));
+    await database.delete(questionnaireAnswerRevisions)
+      .where(eq(questionnaireAnswerRevisions.customerAccountId, accountId));
+    await database.delete(questionnaireSubmissions)
+      .where(eq(questionnaireSubmissions.customerAccountId, accountId));
+    await database.delete(questionnaireDrafts)
+      .where(eq(questionnaireDrafts.customerAccountId, accountId));
     await database.delete(diagnosticCases).where(eq(diagnosticCases.customerAccountId, accountId));
   }
   for (const identityId of Array.from(runIdentityIds)) {

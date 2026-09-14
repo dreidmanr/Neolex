@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPromoAccessTestAllowed } from "./releaseGate";
+import { isPromoAccessTestAllowed, isQuestionnaireTestAllowed } from "./releaseGate";
 
 const valid = {
   NODE_ENV: "test", LEXY_R1_SYNTHETIC_TEST_MODE: "true", LEXY_R1_TEST_IDENTITY: "r1-harness",
@@ -11,6 +11,7 @@ const valid = {
   LEXY_R1_RATE_LIMIT_PEPPER: "rate-pepper-material-32-bytes-minimum",
   LEXY_R1_PAYMENT_PROVIDER: "disabled", LEXY_R1_PROMO_VERIFIER: "promo-verifier-value-32-bytes-minimum",
   LEXY_R1_PROMO_VERIFIER_PEPPER: "promo-verifier-pepper-32-bytes-minimum",
+  LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER: "questionnaire-pepper-32-bytes-minimum",
   LEXY_R1_PROMO_CAMPAIGN_ID: "r1_test_campaign",
 } satisfies NodeJS.ProcessEnv;
 
@@ -35,5 +36,15 @@ describe("R1 promo access gate", () => {
     { LEXY_R1_EMAIL_TRANSPORT: "smtp" }, { LEXY_R1_SYNTHETIC_TEST_MODE: "false" },
   ])("rejects missing, reused, unsafe, and non-Magic-Link profiles %#", override => {
     expect(isPromoAccessTestAllowed({ ...valid, ...override })).toBe(false);
+  });
+  it("requires a dedicated questionnaire idempotency pepper", () => {
+    expect(isQuestionnaireTestAllowed(valid)).toBe(true);
+    expect(isQuestionnaireTestAllowed({
+      ...valid, LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER: undefined,
+    })).toBe(false);
+    expect(isQuestionnaireTestAllowed({
+      ...valid,
+      LEXY_R1_QUESTIONNAIRE_IDEMPOTENCY_PEPPER: valid.LEXY_CUSTOMER_SESSION_SECRET,
+    })).toBe(false);
   });
 });
