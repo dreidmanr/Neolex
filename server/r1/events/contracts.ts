@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const opaqueIdSchema = z.string().min(1).max(64).regex(/^[A-Za-z0-9][A-Za-z0-9_-]*$/);
+const versionSchema = z.string().min(1).max(64).regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/);
 const requestIdSchema = z.string().min(16).max(64).regex(/^[A-Za-z0-9][A-Za-z0-9_-]*$/);
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);
 const positiveVersionSchema = z.number().int().positive();
@@ -161,11 +162,57 @@ const questionnaireAccessDeniedAudit = z.object({
   }).strict(),
   createdAt: z.date().optional(),
 }).strict();
+const ruleEvaluationStartedAudit = z.object({
+  actorType: z.literal("service"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("questionnaire_rule_evaluation"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("rules_engine.evaluation_started"), outcome: z.literal("succeeded"),
+  toStatus: z.literal("pending"), correlationId: opaqueIdSchema,
+  privacySafeMetadata: z.object({
+    caseId: opaqueIdSchema, submissionId: opaqueIdSchema, sourceOutboxEventId: opaqueIdSchema,
+    submittedCaseStateVersion: positiveVersionSchema, rulesetId: opaqueIdSchema,
+    rulesetHash: hashSchema, inputSnapshotHash: hashSchema, test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
+const ruleEvaluationCompletedAudit = z.object({
+  actorType: z.literal("service"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("questionnaire_rule_evaluation"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("rules_engine.evaluation_completed"), outcome: z.literal("succeeded"),
+  fromStatus: z.literal("pending"),
+  toStatus: z.enum(["succeeded", "manual_review_required"]), correlationId: opaqueIdSchema,
+  privacySafeMetadata: z.object({
+    caseId: opaqueIdSchema, submissionId: opaqueIdSchema, sourceOutboxEventId: opaqueIdSchema,
+    submittedCaseStateVersion: positiveVersionSchema, rulesetId: opaqueIdSchema,
+    rulesetHash: hashSchema, inputSnapshotHash: hashSchema, outcomeHash: hashSchema,
+    manualReviewRequired: z.boolean(), test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict().superRefine((event, context) => {
+  if (event.privacySafeMetadata.manualReviewRequired !== (event.toStatus === "manual_review_required")) {
+    context.addIssue({ code: "custom", message: "Evaluation status and manual review flag differ" });
+  }
+});
+const ruleEvaluationFailedAudit = z.object({
+  actorType: z.literal("service"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("questionnaire_rule_evaluation"), aggregateId: opaqueIdSchema,
+  eventType: z.literal("rules_engine.evaluation_failed"), outcome: z.literal("failed"),
+  fromStatus: z.literal("pending"), toStatus: z.literal("failed"), correlationId: opaqueIdSchema,
+  reasonCode: z.enum([
+    "configuration_invalid", "input_inconsistent", "retry_exhausted", "technical_failure",
+  ]),
+  privacySafeMetadata: z.object({
+    caseId: opaqueIdSchema, submissionId: opaqueIdSchema, sourceOutboxEventId: opaqueIdSchema,
+    submittedCaseStateVersion: positiveVersionSchema, rulesetId: opaqueIdSchema,
+    rulesetHash: hashSchema, inputSnapshotHash: hashSchema, test: z.literal(true),
+  }).strict(),
+  createdAt: z.date().optional(),
+}).strict();
 export const auditEventSchema = z.discriminatedUnion("eventType", [
   syntheticAudit, transitionAudit, adminListAudit, ownerDeniedAudit, adminRoleDeniedAudit, adminPurposeDeniedAudit,
   magicLinkIssuedAudit, magicLinkConsumedAudit, customerSessionRevokedAudit, promoGrantedAudit,
   accessRevokedAudit, questionnaireAnswerSavedAudit, questionnaireSubmittedAudit,
-  questionnaireAccessDeniedAudit,
+  questionnaireAccessDeniedAudit, ruleEvaluationStartedAudit, ruleEvaluationCompletedAudit,
+  ruleEvaluationFailedAudit,
 ]);
 export type AppendAuditEvent = z.infer<typeof auditEventSchema>;
 
@@ -219,6 +266,9 @@ const questionnaireSubmittedForScoringOutbox = z.object({
   privacySafePayload: z.object({
     caseId: opaqueIdSchema, submissionId: opaqueIdSchema,
     submissionVersion: z.literal(1), inputSnapshotHash: hashSchema,
+    submittedCaseStateVersion: positiveVersionSchema,
+    legalCoreReleaseId: opaqueIdSchema, legalCoreVersion: versionSchema,
+    rulesetId: opaqueIdSchema, rulesetBundleHash: hashSchema,
     test: z.literal(true),
   }).strict(),
   createdAt: z.date().optional(),

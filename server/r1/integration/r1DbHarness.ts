@@ -19,6 +19,7 @@ import {
   paymentRecords,
   questionnaireAnswerRevisions,
   questionnaireDrafts,
+  questionnaireRuleEvaluations,
   questionnaireSubmissions,
   tariffSnapshots,
   type User,
@@ -160,13 +161,23 @@ export async function cleanRunData(): Promise<void> {
     runCaseIds.has(row.diagnosticCaseId) &&
     runDraftIds.has(row.questionnaireDraftId)
   );
+  const allRuleEvaluations = await database.select().from(questionnaireRuleEvaluations);
+  const runRuleEvaluations = allRuleEvaluations.filter(row =>
+    runAccountIds.has(row.customerAccountId) &&
+    runCaseIds.has(row.diagnosticCaseId)
+  );
 
   const aggregateIds = new Set([
     ...runDeliveries.map(row => row.id), ...runTokens.map(row => row.id),
     ...runCases.map(row => row.id), ...runPayments.map(row => row.id), ...runGrants.map(row => row.id),
     ...runDrafts.map(row => row.id), ...runAnswerRevisions.map(row => row.id),
     ...runSubmissions.map(row => row.id),
+    ...runRuleEvaluations.map(row => row.id),
   ]);
+  for (const accountId of Array.from(runAccountIds)) {
+    await database.delete(questionnaireRuleEvaluations)
+      .where(eq(questionnaireRuleEvaluations.customerAccountId, accountId));
+  }
   for (const aggregateId of Array.from(aggregateIds)) {
     await database.delete(outboxEvents).where(eq(outboxEvents.aggregateId, aggregateId));
     await database.delete(auditEvents).where(eq(auditEvents.aggregateId, aggregateId));
