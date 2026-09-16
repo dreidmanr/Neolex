@@ -31,7 +31,20 @@
 | `pnpm test` | 331 тест прошёл, 43 файла |
 | `pnpm build` | Production build прошёл |
 | `git diff --check` | Пройдена |
-| DB integration journey | Не запускался: отсутствует безопасный disposable MariaDB `DATABASE_URL` |
+| DB integration journey | Пройдена на локальной disposable MariaDB |
+
+## Фактический DB-прогон
+
+Создан отдельный локальный контур `lexy_r1_test_*`, применены миграции с нуля, после чего штатный `pnpm test:r1:db` выполнил полный suite.
+
+Результат: **10 integration-файлов, 48 тестов успешно**. В состав вошёл новый полный journey от magic link до web/PDF snapshot parity.
+
+Во время первого прогона были найдены и исправлены реальные разрывы acceptance-контура:
+
+- clock dependency в новом magic-link E2E была приведена к штатному `{ now() }` контракту;
+- schema acceptance обновлён с 24 до 25 R1-таблиц и с 32 до 33 foreign keys после add-only PDF migration;
+- fixture стал branch-aware и заполняет видимые сервером ветки;
+- MariaDB JSON payload декодируется перед проверкой schema/parity.
 
 ## Дополнительное изменение
 
@@ -50,4 +63,4 @@
 - `LEXY_R1_EMAIL_TRANSPORT=test`;
 - `LEXY_R1_PAYMENT_PROVIDER=disabled`.
 
-Отсутствие этого профиля не обходит проверку и не является основанием заявлять, что DB E2E уже пройден. Production client launch по-прежнему запрещён до human legal approval, legacy policy, retention policy, operational escalation и security launch review.
+Этот профиль использовался только для synthetic-проверки и не содержит реальных клиентских данных или платежей. Production client launch по-прежнему запрещён до human legal approval, legacy policy, retention policy, operational escalation и security launch review.

@@ -15,7 +15,7 @@ import { getR1TestInbox, R1_TEST_HARNESS_IDENTITY } from "../email/testMailbox";
 import { redeemPromo } from "../billing/promoService";
 import { ADVANCED_DIAGNOSTIC_TARIFF_CODE } from "../billing/tariffService";
 import { getDocumentRegistryForValidation } from "../legal/documentRegistry";
-import { saveQuestionnaireAnswer, submitQuestionnaire } from "../questionnaire/questionnaireService";
+import { getQuestionnaireDraft, saveQuestionnaireAnswer, submitQuestionnaire } from "../questionnaire/questionnaireService";
 import { technicalQuestionnaireBundle } from "../questionnaire/configBundle";
 import { processOneRulesEngineJob } from "../scoring/rulesEngineWorker";
 import { initializeReportForCompletedEvaluation } from "../reports/reportGenerationService";
@@ -62,7 +62,7 @@ describe("R1 full synthetic customer journey", () => {
   it("travels from magic link through promo, questionnaire, rules, web report and same-snapshot PDF HTML", async () => {
     const identity = await provisionMagicLinkTestIdentity(email);
     expect(await requestMagicLink(email, `${RUN_PREFIX}_journey_request`, NOW)).toEqual({ accepted: true });
-    await expect(runOneMagicLinkDelivery({ clock: () => new Date(NOW.getTime() + 1_000) })).resolves.toMatchObject({ processed: true, status: "sent" });
+    await expect(runOneMagicLinkDelivery({ clock: { now: () => new Date(NOW.getTime() + 1_000) } })).resolves.toMatchObject({ processed: true, status: "sent" });
 
     const message = getR1TestInbox().readForHarness(R1_TEST_HARNESS_IDENTITY)[0]!;
     const rawToken = new URL(message.magicLinkUrl).hash.slice(1);
@@ -107,6 +107,29 @@ describe("R1 full synthetic customer journey", () => {
       expect(saved.outcome).toBe("saved");
       revision += 1;
     }
+    const projected = await getQuestionnaireDraft({
+      customerAccountId: identity.accountId,
+      customerSessionId: session.id,
+      publicId: access.casePublicId,
+      now: NOW,
+    });
+    for (const question of projected.visibleQuestions) {
+      const questionId = question.id;
+      if (projected.answers[questionId] !== undefined) continue;
+      const saved = await saveQuestionnaireAnswer({
+        customerAccountId: identity.accountId,
+        customerSessionId: session.id,
+        requestId: `${RUN_PREFIX}_journey_branch_${revision}`,
+        publicId: access.casePublicId,
+        questionId,
+        value: answerFor(questionId),
+        clientMutationId: `${RUN_PREFIX}_journey_branch_mutation_${revision}`,
+        expectedDraftRevision: revision,
+        now: NOW,
+      });
+      expect(saved.outcome).toBe("saved");
+      revision += 1;
+    }
     const submitted = await submitQuestionnaire({
       customerAccountId: identity.accountId,
       customerSessionId: session.id,
@@ -139,9 +162,10 @@ describe("R1 full synthetic customer journey", () => {
     const ready = await loadReadyReportSnapshotByPublicCase(database, { customerAccountId: identity.accountId, casePublicId: access.casePublicId });
     expect(ready).toMatchObject({ id: initialized.id, status: "ready" });
     if (!ready?.payloadJson) throw new Error("Ready report has no payload");
-    expect(validateReportSchema(ready.payloadJson)).toEqual([]);
+    const payload = typeof ready.payloadJson === "string" ? JSON.parse(ready.payloadJson) : ready.payloadJson;
+    expect(validateReportSchema(payload)).toEqual([]);
 
-    const view = deriveReportViewModel(ready.payloadJson);
+    const view = deriveReportViewModel(payload);
     const html = buildR1ReportHtml(view);
     expect(html).toContain(view.title);
     expect(html).toContain(view.recommendation.displayName);
