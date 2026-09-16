@@ -70,6 +70,7 @@ const R1_0008_TABLES = [
 const R1_0009_TABLES = ["questionnaire_rule_evaluations"] as const;
 const R1_0010_TABLES = ["credit_entitlements", "report_snapshots"] as const;
 const R1_0011_TABLES = ["report_pdf_artifacts"] as const;
+const R2_0012_TABLES = ["r1_document_manifests"] as const;
 
 const V2_TABLES = [
   ...R1_0005_TABLES,
@@ -79,6 +80,7 @@ const V2_TABLES = [
   ...R1_0009_TABLES,
   ...R1_0010_TABLES,
   ...R1_0011_TABLES,
+  ...R2_0012_TABLES,
 ] as const;
 
 const LEGACY_TABLES = [
@@ -130,6 +132,8 @@ const REQUIRED_FOREIGN_KEYS = [
   "fk_credit_entitlement_payment_owner_case",
   "fk_credit_entitlement_report_owner_case",
   "fk_report_pdf_artifact_snapshot_owner_case",
+  "fk_r1_document_manifest_case_owner",
+  "fk_r1_document_manifest_grant_owner_case",
 ] as const;
 
 const REQUIRED_INDEXES = [
@@ -211,6 +215,9 @@ const REQUIRED_INDEXES = [
   "report_pdf_artifacts_snapshot_renderer_uq",
   "report_pdf_artifacts_id_owner_case_uq",
   "report_pdf_artifacts_owner_case_status_idx",
+  "r1_document_manifests_id_owner_case_uq",
+  "r1_document_manifests_case_hash_uq",
+  "r1_document_manifests_owner_case_status_idx",
 ] as const;
 
 const PRE_R1_MIGRATION_NAMES = [
@@ -227,6 +234,7 @@ const R1_0008_MIGRATION_NAME = "0008_r1_questionnaire_expand.sql";
 const R1_0009_MIGRATION_NAME = "0009_r1_rules_engine_foundation.sql";
 const R1_0010_MIGRATION_NAME = "0010_r1_web_report_expand.sql";
 const R1_0011_MIGRATION_NAME = "0011_r1_pdf_artifact_expand.sql";
+const R2_0012_MIGRATION_NAME = "0012_r1_document_manifest.sql";
 const MIGRATION_NAMES = [
   ...PRE_R1_MIGRATION_NAMES,
   R1_0005_MIGRATION_NAME,
@@ -236,6 +244,7 @@ const MIGRATION_NAMES = [
   R1_0009_MIGRATION_NAME,
   R1_0010_MIGRATION_NAME,
   R1_0011_MIGRATION_NAME,
+  R2_0012_MIGRATION_NAME,
 ] as const;
 
 type NamedRow = { TABLE_NAME: string };
@@ -296,7 +305,7 @@ describe("R1 disposable database schema and constraints", () => {
     await cleanRunData();
   });
 
-  it("has exactly the expected 25 v2 tables, 33 foreign keys, and required indexes", async () => {
+  it("has exactly the expected 26 R1/R2 tables, 35 foreign keys, and required indexes", async () => {
     const database = await db();
     const tableResult = await database.execute(sql`
       SELECT TABLE_NAME
@@ -309,7 +318,7 @@ describe("R1 disposable database schema and constraints", () => {
       !tableName.startsWith("__drizzle"),
     );
     expect(sorted(actualV2Tables)).toEqual(sorted(V2_TABLES));
-    expect(V2_TABLES).toHaveLength(25);
+    expect(V2_TABLES).toHaveLength(26);
 
     const fkResult = await database.execute(sql`
       SELECT CONSTRAINT_NAME
@@ -318,7 +327,7 @@ describe("R1 disposable database schema and constraints", () => {
     `);
     const foreignKeyNames = (fkResult[0] as ForeignKeyRow[]).map(row => row.CONSTRAINT_NAME);
     expect(sorted(foreignKeyNames)).toEqual(sorted(REQUIRED_FOREIGN_KEYS));
-    expect(foreignKeyNames).toHaveLength(33);
+    expect(foreignKeyNames).toHaveLength(35);
 
     const indexResult = await database.execute(sql`
       SELECT DISTINCT INDEX_NAME

@@ -1326,6 +1326,52 @@ export const reportPdfArtifacts = mysqlTable(
 export type ReportPdfArtifact = typeof reportPdfArtifacts.$inferSelect;
 export type InsertReportPdfArtifact = typeof reportPdfArtifacts.$inferInsert;
 
+// ── RELEASE 2 DOCUMENT INTAKE ────────────────────────────────────────────────
+// The source bytes live in private object storage; this owner-bound manifest
+// is the auditable intake record and treats all extracted text as untrusted.
+export const r1DocumentManifests = mysqlTable(
+  "r1_document_manifests",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+    diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+    accessGrantId: varchar("accessGrantId", { length: 64 }).notNull(),
+    categoryId: varchar("categoryId", { length: 64 }).notNull(),
+    fileName: varchar("fileName", { length: 180 }).notNull(),
+    format: mysqlEnum("format", ["pdf", "docx"]).notNull(),
+    mimeType: varchar("mimeType", { length: 128 }).notNull(),
+    byteSize: int("byteSize").notNull(),
+    contentHashSha256: varchar("contentHashSha256", { length: 64 }).notNull(),
+    storageKey: varchar("storageKey", { length: 512 }).notNull(),
+    status: mysqlEnum("status", ["uploaded", "extracting", "analyzed", "manual_review_required", "failed", "deleted"]).default("uploaded").notNull(),
+    trustedContent: boolean("trustedContent").default(false).notNull(),
+    promptInjectionRisk: mysqlEnum("promptInjectionRisk", ["untrusted_document_content"]).default("untrusted_document_content").notNull(),
+    failureCode: varchar("failureCode", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    deletedAt: timestamp("deletedAt"),
+  },
+  table => [
+    foreignKey({
+      columns: [table.diagnosticCaseId, table.customerAccountId],
+      foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+      name: "fk_r1_document_manifest_case_owner",
+    }).onDelete("restrict").onUpdate("restrict"),
+    foreignKey({
+      columns: [table.accessGrantId],
+      foreignColumns: [accessGrants.id],
+      name: "fk_r1_document_manifest_grant_owner_case",
+    }).onDelete("restrict").onUpdate("restrict"),
+    uniqueIndex("r1_document_manifests_id_owner_case_uq").on(table.id, table.customerAccountId, table.diagnosticCaseId),
+    uniqueIndex("r1_document_manifests_case_hash_uq").on(table.diagnosticCaseId, table.contentHashSha256),
+    index("r1_document_manifests_owner_case_status_idx").on(table.customerAccountId, table.diagnosticCaseId, table.status),
+    check("chk_r1_document_manifest_hash", sql`${table.contentHashSha256} REGEXP '^[a-f0-9]{64}$'`),
+    check("chk_r1_document_manifest_size", sql`${table.byteSize} > 0 AND ${table.byteSize} <= 26214400`),
+  ],
+);
+
+export type R1DocumentManifest = typeof r1DocumentManifests.$inferSelect;
+export type InsertR1DocumentManifest = typeof r1DocumentManifests.$inferInsert;
+
 export const creditEntitlements = mysqlTable(
   "credit_entitlements",
   {
