@@ -17,7 +17,7 @@ import { insertCase, toCaseDto, type CaseDto } from "./caseRepository";
 const CREATE_SYNTHETIC_SCOPE = "pilot.case.create_synthetic";
 const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 
-function commandHash(serviceTier: "base_diagnostic"): string {
+function commandHash(serviceTier: "lexy-advanced-diagnostic"): string {
   if (!ENV.customerSessionSecret) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
@@ -83,7 +83,7 @@ function storedResponse(dto: CaseDto): Record<string, unknown> {
 export async function createSyntheticCase(input: {
   customerAccountId: string;
   customerSessionId: string;
-  serviceTier: "base_diagnostic";
+  serviceTier: "lexy-advanced-diagnostic";
   idempotencyKey: string;
   requestId: string;
 }): Promise<CaseDto> {

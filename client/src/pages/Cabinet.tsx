@@ -191,6 +191,13 @@ export default function Cabinet() {
                             </Link>
                           </Button>
                         )}
+                        {item.status === "report_ready" && (
+                          <Button asChild className="mt-4 min-h-11 w-full sm:w-auto">
+                            <Link href={`/cabinet/cases/${encodeURIComponent(item.publicId)}/report`}>
+                              Открыть технический отчёт
+                            </Link>
+                          </Button>
+                        )}
                       </li>
                     );
                   })}

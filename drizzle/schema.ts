@@ -1043,3 +1043,373 @@ export const questionnaireRuleEvaluations = mysqlTable("questionnaire_rule_evalu
 
 export type QuestionnaireRuleEvaluation = typeof questionnaireRuleEvaluations.$inferSelect;
 export type InsertQuestionnaireRuleEvaluation = typeof questionnaireRuleEvaluations.$inferInsert;
+// ── RELEASE 1 V2 WEB REPORT PERSISTENCE ──────────────────────────────────────
+// A row is one immutable, versioned server artifact derived from a validated
+// rule evaluation. Public APIs must project this JSON later; outbox rows remain
+// privacy-safe and contain only opaque identifiers and hashes.
+
+export const reportSnapshots = mysqlTable(
+  "report_snapshots",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+    diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+    questionnaireSubmissionId: varchar("questionnaireSubmissionId", {
+      length: 64,
+    }).notNull(),
+    questionnaireRuleEvaluationId: varchar("questionnaireRuleEvaluationId", {
+      length: 64,
+    }).notNull(),
+    sourceOutboxEventId: varchar("sourceOutboxEventId", {
+      length: 64,
+    }).notNull(),
+    reportVersion: int("reportVersion").notNull(),
+    generationReason: mysqlEnum("generationReason", ["initial_evaluation"])
+      .default("initial_evaluation")
+      .notNull(),
+    templateVersion: varchar("templateVersion", { length: 64 }).notNull(),
+    inputSnapshotHash: varchar("inputSnapshotHash", { length: 64 }).notNull(),
+    outcomeHash: varchar("outcomeHash", { length: 64 }).notNull(),
+    rulesetBundleHash: varchar("rulesetBundleHash", { length: 64 }).notNull(),
+    status: mysqlEnum("status", [
+      "pending",
+      "processing",
+      "ready",
+      "failed",
+      "superseded",
+    ])
+      .default("pending")
+      .notNull(),
+    generationMode: mysqlEnum("generationMode", ["template"])
+      .default("template")
+      .notNull(),
+    readySlot: int("readySlot"),
+    leaseOwner: varchar("leaseOwner", { length: 64 }),
+    leaseVersion: int("leaseVersion").default(0).notNull(),
+    leaseExpiresAt: timestamp("leaseExpiresAt"),
+    attemptCount: int("attemptCount").default(0).notNull(),
+    payloadJson: json("payloadJson"),
+    payloadHash: varchar("payloadHash", { length: 64 }),
+    contentHash: varchar("contentHash", { length: 64 }),
+    failureCode: varchar("failureCode", { length: 64 }),
+    lastAttemptAt: timestamp("lastAttemptAt"),
+    completedAt: timestamp("completedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    foreignKey({
+      columns: [table.customerAccountId],
+      foreignColumns: [customerAccounts.id],
+      name: "fk_report_snapshot_owner",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [table.diagnosticCaseId, table.customerAccountId],
+      foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+      name: "fk_report_snapshot_case_owner",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [
+        table.questionnaireSubmissionId,
+        table.customerAccountId,
+        table.diagnosticCaseId,
+      ],
+      foreignColumns: [
+        questionnaireSubmissions.id,
+        questionnaireSubmissions.customerAccountId,
+        questionnaireSubmissions.diagnosticCaseId,
+      ],
+      name: "fk_report_snapshot_submission_owner_case",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [
+        table.questionnaireRuleEvaluationId,
+        table.customerAccountId,
+        table.diagnosticCaseId,
+        table.questionnaireSubmissionId,
+      ],
+      foreignColumns: [
+        questionnaireRuleEvaluations.id,
+        questionnaireRuleEvaluations.customerAccountId,
+        questionnaireRuleEvaluations.diagnosticCaseId,
+        questionnaireRuleEvaluations.questionnaireSubmissionId,
+      ],
+      name: "fk_report_snapshot_evaluation_owner_case_submission",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [table.sourceOutboxEventId],
+      foreignColumns: [outboxEvents.id],
+      name: "fk_report_snapshot_source_outbox",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [table.sourceOutboxEventId],
+      foreignColumns: [questionnaireRuleEvaluations.sourceOutboxEventId],
+      name: "fk_report_snapshot_evaluation_source_outbox",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    uniqueIndex("report_snapshots_case_version_uq").on(
+      table.diagnosticCaseId,
+      table.reportVersion
+    ),
+    uniqueIndex("report_snapshots_case_input_reason_uq").on(
+      table.diagnosticCaseId,
+      table.inputSnapshotHash,
+      table.generationReason
+    ),
+    uniqueIndex("report_snapshots_id_owner_case_uq").on(
+      table.id,
+      table.customerAccountId,
+      table.diagnosticCaseId
+    ),
+    uniqueIndex("report_snapshots_evaluation_uq").on(
+      table.questionnaireRuleEvaluationId
+    ),
+    uniqueIndex("report_snapshots_source_outbox_uq").on(
+      table.sourceOutboxEventId
+    ),
+    uniqueIndex("report_snapshots_case_ready_uq").on(
+      table.diagnosticCaseId,
+      table.readySlot
+    ),
+    index("report_snapshots_owner_case_status_version_idx").on(
+      table.customerAccountId,
+      table.diagnosticCaseId,
+      table.status,
+      table.reportVersion
+    ),
+    index("report_snapshots_status_lease_created_idx").on(
+      table.status,
+      table.leaseExpiresAt,
+      table.createdAt
+    ),
+    check("chk_report_snapshot_version", sql`${table.reportVersion} > 0`),
+    check(
+      "chk_report_snapshot_template_version",
+      sql`${table.templateVersion} REGEXP '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'`
+    ),
+    check(
+      "chk_report_snapshot_hashes",
+      sql`(
+      ${table.inputSnapshotHash} REGEXP '^[a-f0-9]{64}$'
+      AND ${table.outcomeHash} REGEXP '^[a-f0-9]{64}$'
+      AND ${table.rulesetBundleHash} REGEXP '^[a-f0-9]{64}$'
+      AND (${table.payloadHash} IS NULL OR ${table.payloadHash} REGEXP '^[a-f0-9]{64}$')
+      AND (${table.contentHash} IS NULL OR ${table.contentHash} REGEXP '^[a-f0-9]{64}$')
+    )`
+    ),
+    check(
+      "chk_report_snapshot_counters",
+      sql`${table.attemptCount} >= 0 AND ${table.leaseVersion} >= 0`
+    ),
+    check(
+      "chk_report_snapshot_failure_code_safe",
+      sql`${table.failureCode} IS NULL OR ${table.failureCode} REGEXP '^[a-z][a-z0-9_]{0,63}$'`
+    ),
+    check(
+      "chk_report_snapshot_lifecycle",
+      sql`(
+      (${table.status} = 'pending'
+        AND ${table.readySlot} IS NULL
+        AND ${table.leaseOwner} IS NULL
+        AND ${table.leaseExpiresAt} IS NULL
+        AND ${table.leaseVersion} = 0
+        AND ${table.attemptCount} = 0
+        AND ${table.lastAttemptAt} IS NULL
+        AND ${table.payloadJson} IS NULL
+        AND ${table.payloadHash} IS NULL
+        AND ${table.contentHash} IS NULL
+        AND ${table.failureCode} IS NULL
+        AND ${table.completedAt} IS NULL)
+      OR (${table.status} = 'processing'
+        AND ${table.readySlot} IS NULL
+        AND ${table.leaseOwner} IS NOT NULL
+        AND ${table.leaseExpiresAt} IS NOT NULL
+        AND ${table.leaseVersion} > 0
+        AND ${table.attemptCount} > 0
+        AND ${table.lastAttemptAt} IS NOT NULL
+        AND ${table.leaseExpiresAt} > ${table.lastAttemptAt}
+        AND ${table.payloadJson} IS NULL
+        AND ${table.payloadHash} IS NULL
+        AND ${table.contentHash} IS NULL
+        AND ${table.failureCode} IS NULL
+        AND ${table.completedAt} IS NULL)
+      OR (${table.status} = 'ready'
+        AND ${table.readySlot} = 1
+        AND ${table.leaseOwner} IS NULL
+        AND ${table.leaseExpiresAt} IS NULL
+        AND ${table.leaseVersion} > 0
+        AND ${table.attemptCount} > 0
+        AND ${table.lastAttemptAt} IS NOT NULL
+        AND ${table.payloadJson} IS NOT NULL
+        AND ${table.payloadHash} IS NOT NULL
+        AND ${table.contentHash} IS NOT NULL
+        AND ${table.failureCode} IS NULL
+        AND ${table.completedAt} IS NOT NULL
+        AND ${table.completedAt} >= ${table.lastAttemptAt})
+      OR (${table.status} = 'failed'
+        AND ${table.readySlot} IS NULL
+        AND ${table.leaseOwner} IS NULL
+        AND ${table.leaseExpiresAt} IS NULL
+        AND ${table.leaseVersion} > 0
+        AND ${table.attemptCount} > 0
+        AND ${table.lastAttemptAt} IS NOT NULL
+        AND ${table.payloadJson} IS NULL
+        AND ${table.payloadHash} IS NULL
+        AND ${table.contentHash} IS NULL
+        AND ${table.failureCode} IS NOT NULL
+        AND ${table.completedAt} IS NOT NULL
+        AND ${table.completedAt} >= ${table.lastAttemptAt})
+      OR (${table.status} = 'superseded'
+        AND ${table.readySlot} IS NULL
+        AND ${table.leaseOwner} IS NULL
+        AND ${table.leaseExpiresAt} IS NULL
+        AND ${table.leaseVersion} > 0
+        AND ${table.attemptCount} > 0
+        AND ${table.lastAttemptAt} IS NOT NULL
+        AND ${table.payloadJson} IS NOT NULL
+        AND ${table.payloadHash} IS NOT NULL
+        AND ${table.contentHash} IS NOT NULL
+        AND ${table.failureCode} IS NULL
+        AND ${table.completedAt} IS NOT NULL
+        AND ${table.completedAt} >= ${table.lastAttemptAt})
+    )`
+    ),
+  ]
+);
+
+export type ReportSnapshot = typeof reportSnapshots.$inferSelect;
+export type InsertReportSnapshot = typeof reportSnapshots.$inferInsert;
+
+export const creditEntitlements = mysqlTable(
+  "credit_entitlements",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+    diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+    sourcePaymentRecordId: varchar("sourcePaymentRecordId", { length: 64 }).notNull(),
+    sourceReportSnapshotId: varchar("sourceReportSnapshotId", { length: 64 }).notNull(),
+    sourceTariffId: varchar("sourceTariffId", { length: 64 }).notNull(),
+    sourceTariffVersion: varchar("sourceTariffVersion", { length: 64 }).notNull(),
+    policyId: varchar("policyId", { length: 64 }).notNull(),
+    policyVersion: varchar("policyVersion", { length: 64 }).notNull(),
+    amountRub: int("amountRub").notNull(),
+    currency: mysqlEnum("currency", ["RUB"]).notNull(),
+    eligibleProductCode: mysqlEnum("eligibleProductCode", [
+      "start_product",
+      "safe_sales",
+      "rights_and_ip",
+      "data_and_infrastructure",
+      "enterprise_readiness",
+    ]).notNull(),
+    issuedAt: timestamp("issuedAt", { fsp: 3 }).notNull(),
+    expiresAt: timestamp("expiresAt", { fsp: 3 }).notNull(),
+    businessTimeZone: mysqlEnum("businessTimeZone", ["Europe/Moscow"]).notNull(),
+    status: mysqlEnum("status", ["available", "expired", "revoked"])
+      .default("available")
+      .notNull(),
+    automaticRedemptionEnabled: boolean("automaticRedemptionEnabled")
+      .default(false)
+      .notNull(),
+    revokedAt: timestamp("revokedAt", { fsp: 3 }),
+    revocationReasonCode: varchar("revocationReasonCode", { length: 64 }),
+    createdAt: timestamp("createdAt", { fsp: 3 }).notNull(),
+    updatedAt: timestamp("updatedAt", { fsp: 3 }).notNull(),
+  },
+  table => [
+    foreignKey({
+      columns: [table.customerAccountId],
+      foreignColumns: [customerAccounts.id],
+      name: "fk_credit_entitlement_owner",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [table.diagnosticCaseId, table.customerAccountId],
+      foreignColumns: [diagnosticCases.id, diagnosticCases.customerAccountId],
+      name: "fk_credit_entitlement_case_owner",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [
+        table.sourcePaymentRecordId,
+        table.customerAccountId,
+        table.diagnosticCaseId,
+      ],
+      foreignColumns: [
+        paymentRecords.id,
+        paymentRecords.customerAccountId,
+        paymentRecords.diagnosticCaseId,
+      ],
+      name: "fk_credit_entitlement_payment_owner_case",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    foreignKey({
+      columns: [
+        table.sourceReportSnapshotId,
+        table.customerAccountId,
+        table.diagnosticCaseId,
+      ],
+      foreignColumns: [
+        reportSnapshots.id,
+        reportSnapshots.customerAccountId,
+        reportSnapshots.diagnosticCaseId,
+      ],
+      name: "fk_credit_entitlement_report_owner_case",
+    })
+      .onDelete("restrict")
+      .onUpdate("restrict"),
+    uniqueIndex("credit_entitlements_source_identity_uq").on(
+      table.sourcePaymentRecordId,
+      table.sourceReportSnapshotId,
+      table.policyId
+    ),
+    uniqueIndex("credit_entitlements_report_uq").on(
+      table.sourceReportSnapshotId
+    ),
+    index("credit_entitlements_owner_case_status_expiry_idx").on(
+      table.customerAccountId,
+      table.diagnosticCaseId,
+      table.status,
+      table.expiresAt
+    ),
+    check("chk_credit_entitlement_amount", sql`${table.amountRub} = 6900`),
+    check(
+      "chk_credit_entitlement_policy",
+      sql`${table.policyId} = 'base-diagnostic-credit-6900-rub-v1'
+        AND ${table.sourceTariffId} = 'lexy-advanced-diagnostic'
+        AND ${table.businessTimeZone} = 'Europe/Moscow'
+        AND ${table.automaticRedemptionEnabled} = false`
+    ),
+    check(
+      "chk_credit_entitlement_expiry",
+      sql`${table.expiresAt} > ${table.issuedAt}`
+    ),
+    check(
+      "chk_credit_entitlement_lifecycle",
+      sql`(
+        (${table.status} IN ('available', 'expired')
+          AND ${table.revokedAt} IS NULL
+          AND ${table.revocationReasonCode} IS NULL)
+        OR (${table.status} = 'revoked'
+          AND ${table.revokedAt} IS NOT NULL
+          AND ${table.revocationReasonCode} REGEXP '^[a-z][a-z0-9_]{0,63}$')
+      )`
+    ),
+  ]
+);
+
+export type CreditEntitlement = typeof creditEntitlements.$inferSelect;
+export type InsertCreditEntitlement = typeof creditEntitlements.$inferInsert;

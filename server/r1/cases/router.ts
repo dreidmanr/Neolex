@@ -11,6 +11,7 @@ import {
   getReleaseGateStatus,
   isPromoAccessTestAllowed,
 } from "../releaseGate";
+import { reportsRouter } from "../reports/router";
 import {
   getQuestionnaireDraft,
   saveQuestionnaireAnswer,
@@ -34,6 +35,7 @@ export const pilotRouter = router({
   auth: customerAuthRouter,
   access: pilotAccessRouter,
   consents: pilotConsentsRouter,
+  reports: reportsRouter,
   status: publicProcedure.query(() => {
     const gate = getReleaseGateStatus();
     return {

@@ -19,7 +19,7 @@ const audit = {
   requestId: "request_event_contract_01",
   idempotencyKeyHash: "a".repeat(64),
   privacySafeMetadata: {
-    serviceTier: "base_diagnostic" as const,
+    serviceTier: "lexy-advanced-diagnostic" as const,
     stateVersion: 1,
     synthetic: true as const,
   },

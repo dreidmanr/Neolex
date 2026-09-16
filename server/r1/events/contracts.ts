@@ -24,7 +24,7 @@ const syntheticAudit = z.object({
   eventType: z.literal("diagnostic_case.synthetic_created"), outcome: z.literal("succeeded"),
   toStatus: z.literal("draft"), requestId: requestIdSchema, idempotencyKeyHash: hashSchema,
   privacySafeMetadata: z.object({
-    serviceTier: z.literal("base_diagnostic"), stateVersion: positiveVersionSchema, synthetic: z.literal(true),
+    serviceTier: z.literal("lexy-advanced-diagnostic"), stateVersion: positiveVersionSchema, synthetic: z.literal(true),
   }).strict(),
   createdAt: z.date().optional(),
 }).strict();
@@ -53,6 +53,13 @@ const ownerDeniedAudit = z.object({
   eventType: z.literal("diagnostic_case.owner_access_denied"), outcome: z.literal("denied"),
   reasonCode: z.literal("owner_scope_miss"), requestId: requestIdSchema,
   privacySafeMetadata: z.object({ resourceClass: z.literal("diagnostic_case") }).strict(), createdAt: z.date().optional(),
+}).strict();
+const reportAccessDeniedAudit = z.object({
+  actorType: z.literal("customer_session"), actorId: opaqueIdSchema,
+  aggregateType: z.literal("report_snapshot"), aggregateId: z.literal("unresolved_report"),
+  eventType: z.literal("report.access_denied"), outcome: z.literal("denied"),
+  reasonCode: z.literal("owner_entitlement_or_readiness_miss"), requestId: requestIdSchema,
+  privacySafeMetadata: z.object({ resourceClass: z.literal("report") }).strict(), createdAt: z.date().optional(),
 }).strict();
 const adminRoleDeniedAudit = z.object({
   actorType: z.literal("admin_user"), actorId: opaqueIdSchema,
@@ -107,7 +114,7 @@ const promoGrantedAudit = z.object({
   correlationId: opaqueIdSchema, idempotencyKeyHash: hashSchema,
   privacySafeMetadata: z.object({
     paymentId: opaqueIdSchema, caseId: opaqueIdSchema, grantId: opaqueIdSchema,
-    tariffCode: z.literal("base_diagnostic"), chargedAmount: z.literal(0),
+    tariffCode: z.literal("lexy-advanced-diagnostic"), chargedAmount: z.literal(0),
     currency: z.literal("RUB"), campaignId: opaqueIdSchema, test: z.literal(true),
   }).strict(),
   createdAt: z.date().optional(),
@@ -208,7 +215,8 @@ const ruleEvaluationFailedAudit = z.object({
   createdAt: z.date().optional(),
 }).strict();
 export const auditEventSchema = z.discriminatedUnion("eventType", [
-  syntheticAudit, transitionAudit, adminListAudit, ownerDeniedAudit, adminRoleDeniedAudit, adminPurposeDeniedAudit,
+  syntheticAudit, transitionAudit, adminListAudit, ownerDeniedAudit, reportAccessDeniedAudit,
+  adminRoleDeniedAudit, adminPurposeDeniedAudit,
   magicLinkIssuedAudit, magicLinkConsumedAudit, customerSessionRevokedAudit, promoGrantedAudit,
   accessRevokedAudit, questionnaireAnswerSavedAudit, questionnaireSubmittedAudit,
   questionnaireAccessDeniedAudit, ruleEvaluationStartedAudit, ruleEvaluationCompletedAudit,
@@ -246,7 +254,7 @@ const promoGrantedOutbox = z.object({
   eventType: z.literal("billing.promo_granted"),
   privacySafePayload: z.object({
     paymentId: opaqueIdSchema, caseId: opaqueIdSchema, grantId: opaqueIdSchema,
-    tariffCode: z.literal("base_diagnostic"), chargedAmount: z.literal(0),
+    tariffCode: z.literal("lexy-advanced-diagnostic"), chargedAmount: z.literal(0),
     currency: z.literal("RUB"), campaignId: opaqueIdSchema, test: z.literal(true),
   }).strict(),
   createdAt: z.date().optional(),

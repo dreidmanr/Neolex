@@ -7,7 +7,7 @@ import {
 import type { R1Executor } from "../database";
 
 export type CaseStatus = DiagnosticCase["status"];
-export type CaseServiceTier = "base_diagnostic";
+export type CaseServiceTier = "lexy-advanced-diagnostic";
 
 export type CaseDto = {
   publicId: string;

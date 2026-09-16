@@ -71,6 +71,13 @@
       "when": 1789414689091,
       "tag": "0009_r1_rules_engine_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1789548572112,
+      "tag": "0010_r1_web_report_expand",
+      "breakpoints": true
     }
   ]
 }

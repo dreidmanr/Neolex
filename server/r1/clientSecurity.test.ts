@@ -20,7 +20,7 @@ import { getDocumentRegistryForValidation } from "./legal/documentRegistry";
 const repositoryRoot = path.resolve(import.meta.dirname, "../..");
 
 function canonical(marketing: boolean) {
-  return buildPromoCanonicalSignature("base_diagnostic", [
+  return buildPromoCanonicalSignature("lexy-advanced-diagnostic", [
     {
       documentId: "termsdraft",
       documentVersion: "drafttestv1",

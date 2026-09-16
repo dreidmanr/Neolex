@@ -11,8 +11,8 @@ describe("R1 tariff service", () => {
   it("returns exactly one safe price-free draft/test offer", () => {
     const offer = getOffer();
     expect(offer).toEqual({
-      tariffCode: "base_diagnostic",
-      serviceTier: "base_diagnostic",
+      tariffCode: "lexy-advanced-diagnostic",
+      serviceTier: "lexy-advanced-diagnostic",
       currency: "RUB",
       provenanceStatus: "draft_test_only",
     });

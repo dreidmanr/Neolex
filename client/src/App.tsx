@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
 import Cabinet from "./pages/Cabinet";
 import CaseQuestionnaire from "./pages/CaseQuestionnaire";
+import CaseReport from "./pages/CaseReport";
 import Diagnostic from "./pages/Diagnostic";
 import Home from "./pages/Home";
 import LegalDocs from "./pages/LegalDocs";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/pilot/access" component={PilotAccess} />
       <Route path="/pilot" component={Pilot} />
       <Route path="/cabinet/diagnostics/:publicCaseId/questionnaire" component={CaseQuestionnaire} />
+      <Route path="/cabinet/cases/:publicId/report" component={CaseReport} />
       <Route path="/cabinet" component={Cabinet} />
       <Route path="/auth/request-link" component={RequestMagicLink} />
       <Route path="/auth/consume" component={MagicLinkConsume} />

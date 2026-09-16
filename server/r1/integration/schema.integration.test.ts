@@ -13,9 +13,12 @@ import {
   emailDeliveries,
   idempotencyRecords,
   magicLinkTokens,
+  outboxEvents,
   questionnaireAnswerRevisions,
   questionnaireDrafts,
+  questionnaireRuleEvaluations,
   questionnaireSubmissions,
+  reportSnapshots,
 } from "../../../drizzle/schema";
 import {
   ACCOUNT_A,
@@ -65,6 +68,7 @@ const R1_0008_TABLES = [
 ] as const;
 
 const R1_0009_TABLES = ["questionnaire_rule_evaluations"] as const;
+const R1_0010_TABLES = ["credit_entitlements", "report_snapshots"] as const;
 
 const V2_TABLES = [
   ...R1_0005_TABLES,
@@ -72,6 +76,7 @@ const V2_TABLES = [
   ...R1_0007_TABLES,
   ...R1_0008_TABLES,
   ...R1_0009_TABLES,
+  ...R1_0010_TABLES,
 ] as const;
 
 const LEGACY_TABLES = [
@@ -112,6 +117,16 @@ const REQUIRED_FOREIGN_KEYS = [
   "fk_questionnaire_rule_evaluation_case_owner",
   "fk_questionnaire_rule_evaluation_submission_owner_case",
   "fk_questionnaire_rule_evaluation_source_outbox",
+  "fk_report_snapshot_owner",
+  "fk_report_snapshot_case_owner",
+  "fk_report_snapshot_submission_owner_case",
+  "fk_report_snapshot_evaluation_owner_case_submission",
+  "fk_report_snapshot_source_outbox",
+  "fk_report_snapshot_evaluation_source_outbox",
+  "fk_credit_entitlement_owner",
+  "fk_credit_entitlement_case_owner",
+  "fk_credit_entitlement_payment_owner_case",
+  "fk_credit_entitlement_report_owner_case",
 ] as const;
 
 const REQUIRED_INDEXES = [
@@ -179,6 +194,17 @@ const REQUIRED_INDEXES = [
   "questionnaire_rule_evaluations_id_owner_case_submission_uq",
   "questionnaire_rule_evaluations_owner_case_status_idx",
   "outbox_events_lease_expiry_idx",
+  "report_snapshots_case_version_uq",
+  "report_snapshots_case_input_reason_uq",
+  "report_snapshots_id_owner_case_uq",
+  "report_snapshots_evaluation_uq",
+  "report_snapshots_source_outbox_uq",
+  "report_snapshots_case_ready_uq",
+  "report_snapshots_owner_case_status_version_idx",
+  "report_snapshots_status_lease_created_idx",
+  "credit_entitlements_source_identity_uq",
+  "credit_entitlements_report_uq",
+  "credit_entitlements_owner_case_status_expiry_idx",
 ] as const;
 
 const PRE_R1_MIGRATION_NAMES = [
@@ -193,6 +219,7 @@ const R1_0006_MIGRATION_NAME = "0006_r1_magic_link_expand.sql";
 const R1_0007_MIGRATION_NAME = "0007_r1_promo_access_expand.sql";
 const R1_0008_MIGRATION_NAME = "0008_r1_questionnaire_expand.sql";
 const R1_0009_MIGRATION_NAME = "0009_r1_rules_engine_foundation.sql";
+const R1_0010_MIGRATION_NAME = "0010_r1_web_report_expand.sql";
 const MIGRATION_NAMES = [
   ...PRE_R1_MIGRATION_NAMES,
   R1_0005_MIGRATION_NAME,
@@ -200,6 +227,7 @@ const MIGRATION_NAMES = [
   R1_0007_MIGRATION_NAME,
   R1_0008_MIGRATION_NAME,
   R1_0009_MIGRATION_NAME,
+  R1_0010_MIGRATION_NAME,
 ] as const;
 
 type NamedRow = { TABLE_NAME: string };
@@ -260,7 +288,7 @@ describe("R1 disposable database schema and constraints", () => {
     await cleanRunData();
   });
 
-  it("has exactly the expected 22 v2 tables, 22 foreign keys, and required indexes", async () => {
+  it("has exactly the expected 24 v2 tables, 32 foreign keys, and required indexes", async () => {
     const database = await db();
     const tableResult = await database.execute(sql`
       SELECT TABLE_NAME
@@ -273,7 +301,7 @@ describe("R1 disposable database schema and constraints", () => {
       !tableName.startsWith("__drizzle"),
     );
     expect(sorted(actualV2Tables)).toEqual(sorted(V2_TABLES));
-    expect(V2_TABLES).toHaveLength(22);
+    expect(V2_TABLES).toHaveLength(24);
 
     const fkResult = await database.execute(sql`
       SELECT CONSTRAINT_NAME
@@ -282,7 +310,7 @@ describe("R1 disposable database schema and constraints", () => {
     `);
     const foreignKeyNames = (fkResult[0] as ForeignKeyRow[]).map(row => row.CONSTRAINT_NAME);
     expect(sorted(foreignKeyNames)).toEqual(sorted(REQUIRED_FOREIGN_KEYS));
-    expect(foreignKeyNames).toHaveLength(22);
+    expect(foreignKeyNames).toHaveLength(32);
 
     const indexResult = await database.execute(sql`
       SELECT DISTINCT INDEX_NAME
@@ -310,7 +338,7 @@ describe("R1 disposable database schema and constraints", () => {
     }
   });
 
-  it("keeps R1 migrations add-only and scopes 0006/0007/0008/0009 to their additive targets", async () => {
+  it("keeps R1 migrations add-only and scopes 0006-0010 to their additive targets", async () => {
     const migrationDirectory = path.resolve(import.meta.dirname, "../../../drizzle");
     const migrationsByName = new Map(
       await Promise.all(
@@ -325,17 +353,20 @@ describe("R1 disposable database schema and constraints", () => {
     const promoSql = migrationsByName.get(R1_0007_MIGRATION_NAME) ?? "";
     const questionnaireSql = migrationsByName.get(R1_0008_MIGRATION_NAME) ?? "";
     const rulesSql = migrationsByName.get(R1_0009_MIGRATION_NAME) ?? "";
+    const reportSql = migrationsByName.get(R1_0010_MIGRATION_NAME) ?? "";
     expect(r1Sql).not.toBe("");
     expect(magicLinkSql).not.toBe("");
     expect(promoSql).not.toBe("");
     expect(questionnaireSql).not.toBe("");
     expect(rulesSql).not.toBe("");
+    expect(reportSql).not.toBe("");
     const destructiveSql = /(?:^|;)\s*(?:DROP\b|DELETE\b|TRUNCATE\b|RENAME\b|UPDATE\b|INSERT\b|REPLACE\b)|ALTER\s+TABLE\b[^;]*\b(?:DROP|MODIFY|CHANGE|RENAME)\b/im;
     expect(r1Sql).not.toMatch(destructiveSql);
     expect(magicLinkSql).not.toMatch(destructiveSql);
     expect(promoSql).not.toMatch(destructiveSql);
     expect(questionnaireSql).not.toMatch(destructiveSql);
     expect(rulesSql).not.toMatch(destructiveSql);
+    expect(reportSql).not.toMatch(destructiveSql);
 
     const alterTargets = [...r1Sql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi)].map(match => match[1]);
     expect(alterTargets).toHaveLength(7);
@@ -430,6 +461,28 @@ describe("R1 disposable database schema and constraints", () => {
     expect(rulesSql).toContain("ADD `leaseVersion` int DEFAULT 0 NOT NULL");
     expect(rulesSql).not.toContain("`inputSnapshotJson` json");
 
+    const reportStatements = migrationStatements(reportSql);
+    for (const statement of reportStatements) {
+      expect(statement).toMatch(/^(?:CREATE\s+TABLE|ALTER\s+TABLE|CREATE\s+INDEX)\b/i);
+    }
+    const reportCreateTargets = [
+      ...reportSql.matchAll(/CREATE\s+TABLE\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    expect(sorted(reportCreateTargets)).toEqual(sorted(R1_0010_TABLES));
+    const reportAlterTargets = [
+      ...reportSql.matchAll(/ALTER\s+TABLE\s+`([^`]+)`/gi),
+    ].map(match => match[1]);
+    expect(new Set(reportAlterTargets)).toEqual(new Set(R1_0010_TABLES));
+    for (const statement of reportStatements.filter(statement =>
+      /^ALTER\s+TABLE\b/i.test(statement) && statement.includes("CONSTRAINT"),
+    )) {
+      expect(statement).toMatch(
+        /^ALTER\s+TABLE\s+`(?:report_snapshots|credit_entitlements)`\s+ADD\s+CONSTRAINT\s+`[^`]+`\s+FOREIGN\s+KEY\b/i,
+      );
+    }
+    expect(reportSql).not.toContain("`inputSnapshotJson` json");
+    expect(reportSql).not.toContain("`outcomeJson` json");
+
     const legacyDefinitions = PRE_R1_MIGRATION_NAMES
       .map(name => migrationsByName.get(name) ?? "")
       .join("\n");
@@ -460,14 +513,14 @@ describe("R1 disposable database schema and constraints", () => {
       id: `${RUN_PREFIX}_missing_owner_case`,
       publicId: `${RUN_PREFIX}_missing_owner_public`,
       customerAccountId: `${RUN_PREFIX}_absent_owner`,
-      serviceTier: "base_diagnostic",
+      serviceTier: "lexy-advanced-diagnostic",
     })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }) });
 
     await expect(database.insert(diagnosticCases).values({
       id: `${RUN_PREFIX}_duplicate_public_case`,
       publicId: PUBLIC_A,
       customerAccountId: ACCOUNT_A,
-      serviceTier: "base_diagnostic",
+      serviceTier: "lexy-advanced-diagnostic",
     })).rejects.toMatchObject({ cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }) });
 
     const expiresAt = new Date(Date.now() + 60_000);
@@ -788,6 +841,238 @@ describe("R1 disposable database schema and constraints", () => {
     expect(normalizedColumnNames.filter(name =>
       /rawtoken|tokenvalue|email|legalbody|documentbody|url|promo|price/.test(name)
     )).toEqual([]);
+  });
+
+  it("enforces report snapshot source fences, uniqueness, and lifecycle contracts", async () => {
+    await cleanRunData();
+    await seedOwners();
+    const database = await db();
+    const now = new Date("2026-02-01T00:00:00.000Z");
+    const draftId = opaqueId("report_draft");
+    const submissionId = opaqueId("report_submission");
+    const evaluationId = opaqueId("report_evaluation");
+    const sourceOutboxId = opaqueId("report_source_outbox");
+    const inputSnapshotHash = opaqueHash();
+    const outcomeHash = opaqueHash();
+    const rulesetBundleHash = opaqueHash();
+
+    await database.insert(questionnaireDrafts).values({
+      id: draftId,
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireReleaseId: "report_questionnaire",
+      questionnaireVersion: "1.0.0",
+      questionnaireContentHash: opaqueHash(),
+      status: "submitted",
+      draftRevision: 1,
+      visibleQuestionIds: ["question_a"],
+      visibleSetHash: opaqueHash(),
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      createdAt: now,
+      updatedAt: now,
+    });
+    await database.insert(questionnaireSubmissions).values({
+      id: submissionId,
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireDraftId: draftId,
+      submissionVersion: 1,
+      questionnaireReleaseId: "report_questionnaire",
+      questionnaireVersion: "1.0.0",
+      questionnaireContentHash: opaqueHash(),
+      legalCoreReleaseId: "report_legal_core",
+      legalCoreVersion: "1.0.0",
+      rulesetId: "report_rules",
+      rulesetBundleHash,
+      visibleQuestionIds: ["question_a"],
+      visibleSetHash: opaqueHash(),
+      manualFollowUpRequired: false,
+      manualFollowUpTriggerIds: [],
+      inputSnapshotJson: {
+        activeAnswers: { question_a: { choiceId: "choice_a" } },
+      },
+      inputSnapshotHash,
+      submittedAt: now,
+      createdAt: now,
+    });
+    await database.insert(outboxEvents).values({
+      id: sourceOutboxId,
+      eventId: opaqueId("report_event"),
+      dedupeKey: opaqueHash(),
+      aggregateType: "questionnaire_submission",
+      aggregateId: submissionId,
+      eventType: "questionnaire.submitted_for_scoring",
+      privacySafePayload: {
+        caseId: CASE_A,
+        submissionId,
+        inputSnapshotHash,
+      },
+      status: "published",
+      attemptCount: 1,
+      leaseVersion: 1,
+      publishedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await database.insert(questionnaireRuleEvaluations).values({
+      id: evaluationId,
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireSubmissionId: submissionId,
+      sourceOutboxEventId: sourceOutboxId,
+      submittedCaseStateVersion: 1,
+      rulesetId: "report_rules",
+      rulesetVersion: "1.0.0",
+      rulesetHash: rulesetBundleHash,
+      inputSnapshotHash,
+      status: "succeeded",
+      outcomeJson: { classification: "validated" },
+      outcomeHash,
+      manualReviewRequired: false,
+      startedAt: now,
+      completedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const baseSnapshot = {
+      id: opaqueId("report_snapshot"),
+      customerAccountId: ACCOUNT_A,
+      diagnosticCaseId: CASE_A,
+      questionnaireSubmissionId: submissionId,
+      questionnaireRuleEvaluationId: evaluationId,
+      sourceOutboxEventId: sourceOutboxId,
+      reportVersion: 1,
+      templateVersion: "web_report_v1",
+      inputSnapshotHash,
+      outcomeHash,
+      rulesetBundleHash,
+      status: "pending" as const,
+      generationMode: "template" as const,
+      leaseVersion: 0,
+      attemptCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await expect(
+      database.insert(reportSnapshots).values({
+        ...baseSnapshot,
+        id: opaqueId("report_cross_owner"),
+        customerAccountId: ACCOUNT_B,
+      })
+    ).rejects.toMatchObject({
+      cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }),
+    });
+
+    await expect(
+      database.insert(reportSnapshots).values({
+        ...baseSnapshot,
+        id: opaqueId("report_bad_source"),
+        sourceOutboxEventId: opaqueId("missing_outbox"),
+      })
+    ).rejects.toMatchObject({
+      cause: expect.objectContaining({ code: "ER_NO_REFERENCED_ROW_2" }),
+    });
+
+    await expectCheckConstraintFailure(
+      database.insert(reportSnapshots).values({
+        ...baseSnapshot,
+        id: opaqueId("report_bad_pending"),
+        payloadJson: { leaked: true },
+        payloadHash: opaqueHash(),
+        contentHash: opaqueHash(),
+      }),
+      "chk_report_snapshot_lifecycle"
+    );
+
+    await database.insert(reportSnapshots).values(baseSnapshot);
+    await expect(
+      database.insert(reportSnapshots).values({
+        ...baseSnapshot,
+        id: opaqueId("report_duplicate_evaluation"),
+        reportVersion: 2,
+        templateVersion: "web_report_v2",
+      })
+    ).rejects.toMatchObject({
+      cause: expect.objectContaining({ code: "ER_DUP_ENTRY" }),
+    });
+
+    const processingAt = new Date(now.getTime() + 1_000);
+    const readyAt = new Date(now.getTime() + 2_000);
+    const leaseExpiresAt = new Date(now.getTime() + 60_000);
+    await database
+      .update(reportSnapshots)
+      .set({
+        status: "processing",
+        leaseOwner: "report_worker_a",
+        leaseVersion: 1,
+        leaseExpiresAt,
+        attemptCount: 1,
+        lastAttemptAt: processingAt,
+        updatedAt: processingAt,
+      })
+      .where(sql`${reportSnapshots.id} = ${baseSnapshot.id}`);
+    const payloadHash = opaqueHash();
+    const contentHash = opaqueHash();
+    await database
+      .update(reportSnapshots)
+      .set({
+        status: "ready",
+        readySlot: 1,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        payloadJson: { sections: [{ id: "summary", blocks: [] }] },
+        payloadHash,
+        contentHash,
+        completedAt: readyAt,
+        updatedAt: readyAt,
+      })
+      .where(sql`${reportSnapshots.id} = ${baseSnapshot.id}`);
+
+    await expectCheckConstraintFailure(
+      database
+        .update(reportSnapshots)
+        .set({
+          status: "failed",
+          readySlot: null,
+          payloadJson: { forbidden: "failed_payload" },
+          payloadHash,
+          contentHash,
+          failureCode: "technical_failure",
+        })
+        .where(sql`${reportSnapshots.id} = ${baseSnapshot.id}`),
+      "chk_report_snapshot_lifecycle"
+    );
+
+    const readyRows = await database
+      .select()
+      .from(reportSnapshots)
+      .where(sql`${reportSnapshots.id} = ${baseSnapshot.id}`);
+    expect(readyRows).toHaveLength(1);
+    expect(readyRows[0]).toMatchObject({
+      status: "ready",
+      readySlot: 1,
+      payloadHash,
+      contentHash,
+      failureCode: null,
+    });
+
+    const columnResult = await database.execute(sql`
+      SELECT COLUMN_NAME
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'report_snapshots'
+    `);
+    const normalizedColumnNames = (columnResult[0] as ColumnRow[]).map(row =>
+      row.COLUMN_NAME.replaceAll("_", "").toLowerCase()
+    );
+    expect(
+      normalizedColumnNames.filter(name =>
+        /rawanswer|answertext|legalreport|reportmarkdown|outcometext/.test(name)
+      )
+    ).toEqual([]);
   });
 
   it("rejects a consent actor session owned by another customer account", async () => {

@@ -18,7 +18,7 @@ import { findActiveOwnedAccessGrant } from "../billing/accessPolicy";
 import { revokeAccessGrant } from "../billing/accessGrantService";
 import { redeemPromo, type RedeemPromoInput } from "../billing/promoService";
 import {
-  BASE_DIAGNOSTIC_TARIFF_CODE,
+  ADVANCED_DIAGNOSTIC_TARIFF_CODE,
   TARIFF_CATALOG_VERSION,
 } from "../billing/tariffService";
 import type { R1Executor } from "../database";
@@ -153,7 +153,7 @@ function redemptionInput(
     customerAccountId: customer.accountId,
     customerSessionId: customer.sessionId,
     requestId: fixedId(`request_${label}`),
-    tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
+    tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
     promoValue,
     idempotencyKey: fixedId(`idem_${label}`),
     consents: canonicalConsents(false),
@@ -423,7 +423,7 @@ describe("R1 real promo access acceptance", () => {
     expect(response).toEqual({
       casePublicId: expect.stringMatching(/^public_/),
       status: "access_granted",
-      tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
+      tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       accessStatus: "active",
     });
     expect(Object.keys(response).sort()).toEqual([
@@ -441,7 +441,7 @@ describe("R1 real promo access acceptance", () => {
     expect(diagnosticCase).toMatchObject({
       publicId: response.casePublicId,
       customerAccountId: customer.accountId,
-      serviceTier: BASE_DIAGNOSTIC_TARIFF_CODE,
+      serviceTier: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       status: "access_granted",
       stateVersion: 2,
     });
@@ -474,8 +474,8 @@ describe("R1 real promo access acceptance", () => {
     expect(initial.snapshots).toHaveLength(1);
     const snapshot = initial.snapshots[0]!;
     expect(snapshot).toMatchObject({
-      tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
-      serviceTier: BASE_DIAGNOSTIC_TARIFF_CODE,
+      tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
+      serviceTier: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       provenanceStatus: "draft_test_only",
       catalogVersion: TARIFF_CATALOG_VERSION,
       currency: "RUB",
@@ -490,7 +490,7 @@ describe("R1 real promo access acceptance", () => {
       customerAccountId: customer.accountId,
       diagnosticCaseId: diagnosticCase.id,
       tariffSnapshotId: snapshot.id,
-      tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
+      tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       campaignId: process.env.LEXY_R1_PROMO_CAMPAIGN_ID,
       sourceType: "promo",
       status: "promo_granted",
@@ -540,7 +540,7 @@ describe("R1 real promo access acceptance", () => {
             paymentId: payment.id,
             caseId: diagnosticCase.id,
             grantId: grant.id,
-            tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
+            tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
             chargedAmount: 0,
             currency: "RUB",
             campaignId: process.env.LEXY_R1_PROMO_CAMPAIGN_ID,
@@ -576,7 +576,7 @@ describe("R1 real promo access acceptance", () => {
             paymentId: payment.id,
             caseId: diagnosticCase.id,
             grantId: grant.id,
-            tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
+            tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
             chargedAmount: 0,
             currency: "RUB",
             campaignId: process.env.LEXY_R1_PROMO_CAMPAIGN_ID,
@@ -970,7 +970,7 @@ describe("R1 real promo access acceptance", () => {
       id: blockerCaseId,
       publicId: blockerPublicId,
       customerAccountId: customer.accountId,
-      serviceTier: BASE_DIAGNOSTIC_TARIFF_CODE,
+      serviceTier: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       status: "draft",
       stateVersion: 1,
       createdAt: TEST_DATES.rollback,
@@ -978,8 +978,8 @@ describe("R1 real promo access acceptance", () => {
     });
     await database.insert(tariffSnapshots).values({
       id: blockerSnapshotId,
-      tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
-      serviceTier: BASE_DIAGNOSTIC_TARIFF_CODE,
+      tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
+      serviceTier: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       provenanceStatus: "draft_test_only",
       catalogVersion: TARIFF_CATALOG_VERSION,
       currency: "RUB",
@@ -990,7 +990,7 @@ describe("R1 real promo access acceptance", () => {
       customerAccountId: customer.accountId,
       diagnosticCaseId: blockerCaseId,
       tariffSnapshotId: blockerSnapshotId,
-      tariffCode: BASE_DIAGNOSTIC_TARIFF_CODE,
+      tariffCode: ADVANCED_DIAGNOSTIC_TARIFF_CODE,
       campaignId: process.env.LEXY_R1_PROMO_CAMPAIGN_ID!,
       sourceType: "promo",
       status: "promo_granted",
