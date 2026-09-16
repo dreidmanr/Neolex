@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import {
   AlertTriangle,
   ArrowLeft,
+  Download,
   FileWarning,
   ShieldAlert,
 } from "lucide-react";
@@ -78,6 +79,14 @@ export default function CaseReport() {
     }
   );
   const report = reportQuery.data;
+  const pdfStatusQuery = trpc.pilot.reports.getPdfStatus.useQuery(
+    { publicId },
+    {
+      enabled: Boolean(meQuery.data) && validLocator && Boolean(report),
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   return (
     <PilotShell
@@ -132,6 +141,17 @@ export default function CaseReport() {
               </div>
             </div>
           </div>
+
+          {pdfStatusQuery.data?.status === "ready" && (
+            <div className="flex justify-end">
+              <Button asChild className="min-h-11">
+                <a href={`/api/r1/reports/${encodeURIComponent(publicId)}/artifacts/pdf`} download>
+                  <Download className="size-4" aria-hidden="true" />
+                  Скачать PDF
+                </a>
+              </Button>
+            </div>
+          )}
 
           <Card className="gap-4 border-border shadow-sm">
             <CardHeader className="px-5 sm:px-6">

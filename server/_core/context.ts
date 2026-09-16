@@ -48,6 +48,12 @@ async function authenticateCustomer(
   return findActiveCustomerSessionByTokenHash(tokenHash);
 }
 
+export async function authenticateCustomerRequest(
+  req: CreateExpressContextOptions["req"],
+): Promise<CustomerPrincipal | null> {
+  return authenticateCustomer(req);
+}
+
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
@@ -62,7 +68,7 @@ export async function createContext(
   }
 
   try {
-    customer = await authenticateCustomer(opts.req);
+    customer = await authenticateCustomerRequest(opts.req);
   } catch {
     // Customer authentication is independent and optional for public/admin procedures.
     customer = null;

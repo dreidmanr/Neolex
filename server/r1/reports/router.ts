@@ -9,6 +9,7 @@ import { assertTechnicalPilotAllowed } from "../releaseGate";
 import { loadReadyReportSnapshotByPublicCase } from "./reportSnapshotRepository";
 import { deriveReportViewModel } from "./reportViewModel";
 import { REPORT_TEST_WATERMARK, type ValidatedReportSnapshot } from "./types";
+import { findOwnedPdfArtifact, persistPdfArtifactForReadyReport, R1_PDF_RENDERER_VERSION } from "../artifacts/reportPdfArtifactService";
 
 const publicCaseLocatorSchema = z.string().min(16).max(64);
 
@@ -182,6 +183,28 @@ export const reportsRouter = router({
       } catch {
         return denyReportAccess(db, denialContext);
       }
+    }),
+  getPdfStatus: customerProcedure
+    .input(z.object({ publicId: publicCaseLocatorSchema }).strict())
+    .query(async ({ ctx, input }) => {
+      assertTechnicalPilotAllowed();
+      const db = await requireR1Database();
+      const ownedCase = await findOwnedCaseByPublicId(db, ctx.customer.accountId, input.publicId);
+      if (!ownedCase) return denyReportAccess(db, { customerSessionId: ctx.customer.sessionId, requestId: ctx.requestId });
+      const activeAccess = await findActiveOwnedAccessGrant(db, ctx.customer.accountId, ownedCase.id);
+      if (!activeAccess) return denyReportAccess(db, { customerSessionId: ctx.customer.sessionId, requestId: ctx.requestId });
+      const row = await loadReadyReportSnapshotByPublicCase(db, { customerAccountId: ctx.customer.accountId, casePublicId: input.publicId });
+      if (!row) return denyReportAccess(db, { customerSessionId: ctx.customer.sessionId, requestId: ctx.requestId });
+      let artifact = await findOwnedPdfArtifact(db, { customerAccountId: ctx.customer.accountId, diagnosticCaseId: ownedCase.id, reportSnapshotId: row.id });
+      if (!artifact && row.payloadJson) {
+        artifact = await persistPdfArtifactForReadyReport(db, {
+          customerAccountId: ctx.customer.accountId,
+          diagnosticCaseId: ownedCase.id,
+          reportSnapshotId: row.id,
+          payloadJson: row.payloadJson as ValidatedReportSnapshot,
+        });
+      }
+      return { status: artifact?.status ?? "not_created", rendererVersion: R1_PDF_RENDERER_VERSION } as const;
     }),
 });
 

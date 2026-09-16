@@ -1291,6 +1291,41 @@ export const reportSnapshots = mysqlTable(
 export type ReportSnapshot = typeof reportSnapshots.$inferSelect;
 export type InsertReportSnapshot = typeof reportSnapshots.$inferInsert;
 
+// ── RELEASE 1 V2 PDF ARTIFACTS ───────────────────────────────────────────────
+// The PDF bytes live in object storage; this row is the immutable, owner-bound
+// artifact manifest and never contains credentials or a public share URL.
+export const reportPdfArtifacts = mysqlTable(
+  "report_pdf_artifacts",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+    diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+    reportSnapshotId: varchar("reportSnapshotId", { length: 64 }).notNull(),
+    rendererVersion: varchar("rendererVersion", { length: 64 }).notNull(),
+    status: mysqlEnum("status", ["pending", "ready", "failed"]).default("pending").notNull(),
+    storageKey: varchar("storageKey", { length: 512 }),
+    contentHash: varchar("contentHash", { length: 64 }),
+    byteSize: int("byteSize"),
+    failureCode: varchar("failureCode", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    completedAt: timestamp("completedAt"),
+  },
+  table => [
+    foreignKey({
+      columns: [table.reportSnapshotId, table.customerAccountId, table.diagnosticCaseId],
+      foreignColumns: [reportSnapshots.id, reportSnapshots.customerAccountId, reportSnapshots.diagnosticCaseId],
+      name: "fk_report_pdf_artifact_snapshot_owner_case",
+    }).onDelete("restrict").onUpdate("restrict"),
+    uniqueIndex("report_pdf_artifacts_snapshot_renderer_uq").on(table.reportSnapshotId, table.rendererVersion),
+    uniqueIndex("report_pdf_artifacts_id_owner_case_uq").on(table.id, table.customerAccountId, table.diagnosticCaseId),
+    index("report_pdf_artifacts_owner_case_status_idx").on(table.customerAccountId, table.diagnosticCaseId, table.status),
+    check("chk_report_pdf_artifact_hash", sql`(${table.contentHash} IS NULL OR ${table.contentHash} REGEXP '^[a-f0-9]{64}$')`),
+  ],
+);
+
+export type ReportPdfArtifact = typeof reportPdfArtifacts.$inferSelect;
+export type InsertReportPdfArtifact = typeof reportPdfArtifacts.$inferInsert;
+
 export const creditEntitlements = mysqlTable(
   "credit_entitlements",
   {
