@@ -22,6 +22,7 @@ import {
   questionnaireDrafts,
   questionnaireRuleEvaluations,
   questionnaireSubmissions,
+  reportPdfArtifacts,
   reportSnapshots,
   tariffSnapshots,
   type User,
@@ -185,6 +186,8 @@ export async function cleanRunData(): Promise<void> {
   for (const accountId of Array.from(runAccountIds)) {
     await database.delete(creditEntitlements)
       .where(eq(creditEntitlements.customerAccountId, accountId));
+    await database.delete(reportPdfArtifacts)
+      .where(eq(reportPdfArtifacts.customerAccountId, accountId));
     await database.delete(reportSnapshots)
       .where(eq(reportSnapshots.customerAccountId, accountId));
     await database.delete(questionnaireRuleEvaluations)
