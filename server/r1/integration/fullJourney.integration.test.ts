@@ -24,6 +24,7 @@ import { loadReadyReportSnapshotByPublicCase } from "../reports/reportSnapshotRe
 import { deriveReportViewModel } from "../reports/reportViewModel";
 import { buildR1ReportHtml } from "../reports/reportPdfRenderer";
 import { validateReportSchema } from "../reports/reportSchemaValidator";
+import { buildR1EditorialDraft } from "../editorial/llmEditorService";
 import { hashCustomerSessionToken } from "../auth/customerSessionToken";
 import { RUN_PREFIX, cleanRunData, db, registerRunEmail } from "./r1DbHarness";
 
@@ -166,6 +167,14 @@ describe("R1 full synthetic customer journey", () => {
     expect(validateReportSchema(payload)).toEqual([]);
 
     const view = deriveReportViewModel(payload);
+    if (process.env.LEXY_R1_RUN_LLM_SMOKE === "true") {
+      const editorial = await buildR1EditorialDraft(view);
+      expect(editorial.mode).toBe("editor_only");
+      expect(editorial.deterministicResultUnchanged).toBe(true);
+      expect(editorial.riskExplanations.every(item => view.risks.some(risk => risk.riskId === item.riskId))).toBe(true);
+      expect(editorial.sourceNotes.every(item => view.legalBases.some(basis => basis.legalBasisId === item.legalBasisId))).toBe(true);
+      expect(editorial.humanReviewNotice.length).toBeGreaterThan(0);
+    }
     const html = buildR1ReportHtml(view);
     expect(html).toContain(view.title);
     expect(html).toContain(view.recommendation.displayName);

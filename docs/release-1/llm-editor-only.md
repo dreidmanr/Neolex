@@ -29,6 +29,10 @@ LEXY_R1_LLM_MODEL=gpt-5-mini
 
 В интерфейсе явно указано, что это редактура snapshot и что вывод требует проверки человеком. При ошибке провайдера, schema или source guard используется исходный канонический отчёт.
 
+## Smoke-test
+
+Opt-in прогон с `gpt-5-mini` выполнен на отдельной disposable MariaDB и синтетическом полном journey. Один реальный LLM-вызов завершился успешно: JSON Schema, принадлежность risk/legal-basis идентификаторов и флаг `deterministicResultUnchanged` прошли. После теста база, пользователь и временные секреты удалены.
+
 ## Содержание запроса
 
 LLM получает только безопасную проекцию отчёта: title, summary, risks, legalBases, roadmap, recommendation, escalation и limitations. Исходные ответы анкеты, session identifiers, payment identifiers, storage keys и внутренние provenance-поля в prompt не передаются.
