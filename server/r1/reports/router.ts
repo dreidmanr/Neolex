@@ -10,6 +10,7 @@ import { loadReadyReportSnapshotByPublicCase } from "./reportSnapshotRepository"
 import { deriveReportViewModel } from "./reportViewModel";
 import { REPORT_TEST_WATERMARK, type ValidatedReportSnapshot } from "./types";
 import { findOwnedPdfArtifact, persistPdfArtifactForReadyReport, R1_PDF_RENDERER_VERSION } from "../artifacts/reportPdfArtifactService";
+import { buildR1EditorialDraft } from "../editorial/llmEditorService";
 
 const publicCaseLocatorSchema = z.string().min(16).max(64);
 
@@ -205,6 +206,20 @@ export const reportsRouter = router({
         });
       }
       return { status: artifact?.status ?? "not_created", rendererVersion: R1_PDF_RENDERER_VERSION } as const;
+    }),
+  getEditorialDraft: customerProcedure
+    .input(z.object({ publicId: publicCaseLocatorSchema }).strict())
+    .query(async ({ ctx, input }) => {
+      assertTechnicalPilotAllowed();
+      const db = await requireR1Database();
+      const ownedCase = await findOwnedCaseByPublicId(db, ctx.customer.accountId, input.publicId);
+      if (!ownedCase) return denyReportAccess(db, { customerSessionId: ctx.customer.sessionId, requestId: ctx.requestId });
+      const activeAccess = await findActiveOwnedAccessGrant(db, ctx.customer.accountId, ownedCase.id);
+      if (!activeAccess) return denyReportAccess(db, { customerSessionId: ctx.customer.sessionId, requestId: ctx.requestId });
+      const row = await loadReadyReportSnapshotByPublicCase(db, { customerAccountId: ctx.customer.accountId, casePublicId: input.publicId });
+      if (!row?.payloadJson) return denyReportAccess(db, { customerSessionId: ctx.customer.sessionId, requestId: ctx.requestId });
+      const view = reportViewModelSchema.parse(deriveReportViewModel(row.payloadJson as ValidatedReportSnapshot));
+      return buildR1EditorialDraft(view);
     }),
 });
 

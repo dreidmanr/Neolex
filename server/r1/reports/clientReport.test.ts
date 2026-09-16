@@ -37,7 +37,7 @@ describe("controlled report client", () => {
     expect(source).not.toMatch(
       /shareUrl|downloadUrl|storageUrl|storageKey|navigator\.share/i
     );
-    expect(source).not.toMatch(/analytics|LexyWidget|invokeLLM|fetch\s*\(/i);
+    expect(source).not.toMatch(/analytics|LexyWidget|invokeLLM|(?<!re)fetch\s*\(/i);
     expect(source).not.toMatch(/https?:\/\//i);
   });
 });

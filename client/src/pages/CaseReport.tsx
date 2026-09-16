@@ -12,6 +12,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { useState } from "react";
 
 const SEVERITY_LABELS = {
   low: "Низкий",
@@ -87,6 +88,11 @@ export default function CaseReport() {
       refetchOnWindowFocus: false,
     },
   );
+  const editorialQuery = trpc.pilot.reports.getEditorialDraft.useQuery(
+    { publicId },
+    { enabled: false, retry: false, refetchOnWindowFocus: false },
+  );
+  const [showEditorialDraft, setShowEditorialDraft] = useState(false);
 
   return (
     <PilotShell
@@ -152,6 +158,38 @@ export default function CaseReport() {
               </Button>
             </div>
           )}
+
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold">Пояснение с помощью LLM</p>
+                <p className="text-sm text-muted-foreground">Только редактура готового snapshot. Риски, статьи и рекомендация не изменяются.</p>
+              </div>
+              <Button
+                variant="outline"
+                className="min-h-11 shrink-0"
+                disabled={editorialQuery.isFetching}
+                onClick={() => {
+                  setShowEditorialDraft(true);
+                  void editorialQuery.refetch();
+                }}
+              >
+                {editorialQuery.isFetching ? "Проверяем…" : "Подготовить пояснение"}
+              </Button>
+            </div>
+            {showEditorialDraft && editorialQuery.data && (
+              <div className="mt-4 space-y-3 border-t border-border pt-4 text-sm leading-relaxed">
+                <p>{editorialQuery.data.executiveSummary}</p>
+                <p className="font-semibold">{editorialQuery.data.humanReviewNotice}</p>
+                {editorialQuery.data.sourceNotes.length > 0 && (
+                  <p className="text-muted-foreground">Источники сверены только с каталогом проекта; дополнительные источники требуют проверки человеком.</p>
+                )}
+              </div>
+            )}
+            {showEditorialDraft && editorialQuery.isError && (
+              <p className="mt-3 text-sm text-amber-800">Пояснение недоступно: используется канонический отчёт без LLM.</p>
+            )}
+          </div>
 
           <Card className="gap-4 border-border shadow-sm">
             <CardHeader className="px-5 sm:px-6">
