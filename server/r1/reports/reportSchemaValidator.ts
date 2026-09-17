@@ -4,7 +4,9 @@ import type { ReportValidationIssue } from "./types";
 
 type Schema = Readonly<Record<string, unknown>>;
 
-const rootSchema = JSON.parse(reportSchemaRaw) as Schema;
+const rootSchema = (typeof reportSchemaRaw === "string"
+  ? JSON.parse(reportSchemaRaw)
+  : reportSchemaRaw) as Schema;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);

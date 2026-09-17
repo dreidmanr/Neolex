@@ -90,12 +90,18 @@ interface RulesSource {
   }>[];
 }
 
-const risks = JSON.parse(riskCatalogRaw) as RiskCatalogSource;
-const phrases = JSON.parse(phraseCatalogRaw) as PhraseCatalogSource;
-const legalBases = JSON.parse(legalBasisRaw) as LegalBasisCatalogSource;
-const questionnaire = JSON.parse(questionnaireRaw) as QuestionnaireSource;
-const recommendations = JSON.parse(recommendationRaw) as RecommendationSource;
-const rules = JSON.parse(rulesRaw) as RulesSource;
+function parseCatalogSource<T>(source: unknown): T {
+  if (typeof source === "string") return JSON.parse(source) as T;
+  if (source && typeof source === "object") return source as T;
+  throw new Error("legal catalog source is unavailable");
+}
+
+const risks = parseCatalogSource<RiskCatalogSource>(riskCatalogRaw);
+const phrases = parseCatalogSource<PhraseCatalogSource>(phraseCatalogRaw);
+const legalBases = parseCatalogSource<LegalBasisCatalogSource>(legalBasisRaw);
+const questionnaire = parseCatalogSource<QuestionnaireSource>(questionnaireRaw);
+const recommendations = parseCatalogSource<RecommendationSource>(recommendationRaw);
+const rules = parseCatalogSource<RulesSource>(rulesRaw);
 
 const riskById = new Map(risks.riskDefinitions.map(value => [value.id, value]));
 const phraseByRiskId = new Map(phrases.riskPhrases.map(value => [value.riskId, value]));
