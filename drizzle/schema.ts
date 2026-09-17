@@ -1372,6 +1372,46 @@ export const r1DocumentManifests = mysqlTable(
 export type R1DocumentManifest = typeof r1DocumentManifests.$inferSelect;
 export type InsertR1DocumentManifest = typeof r1DocumentManifests.$inferInsert;
 
+// ── RELEASE 2 DOCUMENT PROCESSING ────────────────────────────────────────────
+// One immutable job/artifact row per document processing version. Extracted text
+// lives in private object storage; this row contains only hashes and lifecycle data.
+export const r1DocumentTextArtifacts = mysqlTable(
+  "r1_document_text_artifacts",
+  {
+    id: varchar("id", { length: 64 }).primaryKey(),
+    documentManifestId: varchar("documentManifestId", { length: 64 }).notNull(),
+    customerAccountId: varchar("customerAccountId", { length: 64 }).notNull(),
+    diagnosticCaseId: varchar("diagnosticCaseId", { length: 64 }).notNull(),
+    extractorVersion: varchar("extractorVersion", { length: 64 }).notNull(),
+    status: mysqlEnum("status", ["queued", "processing", "analyzed", "manual_review_required", "failed"]).default("queued").notNull(),
+    storageKey: varchar("storageKey", { length: 512 }),
+    textHashSha256: varchar("textHashSha256", { length: 64 }),
+    byteSize: int("byteSize"),
+    attemptCount: int("attemptCount").default(0).notNull(),
+    leaseOwner: varchar("leaseOwner", { length: 128 }),
+    leaseExpiresAt: timestamp("leaseExpiresAt"),
+    failureCode: varchar("failureCode", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    completedAt: timestamp("completedAt"),
+  },
+  table => [
+    foreignKey({
+      columns: [table.documentManifestId, table.customerAccountId, table.diagnosticCaseId],
+      foreignColumns: [r1DocumentManifests.id, r1DocumentManifests.customerAccountId, r1DocumentManifests.diagnosticCaseId],
+      name: "fk_r1_document_text_artifact_manifest_owner_case",
+    }).onDelete("restrict").onUpdate("restrict"),
+    uniqueIndex("r1_document_text_artifacts_document_version_uq").on(table.documentManifestId, table.extractorVersion),
+    index("r1_document_text_artifacts_queue_idx").on(table.status, table.leaseExpiresAt, table.createdAt),
+    index("r1_document_text_artifacts_owner_case_idx").on(table.customerAccountId, table.diagnosticCaseId, table.status),
+    check("chk_r1_document_text_artifact_hash", sql`(${table.textHashSha256} IS NULL OR ${table.textHashSha256} REGEXP '^[a-f0-9]{64}$')`),
+    check("chk_r1_document_text_artifact_attempts", sql`${table.attemptCount} >= 0 AND ${table.attemptCount} <= 3`),
+    check("chk_r1_document_text_artifact_size", sql`(${table.byteSize} IS NULL OR (${table.byteSize} > 0 AND ${table.byteSize} <= 2097152))`),
+  ],
+);
+
+export type R1DocumentTextArtifact = typeof r1DocumentTextArtifacts.$inferSelect;
+export type InsertR1DocumentTextArtifact = typeof r1DocumentTextArtifacts.$inferInsert;
+
 export const creditEntitlements = mysqlTable(
   "credit_entitlements",
   {

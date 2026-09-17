@@ -92,6 +92,13 @@
       "when": 1789589720126,
       "tag": "0012_r1_document_manifest",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1789646049508,
+      "tag": "0013_r2_document_text_artifacts",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,7 @@ import { accessGrants, paymentRecords, r1DocumentManifests, type R1DocumentManif
 import { storagePut } from "../../storage";
 import type { R1Database } from "../database";
 import { validateDocumentUpload, DOCUMENT_MAX_PER_CASE, type DocumentUploadManifest } from "./documentIntake";
+import { enqueueDocumentExtraction } from "./documentProcessingService";
 
 export const DOCUMENT_TARIFF_CODE = "lexy-diagnostic-with-documents" as const;
 
@@ -87,5 +88,11 @@ export async function createOwnedDocumentManifest(
     eq(r1DocumentManifests.diagnosticCaseId, input.diagnosticCaseId),
   )).limit(1);
   if (!rows[0]) throw new Error("document manifest could not be reloaded");
+  await enqueueDocumentExtraction(db, {
+    documentManifestId: rows[0].id,
+    customerAccountId: input.customerAccountId,
+    diagnosticCaseId: input.diagnosticCaseId,
+    now: input.now,
+  });
   return rows[0];
 }
