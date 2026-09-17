@@ -18,12 +18,20 @@ const risks = [
   ["Платёжная модель", "Умеренный", "38%", "#eab308"],
 ] as const;
 
+const heroSlides = [
+  { badge: "Флагманский продукт", title: "Lexy — ваш AI-помощник в правовых рисках", description: "Ответьте на 8 вопросов о вашем продукте — получите персонализированный отчёт с зонами риска, вилкой штрафов и приоритетными действиями. Бесплатно и за 5 минут." },
+  { badge: "Бесплатная диагностика", title: "Поймите, где ваш продукт уязвим", description: "Быстро проверьте права на продукт, персональные данные, хранение информации и платёжную модель — без регистрации и реальных платежей." },
+  { badge: "Углублённый Pilot", title: "Подготовьте бизнес к росту", description: "Расширенная диагностика проверяет 14 блоков, документы, договоры и формирует дорожную карту действий на 30, 60 и 90 дней." },
+] as const;
+
 export default function Home() {
   const [, navigate] = useLocation();
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const heroSlide = heroSlides[activeSlide];
 
   const startFree = () => navigate("/diagnostic");
   const openPaid = () => { setPromoCode(""); setPromoError(""); setShowPromoModal(true); };
@@ -43,7 +51,7 @@ export default function Home() {
           <nav className="hidden items-center gap-1 text-sm lg:flex">
             {["Главная", "О компании", "Услуги", "Lexy", "Кейсы", "Контент", "Контакты"].map((item, i) => <a key={item} href={i === 0 ? "#home" : `#${item.toLowerCase().replaceAll(" ", "-")}`} className={`rounded-lg px-3 py-2 transition ${i === 0 ? "bg-[#0b213e] font-semibold text-[#4a91e8]" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>{item}</a>)}
           </nav>
-          <div className="ml-auto flex items-center gap-3"><button aria-label="Сменить тему" className="hidden p-2 text-slate-400 hover:text-white sm:block"><Sun className="size-4" /></button><button aria-label="Контакты" className="hidden p-2 text-slate-400 hover:text-white sm:block"><Send className="size-4" /></button><button onClick={startFree} className="hidden rounded-full bg-[#1677d2] px-5 py-3 text-sm font-bold shadow-[0_8px_26px_rgba(22,119,210,.35)] transition hover:bg-[#2189ed] sm:block">Бесплатная диагностика</button><button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Меню"><Menu className="size-6" /></button></div>
+          <div className="ml-auto flex items-center gap-3"><button aria-label="Сменить тему" className="hidden p-2 text-slate-400 hover:text-white sm:block"><Sun className="size-4" /></button><button aria-label="Контакты" className="hidden p-2 text-slate-400 hover:text-white sm:block"><Send className="size-4" /></button><button onClick={() => navigate("/paid")} className="hidden rounded-full border border-[#4a91e8]/60 px-4 py-3 text-sm font-bold text-[#8bbcff] transition hover:bg-[#0b213e] md:block">Углублённая диагностика</button><button onClick={startFree} className="hidden rounded-full bg-[#1677d2] px-5 py-3 text-sm font-bold shadow-[0_8px_26px_rgba(22,119,210,.35)] transition hover:bg-[#2189ed] sm:block">Бесплатная диагностика</button><button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Меню"><Menu className="size-6" /></button></div>
         </div>
         {mobileOpen && <nav className="border-t border-white/10 bg-[#06101f] px-5 py-3 lg:hidden">{["Главная", "О компании", "Услуги", "Lexy", "Кейсы", "Контент", "Контакты"].map(item => <a key={item} href={`#${item.toLowerCase().replaceAll(" ", "-")}`} onClick={() => setMobileOpen(false)} className="block border-b border-white/5 py-3 text-sm text-slate-300">{item}</a>)}</nav>}
       </header>
@@ -53,11 +61,11 @@ export default function Home() {
           <div className="absolute -right-32 top-20 size-[600px] rounded-full bg-[#0b315d]/20 blur-3xl" />
           <div className="relative mx-auto grid max-w-[1440px] items-center gap-14 px-5 lg:grid-cols-[.95fr_1.05fr] lg:px-16">
             <div>
-              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#1677d2]/40 bg-[#0b213e]/70 px-4 py-2 text-sm font-semibold text-[#4a91e8]"><Zap className="size-4" />Флагманский продукт</div>
-              <h1 className="max-w-2xl text-5xl font-extrabold leading-[.98] tracking-[-.045em] sm:text-6xl lg:text-[70px]"><span className="text-[#4a91e8]">Lexy</span> — ваш AI-помощник в правовых рисках</h1>
-              <p className="mt-7 max-w-xl text-lg leading-8 text-slate-400">Ответьте на 8 вопросов о вашем продукте — получите персонализированный отчёт с зонами риска, вилкой штрафов и приоритетными действиями. Бесплатно и за 5 минут.</p>
-              <div className="mt-9 flex flex-wrap gap-4"><button onClick={startFree} className="inline-flex items-center gap-3 rounded-full bg-[#1677d2] px-6 py-4 text-base font-bold shadow-[0_10px_34px_rgba(22,119,210,.36)] transition hover:bg-[#2189ed]">Узнать свои риски бесплатно <ArrowRight className="size-5" /></button><a href="#lexy" className="inline-flex items-center rounded-full border border-white/15 px-7 py-4 text-base font-semibold text-slate-200 transition hover:border-white/35 hover:bg-white/5">Подробнее о Lexy</a></div>
-              <div className="mt-11 flex gap-3"><button className="grid size-10 place-items-center rounded-full border border-white/15 text-slate-400"><ChevronLeft className="size-5" /></button><span className="grid size-10 place-items-center text-slate-500">•</span><span className="grid size-10 place-items-center text-[#2189ed]">━</span><span className="grid size-10 place-items-center text-slate-500">•</span><button className="grid size-10 place-items-center rounded-full border border-white/15 text-slate-400"><ChevronRight className="size-5" /></button></div>
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#1677d2]/40 bg-[#0b213e]/70 px-4 py-2 text-sm font-semibold text-[#4a91e8]"><Zap className="size-4" />{heroSlide.badge}</div>
+              <h1 className="max-w-2xl text-5xl font-extrabold leading-[.98] tracking-[-.045em] transition-opacity sm:text-6xl lg:text-[70px]"><span className="text-[#4a91e8]">Lexy</span>{activeSlide === 0 ? " — ваш AI-помощник в правовых рисках" : ` — ${heroSlide.title.replace("Lexy", "").trim()}`}</h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-slate-400">{heroSlide.description}</p>
+              <div className="mt-9 flex flex-wrap gap-4"><button onClick={activeSlide === 2 ? () => navigate("/paid") : startFree} className="inline-flex items-center gap-3 rounded-full bg-[#1677d2] px-6 py-4 text-base font-bold shadow-[0_10px_34px_rgba(22,119,210,.36)] transition hover:bg-[#2189ed]">{activeSlide === 2 ? "Открыть углублённую диагностику" : "Узнать свои риски бесплатно"} <ArrowRight className="size-5" /></button><button onClick={() => navigate("/paid")} className="inline-flex items-center rounded-full border border-[#4a91e8]/60 px-6 py-4 text-base font-semibold text-[#a9cbf5] transition hover:bg-[#0b213e]">Платная диагностика</button><a href="#lexy" className="inline-flex items-center rounded-full border border-white/15 px-7 py-4 text-base font-semibold text-slate-200 transition hover:border-white/35 hover:bg-white/5">Подробнее о Lexy</a></div>
+              <div className="mt-11 flex items-center gap-3"><button onClick={() => setActiveSlide((activeSlide + heroSlides.length - 1) % heroSlides.length)} aria-label="Предыдущий слайд" className="grid size-10 place-items-center rounded-full border border-white/15 text-slate-400 transition hover:border-[#4a91e8] hover:text-white"><ChevronLeft className="size-5" /></button>{heroSlides.map((slide, index) => <button key={slide.badge} onClick={() => setActiveSlide(index)} aria-label={`Слайд ${index + 1}`} className={`h-2 rounded-full transition-all ${index === activeSlide ? "w-8 bg-[#2189ed]" : "w-2 bg-slate-600 hover:bg-slate-400"}`} />)}<button onClick={() => setActiveSlide((activeSlide + 1) % heroSlides.length)} aria-label="Следующий слайд" className="grid size-10 place-items-center rounded-full border border-white/15 text-slate-400 transition hover:border-[#4a91e8] hover:text-white"><ChevronRight className="size-5" /></button></div>
             </div>
             <ReportPreview />
           </div>
