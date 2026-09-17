@@ -12,6 +12,10 @@ import {
   isPromoAccessTestAllowed,
 } from "../releaseGate";
 import { reportsRouter } from "../reports/router";
+import { listOwnedDocuments } from "../documents/documentRepository";
+import { DOCUMENT_TARIFF_CODE } from "../documents/documentService";
+import { accessGrants, paymentRecords } from "../../../drizzle/schema";
+import { and, eq } from "drizzle-orm";
 import {
   getQuestionnaireDraft,
   saveQuestionnaireAnswer,
@@ -86,6 +90,40 @@ export const pilotRouter = router({
         }
         return toCaseDto(row);
       }),
+    documents: router({
+      list: customerProcedure
+        .input(z.object({ publicId: publicCaseLocatorSchema }).strict())
+        .query(async ({ ctx, input }) => {
+          assertTechnicalPilotAllowed();
+          const db = await requireR1Database();
+          const ownedCase = await findOwnedCaseByPublicId(db, ctx.customer.accountId, input.publicId);
+          if (!ownedCase) throwNeutralNotFound();
+          const grants = await db.select({ paymentRecordId: accessGrants.paymentRecordId }).from(accessGrants).where(and(
+            eq(accessGrants.customerAccountId, ctx.customer.accountId),
+            eq(accessGrants.diagnosticCaseId, ownedCase.id),
+            eq(accessGrants.status, "active"),
+          )).limit(1);
+          if (!grants[0]) throwNeutralNotFound();
+          const payment = await db.select({ tariffCode: paymentRecords.tariffCode }).from(paymentRecords).where(and(
+            eq(paymentRecords.id, grants[0].paymentRecordId),
+            eq(paymentRecords.customerAccountId, ctx.customer.accountId),
+            eq(paymentRecords.diagnosticCaseId, ownedCase.id),
+          )).limit(1);
+          if (payment[0]?.tariffCode !== DOCUMENT_TARIFF_CODE) throwNeutralNotFound();
+          return (await listOwnedDocuments(db, {
+            customerAccountId: ctx.customer.accountId,
+            diagnosticCaseId: ownedCase.id,
+          })).map(document => ({
+            id: document.id,
+            fileName: document.fileName,
+            categoryId: document.categoryId,
+            status: document.status,
+            byteSize: document.byteSize,
+            createdAt: document.createdAt,
+            deletedAt: document.deletedAt,
+          }));
+        }),
+    }),
     getDraft: customerProcedure
       .input(z.object({ publicId: publicCaseLocatorSchema }).strict())
       .query(({ ctx, input }) => getQuestionnaireDraft({

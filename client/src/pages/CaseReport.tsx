@@ -29,6 +29,15 @@ const EVIDENCE_LABELS = {
   manual_review_required: "Нужна ручная проверка",
 } as const;
 
+const DOCUMENT_STATUS_LABELS = {
+  uploaded: "Загружен",
+  extracting: "Обрабатывается",
+  analyzed: "Текст извлечён",
+  manual_review_required: "Нужна ручная проверка",
+  failed: "Не обработан",
+  deleted: "Удалён",
+} as const;
+
 function ReportSkeleton() {
   return (
     <div
@@ -87,6 +96,10 @@ export default function CaseReport() {
       retry: false,
       refetchOnWindowFocus: false,
     },
+  );
+  const documentsQuery = trpc.pilot.cases.documents.list.useQuery(
+    { publicId },
+    { enabled: Boolean(meQuery.data) && validLocator, retry: false, refetchOnWindowFocus: false },
   );
   const editorialQuery = trpc.pilot.reports.getEditorialDraft.useQuery(
     { publicId },
@@ -157,6 +170,27 @@ export default function CaseReport() {
                 </a>
               </Button>
             </div>
+          )}
+
+          {documentsQuery.data && documentsQuery.data.length > 0 && (
+            <Card className="border-border shadow-sm">
+              <CardHeader className="px-5 sm:px-6">
+                <CardTitle className="font-display text-xl">Документы диагностики</CardTitle>
+              </CardHeader>
+              <CardContent className="px-5 sm:px-6">
+                <ul className="space-y-3 text-sm" aria-label="Статусы документов">
+                  {documentsQuery.data.map(document => (
+                    <li key={document.id} className="flex flex-col gap-1 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="font-medium">{document.fileName}</span>
+                      <span className="text-muted-foreground">{DOCUMENT_STATUS_LABELS[document.status]}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+                  Документы являются недоверенными данными. Их статус не изменяет канонический риск или рекомендацию без отдельной проверки.
+                </p>
+              </CardContent>
+            </Card>
           )}
 
           <div className="rounded-xl border border-border bg-muted/30 p-4">
