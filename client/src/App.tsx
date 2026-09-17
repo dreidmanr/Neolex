@@ -41,9 +41,18 @@ function Router() {
       <Route path="/auth/consume" component={MagicLinkConsume} />
       <Route path="/admin/pilot-diagnostics" component={AdminPilotDiagnostics} />
       <Route path="/" component={Home} />
+      <Route path="/about" component={Home} />
+      <Route path="/services" component={Home} />
+      <Route path="/lexy" component={Home} />
+      <Route path="/cases" component={Home} />
+      <Route path="/blog" component={Home} />
+      <Route path="/contacts" component={Home} />
       <Route path="/diagnostic" component={Diagnostic} />
       <Route path="/results/:token" component={Results} />
       <Route path="/paid" component={PaidDiagnostic} />
+      <Route path="/lexy/advanced" component={PaidDiagnostic} />
+      <Route path="/lexy/advanced/questionnaire" component={PaidDiagnostic} />
+      <Route path="/lexy/advanced/report/:token" component={PaidResults} />
       <Route path="/paid/results/:token" component={PaidResults} />
       <Route path="/legal/:doc" component={LegalDocs} />
       <Route path="/admin" component={Admin} />

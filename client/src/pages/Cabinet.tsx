@@ -128,6 +128,9 @@ export default function Cabinet() {
                 />
                 Обновить
               </Button>
+              <Button asChild className="min-h-11">
+                <Link href="/lexy/advanced">Углублённая диагностика</Link>
+              </Button>
             </div>
 
             {casesQuery.isLoading && <CasesSkeleton />}

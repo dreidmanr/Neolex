@@ -110,6 +110,7 @@ export default function PaidDiagnostic() {
   const createSession = trpc.paid.createSession.useMutation();
   const saveConsents = trpc.paid.saveConsents.useMutation();
   const confirmPayment = trpc.paid.confirmPayment.useMutation();
+  const activatePromo = trpc.paid.activatePromo.useMutation();
   const saveAnswer = trpc.paid.saveAnswer.useMutation();
   const uploadDocument = trpc.paid.uploadDocument.useMutation();
   const completeMutation = trpc.paid.complete.useMutation();
@@ -156,7 +157,9 @@ export default function PaidDiagnostic() {
         dataProcessingAccepted: dataProcessing,
       });
 
-      setStep("payment");
+      await activatePromo.mutateAsync({ sessionToken: result.sessionToken, promoCode: "123" });
+      setStep("questionnaire");
+      setCurrentBlock(0);
       scrollTop();
     } catch (e: any) {
       toast.error("Ошибка создания сессии: " + (e.message || "Попробуйте ещё раз"));
@@ -388,18 +391,17 @@ export default function PaidDiagnostic() {
             website={website}
             setWebsite={setWebsite}
             onSubmit={handleContactSubmit}
-            isLoading={createSession.isPending || saveConsents.isPending}
+            isLoading={createSession.isPending || saveConsents.isPending || activatePromo.isPending}
           />
         )}
 
         {/* ── PAYMENT ── */}
         {step === "payment" && (
-          <PaymentScreen
-            amount={PAID_PRICE_RUB}
-            email={contactEmail}
-            onConfirm={handlePaymentConfirm}
-            isLoading={confirmPayment.isPending}
-          />
+          <div className="mx-auto max-w-xl rounded-3xl border border-[#dbe7f5] bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-[#e8f2ff] text-[#1677d2]"><Lock className="size-6" /></div>
+            <h2 className="mt-5 text-2xl font-bold text-[#0b1b31]">Доступ по промокоду активирован</h2>
+            <p className="mt-3 text-slate-500">Платёжный шаг отключён. Можно переходить к расширенной анкете.</p>
+          </div>
         )}
 
         {/* ── QUESTIONNAIRE ── */}
@@ -524,7 +526,7 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
             disabled={!promoValid}
             className="px-8 py-4 bg-[#1677d2] text-white rounded-2xl font-semibold text-lg hover:bg-[#2189ed] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
-            Начать диагностику — {PAID_PRICE_RUB.toLocaleString("ru-RU")} ₽
+            Начать диагностику бесплатно
           </button>
           <span className="text-sm text-slate-400">Результат через 20–30 минут</span>
         </div>
