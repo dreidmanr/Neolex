@@ -330,35 +330,35 @@ export default function PaidDiagnostic() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div ref={topRef} className="min-h-screen bg-white">
+    <div ref={topRef} className="min-h-screen bg-[#f6f8fb] text-[#0b1b31]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-gray-900 hover:opacity-70 transition-opacity">
-            <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">N</span>
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#030b17]/95 text-white backdrop-blur-xl">
+        <div className="mx-auto flex h-[66px] max-w-5xl items-center justify-between px-4">
+          <button onClick={() => navigate("/")} className="flex items-center gap-3 text-white transition-opacity hover:opacity-80">
+            <div className="grid size-10 place-items-center rounded-xl bg-[#1677d2] shadow-lg shadow-blue-950/30">
+              <span className="text-white font-bold">⚖</span>
             </div>
-            <span className="font-semibold text-sm">Lexy</span>
+            <span><span className="block text-lg font-bold leading-none">Neolex</span><span className="mt-1 block text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Legal Tech · Lexy</span></span>
           </button>
           {step === "questionnaire" && (
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500">Блок {currentBlock + 1} из {totalBlocks}</span>
+              <span className="text-sm text-slate-500">Блок {currentBlock + 1} из {totalBlocks}</span>
               <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gray-900 rounded-full transition-all duration-500"
+                  className="h-full rounded-full bg-[#1677d2] transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
             <Lock className="w-3 h-3" />
             <span>Защищено</span>
           </div>
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="mx-auto max-w-5xl px-4 py-12">
         {/* ── LANDING ── */}
         {step === "landing" && <PaidLanding onStart={handleStartDiagnostic} />}
 
@@ -466,21 +466,21 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
     <div className="space-y-16">
       {/* Hero */}
       <div className="text-center space-y-6">
-        <div className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-1.5 rounded-full text-sm font-medium">
+        <div className="inline-flex items-center gap-2 bg-[#1677d2] text-white px-4 py-1.5 rounded-full text-sm font-medium">
           <Shield className="w-3.5 h-3.5" />
           Углублённая правовая диагностика
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+        <h1 className="text-4xl md:text-5xl font-bold text-[#0b1b31] leading-tight">
           Полный правовой аудит<br />
-          <span className="text-gray-400">вашего IT-продукта</span>
+          <span className="text-slate-400">вашего IT-продукта</span>
         </h1>
-        <p className="text-lg text-gray-600 max-w-xl mx-auto leading-relaxed">
+        <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
           14 блоков анализа, 50+ вопросов, AI-отчёт с дорожной картой устранения рисков на 30/60/90 дней. Подготовка к инвестициям, сделкам и масштабированию.
         </p>
 
         {/* Promo-code gate */}
         <div className="max-w-sm mx-auto space-y-3">
-          <div className="text-sm font-medium text-gray-700 flex items-center gap-2 justify-center">
+          <div className="text-sm font-medium text-slate-600 flex items-center gap-2 justify-center">
             <Lock className="w-4 h-4" />
             Доступ по промо-коду
           </div>
@@ -501,7 +501,7 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
             />
             <button
               onClick={handlePromoCheck}
-              className="px-5 py-3 bg-gray-900 text-white rounded-xl font-medium text-sm hover:bg-gray-800 active:scale-[0.98] transition-all"
+              className="px-5 py-3 bg-[#1677d2] text-white rounded-xl font-medium text-sm hover:bg-[#2189ed] active:scale-[0.98] transition-all"
             >
               Применить
             </button>
@@ -522,11 +522,11 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
           <button
             onClick={onStart}
             disabled={!promoValid}
-            className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="px-8 py-4 bg-[#1677d2] text-white rounded-2xl font-semibold text-lg hover:bg-[#2189ed] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             Начать диагностику — {PAID_PRICE_RUB.toLocaleString("ru-RU")} ₽
           </button>
-          <span className="text-sm text-gray-400">Результат через 20–30 минут</span>
+          <span className="text-sm text-slate-400">Результат через 20–30 минут</span>
         </div>
       </div>
 
@@ -540,24 +540,24 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
           { icon: "⚖️", title: "Правовые основания", desc: "Каждый риск подкреплён ссылками на конкретные нормы российского законодательства" },
           { icon: "💰", title: "Финансовые последствия", desc: "Денежная оценка каждого риска: штрафы, убытки, стоимость исправления" },
         ].map((item) => (
-          <div key={item.title} className="p-5 border border-gray-100 rounded-2xl hover:border-gray-200 transition-colors">
+          <div key={item.title} className="p-5 border border-slate-200 rounded-2xl hover:border-gray-200 transition-colors">
             <div className="text-2xl mb-3">{item.icon}</div>
-            <div className="font-semibold text-gray-900 mb-1">{item.title}</div>
-            <div className="text-sm text-gray-500 leading-relaxed">{item.desc}</div>
+            <div className="font-semibold text-[#0b1b31] mb-1">{item.title}</div>
+            <div className="text-sm text-slate-500 leading-relaxed">{item.desc}</div>
           </div>
         ))}
       </div>
 
       {/* Blocks preview */}
-      <div className="bg-gray-50 rounded-3xl p-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Что входит в диагностику</h2>
+      <div className="bg-[#eef4fa] rounded-3xl p-8">
+        <h2 className="text-xl font-bold text-[#0b1b31] mb-6">Что входит в диагностику</h2>
         <div className="grid sm:grid-cols-2 gap-2">
           {PAID_BLOCKS.map((b, i) => (
             <div key={b.id} className="flex items-center gap-3 py-2">
-              <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+              <span className="w-6 h-6 rounded-full bg-gray-200 text-slate-500 text-xs font-bold flex items-center justify-center flex-shrink-0">
                 {i + 1}
               </span>
-              <span className="text-sm text-gray-700">{b.title}</span>
+              <span className="text-sm text-slate-600">{b.title}</span>
             </div>
           ))}
         </div>
@@ -568,11 +568,11 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
         <button
           onClick={onStart}
           disabled={!promoValid}
-          className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+          className="px-10 py-4 bg-[#1677d2] text-white rounded-2xl font-semibold text-lg hover:bg-[#2189ed] active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
         >
           Начать диагностику — {PAID_PRICE_RUB.toLocaleString("ru-RU")} ₽
         </button>
-        <p className="text-sm text-gray-400">Доступ по промо-коду · Результат через 20–30 минут</p>
+        <p className="text-sm text-slate-400">Доступ по промо-коду · Результат через 20–30 минут</p>
       </div>
     </div>
   );
@@ -596,13 +596,13 @@ function ConsentScreen({
         <div className="w-12 h-12 rounded-2xl bg-gray-900 flex items-center justify-center mx-auto">
           <Shield className="w-6 h-6 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">Согласие на обработку данных</h2>
-        <p className="text-gray-500 text-sm">Перед началом диагностики ознакомьтесь с условиями</p>
+        <h2 className="text-2xl font-bold text-[#0b1b31]">Согласие на обработку данных</h2>
+        <p className="text-slate-500 text-sm">Перед началом диагностики ознакомьтесь с условиями</p>
       </div>
 
       <div className="space-y-4">
         {/* Mandatory */}
-        <label className="flex items-start gap-3 p-4 border-2 border-gray-900 rounded-2xl cursor-pointer bg-gray-50">
+        <label className="flex items-start gap-3 p-4 border-2 border-gray-900 rounded-2xl cursor-pointer bg-[#eef4fa]">
           <div
             className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-colors ${userAgreement ? "bg-gray-900 border-gray-900" : "border-gray-300"}`}
             onClick={() => setUserAgreement(!userAgreement)}
@@ -610,18 +610,18 @@ function ConsentScreen({
             {userAgreement && <Check className="w-3 h-3 text-white" />}
           </div>
           <div className="text-sm">
-            <span className="font-semibold text-gray-900">Обязательно: </span>
-            <span className="text-gray-700">Я принимаю условия </span>
-            <a href="/legal/terms" target="_blank" className="text-gray-900 underline">пользовательского соглашения</a>
-            <span className="text-gray-700"> и </span>
-            <a href="/legal/privacy" target="_blank" className="text-gray-900 underline">политики обработки персональных данных</a>
-            <span className="text-gray-700"> сервиса Lexy.</span>
-            <div className="text-gray-400 text-xs mt-1">Версия документа: {docVersion} · Дата принятия: {now}</div>
+            <span className="font-semibold text-[#0b1b31]">Обязательно: </span>
+            <span className="text-slate-600">Я принимаю условия </span>
+            <a href="/legal/terms" target="_blank" className="text-[#0b1b31] underline">пользовательского соглашения</a>
+            <span className="text-slate-600"> и </span>
+            <a href="/legal/privacy" target="_blank" className="text-[#0b1b31] underline">политики обработки персональных данных</a>
+            <span className="text-slate-600"> сервиса Lexy.</span>
+            <div className="text-slate-400 text-xs mt-1">Версия документа: {docVersion} · Дата принятия: {now}</div>
           </div>
         </label>
 
         {/* Data processing */}
-        <label className="flex items-start gap-3 p-4 border border-gray-100 rounded-2xl cursor-pointer hover:border-gray-200 transition-colors">
+        <label className="flex items-start gap-3 p-4 border border-slate-200 rounded-2xl cursor-pointer hover:border-gray-200 transition-colors">
           <div
             className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-colors ${dataProcessing ? "bg-gray-900 border-gray-900" : "border-gray-300"}`}
             onClick={() => setDataProcessing(!dataProcessing)}
@@ -629,13 +629,13 @@ function ConsentScreen({
             {dataProcessing && <Check className="w-3 h-3 text-white" />}
           </div>
           <div className="text-sm">
-            <span className="font-semibold text-gray-900">Обязательно: </span>
-            <span className="text-gray-700">Я даю согласие на обработку персональных данных в целях проведения диагностики в соответствии с 152-ФЗ.</span>
+            <span className="font-semibold text-[#0b1b31]">Обязательно: </span>
+            <span className="text-slate-600">Я даю согласие на обработку персональных данных в целях проведения диагностики в соответствии с 152-ФЗ.</span>
           </div>
         </label>
 
         {/* Marketing */}
-        <label className="flex items-start gap-3 p-4 border border-gray-100 rounded-2xl cursor-pointer hover:border-gray-200 transition-colors">
+        <label className="flex items-start gap-3 p-4 border border-slate-200 rounded-2xl cursor-pointer hover:border-gray-200 transition-colors">
           <div
             className={`w-5 h-5 rounded border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition-colors ${marketingConsent ? "bg-gray-900 border-gray-900" : "border-gray-300"}`}
             onClick={() => setMarketingConsent(!marketingConsent)}
@@ -643,8 +643,8 @@ function ConsentScreen({
             {marketingConsent && <Check className="w-3 h-3 text-white" />}
           </div>
           <div className="text-sm">
-            <span className="font-medium text-gray-700">Необязательно: </span>
-            <span className="text-gray-500">Я согласен(а) получать от сервиса Lexy полезные материалы по правовым рискам IT-продуктов.</span>
+            <span className="font-medium text-slate-600">Необязательно: </span>
+            <span className="text-slate-500">Я согласен(а) получать от сервиса Lexy полезные материалы по правовым рискам IT-продуктов.</span>
           </div>
         </label>
       </div>
@@ -652,7 +652,7 @@ function ConsentScreen({
       <button
         onClick={onSubmit}
         disabled={!userAgreement || !dataProcessing}
-        className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold text-base hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+        className="w-full py-4 bg-[#1677d2] text-white rounded-2xl font-semibold text-base hover:bg-[#2189ed] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
       >
         Продолжить
       </button>
@@ -673,32 +673,32 @@ function ContactScreen({
   return (
     <div className="max-w-xl mx-auto space-y-8">
       <div className="text-center space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Расскажите о себе</h2>
-        <p className="text-gray-500 text-sm">Это поможет персонализировать отчёт</p>
+        <h2 className="text-2xl font-bold text-[#0b1b31]">Расскажите о себе</h2>
+        <p className="text-slate-500 text-sm">Это поможет персонализировать отчёт</p>
       </div>
       <div className="space-y-4">
         <div>
-          <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Как к вам обращаться</Label>
+          <Label className="text-sm font-medium text-slate-600 mb-1.5 block">Как к вам обращаться</Label>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Имя или никнейм" className="rounded-xl h-12" />
         </div>
         <div>
-          <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Email <span className="text-red-500">*</span></Label>
+          <Label className="text-sm font-medium text-slate-600 mb-1.5 block">Email <span className="text-red-500">*</span></Label>
           <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" className="rounded-xl h-12" required />
-          <p className="text-xs text-gray-400 mt-1">На этот адрес придёт ссылка на отчёт</p>
+          <p className="text-xs text-slate-400 mt-1">На этот адрес придёт ссылка на отчёт</p>
         </div>
         <div>
-          <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Название продукта или компании</Label>
+          <Label className="text-sm font-medium text-slate-600 mb-1.5 block">Название продукта или компании</Label>
           <Input value={productName} onChange={e => setProductName(e.target.value)} placeholder="Например: MyApp, ООО «Ромашка»" className="rounded-xl h-12" />
         </div>
         <div>
-          <Label className="text-sm font-medium text-gray-700 mb-1.5 block">Сайт</Label>
+          <Label className="text-sm font-medium text-slate-600 mb-1.5 block">Сайт</Label>
           <Input value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://example.com" className="rounded-xl h-12" />
         </div>
       </div>
       <button
         onClick={onSubmit}
         disabled={!email || isLoading}
-        className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold text-base hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
+        className="w-full py-4 bg-[#1677d2] text-white rounded-2xl font-semibold text-base hover:bg-[#2189ed] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
       >
         {isLoading ? "Сохраняем..." : "Перейти к оплате"}
       </button>
@@ -712,20 +712,20 @@ function PaymentScreen({ amount, email, onConfirm, isLoading }: {
   return (
     <div className="max-w-md mx-auto space-y-8">
       <div className="text-center space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Оплата диагностики</h2>
-        <p className="text-gray-500 text-sm">После оплаты вы сразу перейдёте к анкете</p>
+        <h2 className="text-2xl font-bold text-[#0b1b31]">Оплата диагностики</h2>
+        <p className="text-slate-500 text-sm">После оплаты вы сразу перейдёте к анкете</p>
       </div>
 
-      <div className="border border-gray-100 rounded-3xl p-6 space-y-4">
+      <div className="border border-slate-200 rounded-3xl p-6 space-y-4">
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">Углублённая правовая диагностика</span>
-          <span className="font-bold text-gray-900">{amount.toLocaleString("ru-RU")} ₽</span>
+          <span className="text-slate-500">Углублённая правовая диагностика</span>
+          <span className="font-bold text-[#0b1b31]">{amount.toLocaleString("ru-RU")} ₽</span>
         </div>
-        <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Итого</span>
-          <span className="text-2xl font-bold text-gray-900">{amount.toLocaleString("ru-RU")} ₽</span>
+        <div className="border-t border-slate-200 pt-4 flex justify-between items-center">
+          <span className="font-semibold text-[#0b1b31]">Итого</span>
+          <span className="text-2xl font-bold text-[#0b1b31]">{amount.toLocaleString("ru-RU")} ₽</span>
         </div>
-        <div className="text-xs text-gray-400">Квитанция будет отправлена на {email}</div>
+        <div className="text-xs text-slate-400">Квитанция будет отправлена на {email}</div>
       </div>
 
       <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3">
@@ -738,12 +738,12 @@ function PaymentScreen({ amount, email, onConfirm, isLoading }: {
       <button
         onClick={onConfirm}
         disabled={isLoading}
-        className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 disabled:opacity-40 active:scale-[0.98] transition-all duration-150"
+        className="w-full py-4 bg-[#1677d2] text-white rounded-2xl font-semibold text-lg hover:bg-[#2189ed] disabled:opacity-40 active:scale-[0.98] transition-all duration-150"
       >
         {isLoading ? "Подтверждаем..." : `Оплатить ${amount.toLocaleString("ru-RU")} ₽`}
       </button>
 
-      <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+      <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
         <div className="flex items-center gap-1"><Lock className="w-3 h-3" /> Защищённое соединение</div>
         <div>Возврат в течение 14 дней</div>
       </div>
@@ -777,14 +777,14 @@ function QuestionnaireBlock({
     <div className="space-y-8">
       {/* Block header */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
+        <div className="flex items-center gap-2 text-sm text-slate-400">
           <span>Блок {blockIndex + 1} из {totalBlocks}</span>
         </div>
-        <h2 className="text-2xl font-bold text-gray-900">{block.title}</h2>
-        <p className="text-gray-500">{block.description}</p>
+        <h2 className="text-2xl font-bold text-[#0b1b31]">{block.title}</h2>
+        <p className="text-slate-500">{block.description}</p>
         {block.why && (
-          <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
-            <span className="font-medium text-gray-700">Зачем мы спрашиваем: </span>{block.why}
+          <div className="bg-[#eef4fa] rounded-xl p-3 text-sm text-slate-500">
+            <span className="font-medium text-slate-600">Зачем мы спрашиваем: </span>{block.why}
           </div>
         )}
       </div>
@@ -794,11 +794,11 @@ function QuestionnaireBlock({
         {visibleQuestions.map((q) => (
           <div key={q.id} className="space-y-3">
             <div className="space-y-1">
-              <p className="font-medium text-gray-900">
+              <p className="font-medium text-[#0b1b31]">
                 {q.text}
                 {q.required && <span className="text-red-400 ml-1">*</span>}
               </p>
-              {q.hint && <p className="text-sm text-gray-400">{q.hint}</p>}
+              {q.hint && <p className="text-sm text-slate-400">{q.hint}</p>}
             </div>
 
             {/* Single select */}
@@ -812,8 +812,8 @@ function QuestionnaireBlock({
                       onClick={() => onSingle(q, opt.id)}
                       className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 active:scale-[0.99] ${
                         selected
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-100 bg-white text-gray-700 hover:border-gray-300"
+                          ? "border-gray-900 bg-[#1677d2] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-gray-300"
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -837,13 +837,13 @@ function QuestionnaireBlock({
                       onClick={() => onMulti(q, opt.id)}
                       className={`w-full text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 active:scale-[0.99] ${
                         selected
-                          ? "border-gray-900 bg-gray-900 text-white"
-                          : "border-gray-100 bg-white text-gray-700 hover:border-gray-300"
+                          ? "border-gray-900 bg-[#1677d2] text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-gray-300"
                       }`}
                     >
                       <span className="flex items-center gap-2">
                         <div className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center ${selected ? "border-white bg-white" : "border-current"}`}>
-                          {selected && <Check className="w-2.5 h-2.5 text-gray-900" />}
+                          {selected && <Check className="w-2.5 h-2.5 text-[#0b1b31]" />}
                         </div>
                         {opt.label}
                       </span>
@@ -875,19 +875,19 @@ function QuestionnaireBlock({
                   }}
                 >
                   {uploadLoading ? (
-                    <div className="text-sm text-gray-500">Загружаем...</div>
+                    <div className="text-sm text-slate-500">Загружаем...</div>
                   ) : (
                     <>
                       <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">Нажмите для загрузки файла</p>
-                      <p className="text-xs text-gray-400 mt-1">PDF, DOCX, JPG, PNG до 16 МБ</p>
+                      <p className="text-sm text-slate-500">Нажмите для загрузки файла</p>
+                      <p className="text-xs text-slate-400 mt-1">PDF, DOCX, JPG, PNG до 16 МБ</p>
                     </>
                   )}
                 </div>
                 {(uploadedFiles[q.id] ?? []).map((f, i) => (
-                  <div key={i} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl text-sm">
-                    <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <span className="text-gray-700 truncate">{f.name}</span>
+                  <div key={i} className="flex items-center gap-2 p-3 bg-[#eef4fa] rounded-xl text-sm">
+                    <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-slate-600 truncate">{f.name}</span>
                     <Check className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto" />
                   </div>
                 ))}
@@ -911,18 +911,18 @@ function QuestionnaireBlock({
       />
 
       {/* Navigation */}
-      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200">
         <button
           onClick={onPrev}
           disabled={blockIndex === 0}
-          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-500 hover:text-[#0b1b31] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Назад
         </button>
         <button
           onClick={onNext}
-          className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm hover:bg-gray-800 active:scale-[0.98] transition-all duration-150"
+          className="flex items-center gap-2 px-6 py-3 bg-[#1677d2] text-white rounded-xl font-semibold text-sm hover:bg-[#2189ed] active:scale-[0.98] transition-all duration-150"
         >
           {isLastBlock ? "Получить отчёт" : "Следующий блок"}
           {!isLastBlock && <ChevronRight className="w-4 h-4" />}
@@ -945,10 +945,10 @@ function ProcessingScreen() {
         <Shield className="w-8 h-8 text-white" />
       </div>
       <div className="space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Анализируем ваши ответы{dots}</h2>
-        <p className="text-gray-500 max-w-sm">Lexy изучает данные и формирует персональный отчёт с рекомендациями</p>
+        <h2 className="text-2xl font-bold text-[#0b1b31]">Анализируем ваши ответы{dots}</h2>
+        <p className="text-slate-500 max-w-sm">Lexy изучает данные и формирует персональный отчёт с рекомендациями</p>
       </div>
-      <div className="space-y-2 text-sm text-gray-400 max-w-xs">
+      <div className="space-y-2 text-sm text-slate-400 max-w-xs">
         {["Анализ корпоративной структуры", "Оценка рисков по 14 блокам", "Формирование дорожной карты", "Генерация отчёта"].map((item, i) => (
           <div key={i} className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
@@ -985,23 +985,23 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
           <Shield className="w-4 h-4" />
           Категория риска: {label}
         </div>
-        <h1 className="text-3xl font-bold text-gray-900">Отчёт о правовых рисках</h1>
-        <p className="text-gray-500">{productName}</p>
+        <h1 className="text-3xl font-bold text-[#0b1b31]">Отчёт о правовых рисках</h1>
+        <p className="text-slate-500">{productName}</p>
       </div>
 
       {/* Score summary */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="text-center p-4 bg-gray-50 rounded-2xl">
-          <div className="text-3xl font-bold text-gray-900">{scoring.totalScore}</div>
-          <div className="text-xs text-gray-500 mt-1">Общий балл риска</div>
+        <div className="text-center p-4 bg-[#eef4fa] rounded-2xl">
+          <div className="text-3xl font-bold text-[#0b1b31]">{scoring.totalScore}</div>
+          <div className="text-xs text-slate-500 mt-1">Общий балл риска</div>
         </div>
-        <div className="text-center p-4 bg-gray-50 rounded-2xl">
+        <div className="text-center p-4 bg-[#eef4fa] rounded-2xl">
           <div className="text-3xl font-bold text-red-600">{scoring.criticalTriggers?.length ?? 0}</div>
-          <div className="text-xs text-gray-500 mt-1">Критических триггеров</div>
+          <div className="text-xs text-slate-500 mt-1">Критических триггеров</div>
         </div>
-        <div className="text-center p-4 bg-gray-50 rounded-2xl">
+        <div className="text-center p-4 bg-[#eef4fa] rounded-2xl">
           <div className="text-3xl font-bold text-orange-600">{scoring.riskBlocks?.length ?? 0}</div>
-          <div className="text-xs text-gray-500 mt-1">Зон риска</div>
+          <div className="text-xs text-slate-500 mt-1">Зон риска</div>
         </div>
       </div>
 
@@ -1025,7 +1025,7 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
       {/* Risk blocks */}
       {scoring.riskBlocks?.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">Выявленные риски</h2>
+          <h2 className="text-xl font-bold text-[#0b1b31]">Выявленные риски</h2>
           {scoring.riskBlocks.map((rb: any, i: number) => (
             <RiskBlockCard key={i} block={rb} />
           ))}
@@ -1034,9 +1034,9 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
 
       {/* Full report markdown — rendered cleanly */}
       {reportMarkdown && (
-        <div className="border border-gray-100 rounded-2xl p-6 space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">Полный отчёт</h2>
-          <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+        <div className="border border-slate-200 rounded-2xl p-6 space-y-4">
+          <h2 className="text-xl font-bold text-[#0b1b31]">Полный отчёт</h2>
+          <div className="prose prose-sm max-w-none text-slate-600 leading-relaxed">
             {reportMarkdown
               .replace(/^#+\s*/gm, "")
               .replace(/\*\*([^*]+)\*\*/g, "$1")
@@ -1053,7 +1053,7 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
       {/* Roadmap */}
       {scoring.roadmap && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">Дорожная карта устранения рисков</h2>
+          <h2 className="text-xl font-bold text-[#0b1b31]">Дорожная карта устранения рисков</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {[
               { key: "immediate", label: "Немедленно", color: "bg-red-50 border-red-100" },
@@ -1069,7 +1069,7 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
                   <div className="font-semibold text-gray-800 mb-2 text-sm">{label}</div>
                   <ul className="space-y-1">
                     {items.map((item: string, i: number) => (
-                      <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
+                      <li key={i} className="text-xs text-slate-500 flex items-start gap-1.5">
                         <span className="mt-0.5">•</span>{item}
                       </li>
                     ))}
@@ -1083,11 +1083,11 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
 
       {/* Missing documents */}
       {scoring.missingDocuments?.length > 0 && (
-        <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
-          <h3 className="font-semibold text-gray-900">Отсутствующие документы</h3>
+        <div className="bg-[#eef4fa] rounded-2xl p-5 space-y-3">
+          <h3 className="font-semibold text-[#0b1b31]">Отсутствующие документы</h3>
           <ul className="space-y-1.5">
             {scoring.missingDocuments.map((d: string, i: number) => (
-              <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+              <li key={i} className="text-sm text-slate-500 flex items-start gap-2">
                 <X className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                 {d}
               </li>
@@ -1098,11 +1098,11 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
 
       {/* Scope limitations */}
       {scoring.scopeLimitations?.length > 0 && (
-        <div className="border border-gray-100 rounded-2xl p-5 space-y-2">
-          <h3 className="font-semibold text-gray-700 text-sm">Ограничения отчёта</h3>
+        <div className="border border-slate-200 rounded-2xl p-5 space-y-2">
+          <h3 className="font-semibold text-slate-600 text-sm">Ограничения отчёта</h3>
           <ul className="space-y-1">
             {scoring.scopeLimitations.map((l: string, i: number) => (
-              <li key={i} className="text-xs text-gray-400 flex items-start gap-1.5">
+              <li key={i} className="text-xs text-slate-400 flex items-start gap-1.5">
                 <span className="mt-0.5">•</span>{l}
               </li>
             ))}
@@ -1123,17 +1123,17 @@ function ReportScreen({ scoring, reportMarkdown, productName, sessionToken, onNa
       {/* Next step CTA */}
       {scoring.nextStep && (
         <div className="bg-gray-900 rounded-3xl p-8 text-white text-center space-y-4">
-          <div className="text-sm text-gray-400 uppercase tracking-wider">Следующий шаг</div>
+          <div className="text-sm text-slate-400 uppercase tracking-wider">Следующий шаг</div>
           <h3 className="text-2xl font-bold">{scoring.nextStep.title}</h3>
           <p className="text-gray-300 max-w-md mx-auto">{scoring.nextStep.description}</p>
-          <button className="px-8 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150">
+          <button className="px-8 py-3 bg-white text-[#0b1b31] rounded-xl font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150">
             Связаться с Lexy
           </button>
         </div>
       )}
 
       <div className="text-center">
-        <button onClick={onNavigateHome} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+        <button onClick={onNavigateHome} className="text-sm text-slate-400 hover:text-slate-500 transition-colors">
           Вернуться на главную
         </button>
       </div>
@@ -1154,42 +1154,42 @@ function RiskBlockCard({ block }: { block: any }) {
   };
 
   return (
-    <div className="border border-gray-100 rounded-2xl overflow-hidden">
+    <div className="border border-slate-200 rounded-2xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between p-5 text-left hover:bg-[#eef4fa] transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${levelColors[block.riskLevel] ?? levelColors.moderate}`}>
             {levelLabels[block.riskLevel] ?? block.riskLevel}
           </span>
-          <span className="font-medium text-gray-900 text-sm">{block.title}</span>
+          <span className="font-medium text-[#0b1b31] text-sm">{block.title}</span>
         </div>
-        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`} />
+        <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>
       {open && (
         <div className="px-5 pb-5 space-y-3 border-t border-gray-50">
           <div className="grid md:grid-cols-2 gap-3 pt-3">
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Что обнаружено</div>
-              <div className="text-sm text-gray-700">{block.whatFound}</div>
+              <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Что обнаружено</div>
+              <div className="text-sm text-slate-600">{block.whatFound}</div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Почему важно</div>
-              <div className="text-sm text-gray-700">{block.whyItMatters}</div>
+              <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Почему важно</div>
+              <div className="text-sm text-slate-600">{block.whyItMatters}</div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Правовое основание</div>
-              <div className="text-sm text-gray-700">{block.legalBasis}</div>
+              <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Правовое основание</div>
+              <div className="text-sm text-slate-600">{block.legalBasis}</div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Финансовые последствия</div>
+              <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Финансовые последствия</div>
               <div className="text-sm text-orange-700 font-medium">{block.financialRange}</div>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-xl p-3">
-            <div className="text-xs font-semibold text-gray-400 uppercase mb-1">Что делать</div>
-            <div className="text-sm text-gray-700">{block.whatToDo}</div>
+          <div className="bg-[#eef4fa] rounded-xl p-3">
+            <div className="text-xs font-semibold text-slate-400 uppercase mb-1">Что делать</div>
+            <div className="text-sm text-slate-600">{block.whatToDo}</div>
           </div>
         </div>
       )}

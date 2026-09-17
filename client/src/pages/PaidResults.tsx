@@ -31,9 +31,9 @@ export default function PaidResults() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4 max-w-sm">
           <AlertTriangle className="w-12 h-12 text-red-400 mx-auto" />
-          <h2 className="text-xl font-bold text-gray-900">Отчёт не найден</h2>
+          <h2 className="text-xl font-bold text-[#0b1b31]">Отчёт не найден</h2>
           <p className="text-gray-500 text-sm">Проверьте ссылку или пройдите диагностику заново.</p>
-          <button onClick={() => navigate("/paid")} className="px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm">
+          <button onClick={() => navigate("/paid")} className="px-6 py-3 bg-[#1677d2] text-white rounded-xl font-semibold text-sm">
             Начать диагностику
           </button>
         </div>
@@ -71,10 +71,10 @@ export default function PaidResults() {
   const label = riskLabels[category] ?? category;
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
+    <div className="min-h-screen bg-[#f6f8fb] text-[#0b1b31]">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#030b17]/95 text-white backdrop-blur-xl">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-gray-900 hover:opacity-70 transition-opacity">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-[#0b1b31] hover:opacity-70 transition-opacity">
             <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
               <span className="text-white font-bold text-xs">N</span>
             </div>
@@ -90,14 +90,14 @@ export default function PaidResults() {
       <div className="max-w-3xl mx-auto px-4 py-12 space-y-10">
         {/* Header */}
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold text-gray-900">Отчёт о правовых рисках</h1>
+          <h1 className="text-3xl font-bold text-[#0b1b31]">Отчёт о правовых рисках</h1>
           {productName && <p className="text-gray-500">{productName}</p>}
         </div>
 
         {/* Score summary */}
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-2xl">
-            <div className="text-3xl font-bold text-gray-900">{scoring.totalScore}</div>
+            <div className="text-3xl font-bold text-[#0b1b31]">{scoring.totalScore}</div>
             <div className="text-xs text-gray-500 mt-1">Общий балл</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-2xl">
@@ -130,7 +130,7 @@ export default function PaidResults() {
         {/* Risk blocks */}
         {scoring.riskBlocks?.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Выявленные риски</h2>
+            <h2 className="text-xl font-bold text-[#0b1b31]">Выявленные риски</h2>
             {scoring.riskBlocks.map((rb: any, i: number) => (
               <RiskBlockCard key={i} block={rb} />
             ))}
@@ -139,8 +139,8 @@ export default function PaidResults() {
 
         {/* Full report — clean render */}
         {reportMarkdown && (
-          <div className="border border-gray-100 rounded-2xl p-6 space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Полный отчёт</h2>
+          <div className="border border-slate-200 rounded-2xl p-6 space-y-4">
+            <h2 className="text-xl font-bold text-[#0b1b31]">Полный отчёт</h2>
             <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
               {reportMarkdown
                 .replace(/^#+\s*/gm, "")
@@ -158,7 +158,7 @@ export default function PaidResults() {
         {/* Roadmap */}
         {scoring.roadmap && (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900">Дорожная карта</h2>
+            <h2 className="text-xl font-bold text-[#0b1b31]">Дорожная карта</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {[
                 { key: "immediate", label: "Немедленно", color: "bg-red-50 border-red-100" },
@@ -189,7 +189,7 @@ export default function PaidResults() {
         {/* Missing documents */}
         {scoring.missingDocuments?.length > 0 && (
           <div className="bg-gray-50 rounded-2xl p-5 space-y-3">
-            <h3 className="font-semibold text-gray-900">Отсутствующие документы</h3>
+            <h3 className="font-semibold text-[#0b1b31]">Отсутствующие документы</h3>
             <ul className="space-y-1.5">
               {scoring.missingDocuments.map((d: string, i: number) => (
                 <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
@@ -215,7 +215,7 @@ export default function PaidResults() {
             <div className="text-sm text-gray-400 uppercase tracking-wider">Следующий шаг</div>
             <h3 className="text-2xl font-bold">{scoring.nextStep.title}</h3>
             <p className="text-gray-300 max-w-md mx-auto">{scoring.nextStep.description}</p>
-            <button className="px-8 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150">
+            <button className="px-8 py-3 bg-white text-[#0b1b31] rounded-xl font-semibold hover:bg-gray-100 active:scale-[0.98] transition-all duration-150">
               Связаться с Lexy
             </button>
           </div>
@@ -244,7 +244,7 @@ function RiskBlockCard({ block }: { block: any }) {
   };
 
   return (
-    <div className="border border-gray-100 rounded-2xl overflow-hidden">
+    <div className="border border-slate-200 rounded-2xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
@@ -253,7 +253,7 @@ function RiskBlockCard({ block }: { block: any }) {
           <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${levelColors[block.riskLevel] ?? levelColors.moderate}`}>
             {levelLabels[block.riskLevel] ?? block.riskLevel}
           </span>
-          <span className="font-medium text-gray-900 text-sm">{block.title}</span>
+          <span className="font-medium text-[#0b1b31] text-sm">{block.title}</span>
         </div>
         <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-90" : ""}`} />
       </button>

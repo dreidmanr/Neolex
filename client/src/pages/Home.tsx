@@ -1,548 +1,86 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, FileText, AlertTriangle, CheckCircle2, Clock, Users, ChevronRight, Scale, Lock, Zap, X, Check } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, ChevronRight, FileText, Lock, Menu, Scale, Send, Shield, Sun, X, Zap } from "lucide-react";
+
+const services = [
+  ["Договоры и оферты", "Пользовательские соглашения, SaaS-контракты, NDA, лицензии", "от 20 000 ₽", FileText],
+  ["Персональные данные", "Политика, уведомление в РКН, аудит 152-ФЗ", "от 10 000 ₽", Lock],
+  ["Интеллектуальная собственность", "Регистрация ПО, товарные знаки, IP-assignment", "от 20 000 ₽", Shield],
+  ["IT-аккредитация", "Подготовка и подача в Минцифры, реестр отечественного ПО", "от 100 000 ₽", FileText],
+  ["Международное право", "GDPR, трансграничная передача, структурирование", "от 20 000 ₽", Scale],
+  ["AI и нейросети", "Правовой режим AI-контента, ответственность, регулирование", "от 20 000 ₽", Zap],
+] as const;
+
+const risks = [
+  ["Права на продукт", "Критично", "92%", "#e11d48"],
+  ["Хранение данных", "Критично", "85%", "#e11d48"],
+  ["Персональные данные", "Высокий", "62%", "#f97316"],
+  ["Платёжная модель", "Умеренный", "38%", "#eab308"],
+] as const;
 
 export default function Home() {
   const [, navigate] = useLocation();
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
-  const [promoValid, setPromoValid] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleStartDiagnostic = () => {
-    navigate("/diagnostic");
-  };
-  const handleStartPaid = () => {
-    setShowPromoModal(true);
-    setPromoCode("");
-    setPromoError("");
-    setPromoValid(false);
-  };
-  const handlePromoSubmit = () => {
-    if (promoCode.trim() === "123") {
-      setPromoValid(true);
-      setPromoError("");
-      setTimeout(() => {
-        setShowPromoModal(false);
-        navigate("/paid");
-      }, 600);
-    } else {
-      setPromoError("Неверный промо-код. Попробуйте ещё раз.");
-      setPromoValid(false);
-    }
+  const startFree = () => navigate("/diagnostic");
+  const openPaid = () => { setPromoCode(""); setPromoError(""); setShowPromoModal(true); };
+  const submitPromo = () => {
+    if (promoCode.trim() === "123") navigate("/paid");
+    else setPromoError("Неверный промо-код. Попробуйте ещё раз.");
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* ── NAV ── */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Scale className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-800 text-xl tracking-tight">Lexy</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-3">
-            <button
-              onClick={handleStartPaid}
-              title="Доступна в тестовом режиме по промокоду"
-              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors flex items-center gap-1.5"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              Углублённая диагностика
-            </button>
-            <Button
-              onClick={handleStartDiagnostic}
-              className="btn-electric px-5 py-2 text-sm"
-            >
-              Бесплатно
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
+    <div className="min-h-screen overflow-x-hidden bg-[#030b17] text-white">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#030b17]/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-[66px] max-w-[1440px] items-center gap-7 px-5 lg:px-16">
+          <a href="#home" className="flex shrink-0 items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-[#1677d2] shadow-[0_8px_24px_rgba(22,119,210,.35)]"><Scale className="size-5" /></span>
+            <span><span className="block text-xl font-semibold tracking-tight">Neolex</span><span className="block text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">Legal Tech</span></span>
+          </a>
+          <nav className="hidden items-center gap-1 text-sm lg:flex">
+            {["Главная", "О компании", "Услуги", "Lexy", "Кейсы", "Контент", "Контакты"].map((item, i) => <a key={item} href={i === 0 ? "#home" : `#${item.toLowerCase().replaceAll(" ", "-")}`} className={`rounded-lg px-3 py-2 transition ${i === 0 ? "bg-[#0b213e] font-semibold text-[#4a91e8]" : "text-slate-300 hover:bg-white/5 hover:text-white"}`}>{item}</a>)}
+          </nav>
+          <div className="ml-auto flex items-center gap-3"><button aria-label="Сменить тему" className="hidden p-2 text-slate-400 hover:text-white sm:block"><Sun className="size-4" /></button><button aria-label="Контакты" className="hidden p-2 text-slate-400 hover:text-white sm:block"><Send className="size-4" /></button><button onClick={startFree} className="hidden rounded-full bg-[#1677d2] px-5 py-3 text-sm font-bold shadow-[0_8px_26px_rgba(22,119,210,.35)] transition hover:bg-[#2189ed] sm:block">Бесплатная диагностика</button><button className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Меню"><Menu className="size-6" /></button></div>
         </div>
-      </nav>
+        {mobileOpen && <nav className="border-t border-white/10 bg-[#06101f] px-5 py-3 lg:hidden">{["Главная", "О компании", "Услуги", "Lexy", "Кейсы", "Контент", "Контакты"].map(item => <a key={item} href={`#${item.toLowerCase().replaceAll(" ", "-")}`} onClick={() => setMobileOpen(false)} className="block border-b border-white/5 py-3 text-sm text-slate-300">{item}</a>)}</nav>}
+      </header>
 
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-background pt-20 pb-24">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-500/5 blur-3xl translate-y-1/2 -translate-x-1/3 pointer-events-none" />
-
-        <div className="container relative">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-primary text-sm font-medium mb-6 animate-fade-in-up">
-              <Zap className="w-3.5 h-3.5" />
-              Бесплатная экспресс-диагностика · 5–7 минут
-            </div>
-
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-800 leading-[1.05] tracking-tight mb-6 animate-fade-in-up animate-delay-100">
-              Узнайте, какие{" "}
-              <span className="text-gradient">правовые риски</span>{" "}
-              скрыты в вашем IT-продукте
-            </h1>
-
-            <p className="text-xl text-muted-foreground leading-relaxed mb-10 max-w-2xl animate-fade-in-up animate-delay-200">
-              Предварительная правовая оценка за 5–7 минут. Выявите зоны уязвимости, получите конкретные выводы и узнайте, что стоит проверить в первую очередь.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animate-delay-300">
-              <button
-                onClick={handleStartDiagnostic}
-                className="btn-electric flex items-center justify-center gap-2 px-8 py-4 text-base rounded-xl"
-              >
-                Начать диагностику бесплатно
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground px-4">
-                <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                Без регистрации · Без оплаты
-              </div>
-            </div>
-
-            {/* Stats row */}
-            <div className="flex flex-wrap gap-8 mt-14 animate-fade-in-up animate-delay-400">
-              {[
-                { value: "8", label: "вопросов" },
-                { value: "5–7", label: "минут" },
-                { value: "4", label: "зоны риска" },
-                { value: "100%", label: "бесплатно" },
-              ].map((stat) => (
-                <div key={stat.label}>
-                  <div className="font-display text-3xl font-800 text-foreground">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground mt-0.5">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHAT DIAGNOSTIC SHOWS ── */}
-      <section className="section-dark py-24">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl sm:text-5xl font-800 text-white mb-4">
-              Что показывает диагностика
-            </h2>
-            <p className="text-lg text-white/60 max-w-xl mx-auto">
-              Восемь ключевых зон, в которых IT-продукты чаще всего сталкиваются с правовыми проблемами
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { icon: FileText, title: "Документы и оферта", desc: "Есть ли у продукта правовая защита в спорах с пользователями" },
-              { icon: Lock, title: "Персональные данные", desc: "Соответствует ли работа с данными применимым требованиям законодательства" },
-              { icon: Shield, title: "Права на продукт", desc: "Оформлены ли исключительные права на код и результаты разработки" },
-              { icon: AlertTriangle, title: "Хранение данных", desc: "Где хранятся данные российских пользователей и есть ли риск блокировки" },
-              { icon: Users, title: "Работа с клиентами", desc: "Насколько юридически защищена компания при работе с клиентами, пользователями, заказчиками и партнёрами" },
-              { icon: Scale, title: "Платёжная модель", desc: "Корректно ли оформлены расчёты и работа через посредников" },
-              { icon: CheckCircle2, title: "Подрядчики", desc: "Переданы ли права на результаты работ подрядчиков" },
-              { icon: Zap, title: "Регулируемые сферы", desc: "Нужны ли лицензии и специальные разрешения для вашей деятельности" },
-            ].map((item, i) => (
-              <div key={i} className="card-dark p-5 animate-fade-in-up" style={{ animationDelay: `${i * 60}ms` }}>
-                <div className="w-10 h-10 rounded-lg bg-white/8 flex items-center justify-center mb-4">
-                  <item.icon className="w-5 h-5 text-white/70" />
-                </div>
-                <h3 className="font-display font-700 text-white text-sm mb-2">{item.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── WHAT YOU GET ── */}
-      <section className="py-24 bg-background">
-        <div className="container">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <main id="home">
+        <section className="relative overflow-hidden border-b border-white/5 bg-[#030b17] py-24 lg:py-28">
+          <div className="absolute -right-32 top-20 size-[600px] rounded-full bg-[#0b315d]/20 blur-3xl" />
+          <div className="relative mx-auto grid max-w-[1440px] items-center gap-14 px-5 lg:grid-cols-[.95fr_1.05fr] lg:px-16">
             <div>
-              <h2 className="font-display text-4xl sm:text-5xl font-800 leading-tight mb-6">
-                Что вы получите
-                <br />
-                <span className="text-gradient">по итогам</span>
-              </h2>
-              <p className="text-lg text-muted-foreground mb-10">
-                Не просто список вопросов, а структурированный вывод с конкретными последствиями и ссылками на применимые правовые основания.
-              </p>
-
-              <div className="space-y-5">
-                {[
-                  { title: "Категория риска", desc: "Низкий, умеренный, высокий или критический — с объяснением, почему именно эта оценка" },
-                  { title: "Матрица зон риска", desc: "Наглядное отображение того, в каких зонах выявлены проблемы" },
-                  { title: "Ключевые риски с последствиями", desc: "До 5 ключевых рисков с конкретными статьями законов, размерами штрафов и последствиями бездействия: претензии, блокировка, убытки" },
-                  { title: "Главный вывод", desc: "Итоговая оценка правовой устойчивости продукта на текущем этапе" },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ChevronRight className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-display font-700 text-foreground mb-1">{item.title}</div>
-                      <div className="text-muted-foreground text-sm leading-relaxed">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#1677d2]/40 bg-[#0b213e]/70 px-4 py-2 text-sm font-semibold text-[#4a91e8]"><Zap className="size-4" />Флагманский продукт</div>
+              <h1 className="max-w-2xl text-5xl font-extrabold leading-[.98] tracking-[-.045em] sm:text-6xl lg:text-[70px]"><span className="text-[#4a91e8]">Lexy</span> — ваш AI-помощник в правовых рисках</h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-slate-400">Ответьте на 8 вопросов о вашем продукте — получите персонализированный отчёт с зонами риска, вилкой штрафов и приоритетными действиями. Бесплатно и за 5 минут.</p>
+              <div className="mt-9 flex flex-wrap gap-4"><button onClick={startFree} className="inline-flex items-center gap-3 rounded-full bg-[#1677d2] px-6 py-4 text-base font-bold shadow-[0_10px_34px_rgba(22,119,210,.36)] transition hover:bg-[#2189ed]">Узнать свои риски бесплатно <ArrowRight className="size-5" /></button><a href="#lexy" className="inline-flex items-center rounded-full border border-white/15 px-7 py-4 text-base font-semibold text-slate-200 transition hover:border-white/35 hover:bg-white/5">Подробнее о Lexy</a></div>
+              <div className="mt-11 flex gap-3"><button className="grid size-10 place-items-center rounded-full border border-white/15 text-slate-400"><ChevronLeft className="size-5" /></button><span className="grid size-10 place-items-center text-slate-500">•</span><span className="grid size-10 place-items-center text-[#2189ed]">━</span><span className="grid size-10 place-items-center text-slate-500">•</span><button className="grid size-10 place-items-center rounded-full border border-white/15 text-slate-400"><ChevronRight className="size-5" /></button></div>
             </div>
-
-            {/* Realistic report preview */}
-            <div className="relative">
-              <div className="card-premium p-7 rounded-2xl">
-                {/* Header with category and score */}
-                <div className="flex items-start justify-between mb-5 pb-5 border-b border-border">
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">Отчёт по экспресс-диагностике</div>
-                    <div className="font-display font-800 text-lg leading-tight">Категория риска</div>
-                  </div>
-                  <div className="text-right">
-                    <span className="risk-badge risk-high">Высокий</span>
-                    <div className="text-xs text-muted-foreground mt-1">балл 21 · высокий риск (16–24)</div>
-                  </div>
-                </div>
-
-                {/* Risk zones matrix */}
-                <div className="text-xs font-600 text-muted-foreground uppercase tracking-wide mb-3">Матрица зон риска</div>
-                <div className="space-y-3 mb-5">
-                  {[
-                    { label: "Права на продукт", level: "critical", pct: 90 },
-                    { label: "Хранение данных", level: "critical", pct: 85 },
-                    { label: "Пользовательские документы", level: "high", pct: 65 },
-                    { label: "Персональные данные", level: "high", pct: 60 },
-                    { label: "Платёжная модель", level: "moderate", pct: 35 },
-                  ].map((row) => (
-                    <div key={row.label}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-foreground font-medium">{row.label}</span>
-                        <span className={`text-xs font-600 ${row.level === "critical" ? "text-red-600" : row.level === "high" ? "text-orange-500" : row.level === "moderate" ? "text-yellow-600" : "text-green-600"}`}>
-                          {row.level === "critical" ? "Критично" : row.level === "high" ? "Высокий" : row.level === "moderate" ? "Умеренный" : "Низкий"}
-                        </span>
-                      </div>
-                      <div className="progress-track">
-                        <div
-                          className="progress-fill"
-                          style={{
-                            width: `${row.pct}%`,
-                            background: row.level === "critical" ? "oklch(55% 0.22 20)" : row.level === "high" ? "oklch(68% 0.20 40)" : row.level === "moderate" ? "oklch(72% 0.18 75)" : "oklch(65% 0.18 145)",
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Sample key risk block — mirrors the real report structure */}
-                <div className="text-xs font-600 text-muted-foreground uppercase tracking-wide mb-2">Ключевой риск (1 из 4)</div>
-                <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="risk-badge risk-high text-[10px] px-2 py-0.5">Критично</span>
-                    <span className="font-display font-700 text-sm">Права на продукт оформлены не полностью</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                    <span className="text-foreground font-600">Почему опасно:</span> если исключительные права на код не переданы компании, правовой титул на продукт остаётся спорным — это первое, что проверяют на due diligence.
-                  </p>
-                  <p className="text-xs text-muted-foreground leading-relaxed mb-2">
-                    <span className="text-foreground font-600">Последствия:</span> компенсация от 10 000 до 5 000 000 ₽ (ст. 1301 ГК РФ), срыв инвестиционной сделки, снижение оценки бизнеса.
-                  </p>
-                  <div className="text-[11px] font-mono text-primary/80 mt-2 pt-2 border-t border-border">
-                    Правовое основание: ГК РФ ст. 1295, 1296, 1301
-                  </div>
-                </div>
-
-                <div className="mt-5 p-4 rounded-xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground leading-relaxed">
-                  <span className="text-foreground font-600">Главный вывод:</span> выявлены существенные правовые риски в ключевых зонах. Сохранение текущей конструкции может привести к прямым финансовым потерям и спорам.
-                </div>
-              </div>
-              {/* Floating badge */}
-              <div className="absolute -top-4 -right-4 bg-primary text-primary-foreground text-xs font-700 px-3 py-1.5 rounded-full shadow-lg">
-                Пример отчёта · образец
-              </div>
-            </div>
+            <ReportPreview />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── WHO IT'S FOR ── */}
-      <section className="section-dark py-24">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl sm:text-5xl font-800 text-white mb-4">
-              Для кого подходит
-            </h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { emoji: "🚀", title: "Стартапы и MVP", desc: "Проверьте правовую конструкцию до первых пользователей и инвестиционных переговоров" },
-              { emoji: "📦", title: "Зрелые продукты", desc: "Убедитесь, что рост не создал новых правовых рисков, которые вы ещё не заметили" },
-              { emoji: "💼", title: "Предприниматели", desc: "Получите первичную оценку без дорогостоящей консультации юриста" },
-              { emoji: "🏢", title: "Продуктовые команды", desc: "Выявите риски перед запуском новой функциональности или выходом на новый рынок" },
-              { emoji: "🤝", title: "Перед сделкой", desc: "Оцените правовую устойчивость продукта перед переговорами с инвестором или покупателем" },
-              { emoji: "🌍", title: "Масштабирование", desc: "Проверьте, готов ли продукт к росту аудитории с правовой точки зрения" },
-            ].map((item, i) => (
-              <div key={i} className="card-dark p-6">
-                <div className="text-3xl mb-3">{item.emoji}</div>
-                <h3 className="font-display font-700 text-white mb-2">{item.title}</h3>
-                <p className="text-white/55 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <section id="lexy" className="bg-[#f6f8fb] py-24 text-[#0b1b31]"><div className="mx-auto grid max-w-[1240px] gap-14 px-5 lg:grid-cols-2 lg:px-10"><div><div className="mb-5 inline-flex rounded-full bg-[#e5f0ff] px-4 py-2 text-sm font-bold text-[#1677d2]">Флагманский продукт</div><h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Lexy — AI-диагностика правовых рисков</h2><p className="mt-5 text-lg leading-8 text-slate-500">Ответьте на 8 вопросов о вашем продукте — получите персонализированный отчёт с зонами риска, потенциальными штрафами и конкретными шагами для защиты бизнеса. Бесплатно и за 5 минут.</p><ul className="mt-8 grid gap-4 sm:grid-cols-2">{["9 зон правового риска — от ПДн до лицензирования", "Персональная вилка штрафов (мин–макс)", "Приоритетные действия на первые 7 дней", "Ссылки на конкретные статьи законов"].map(item => <li key={item} className="flex gap-3 text-sm font-semibold"><Check className="mt-0.5 size-5 shrink-0 text-[#1677d2]" />{item}</li>)}</ul><div className="mt-9 flex flex-wrap gap-3"><button onClick={startFree} className="rounded-full bg-[#1677d2] px-6 py-3.5 font-bold text-white">Попробовать бесплатно</button><button onClick={() => navigate("/paid")} className="rounded-full border border-[#1677d2] px-6 py-3.5 font-bold text-[#1677d2]">Углублённая диагностика</button><a href="#about" className="rounded-full border border-slate-300 px-6 py-3.5 font-bold text-slate-700">Подробнее о Lexy</a></div></div><div><ReportPreview light /></div></div></section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="py-24 bg-background">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-4xl sm:text-5xl font-800 mb-4">
-              Как проходит диагностика
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-              Четыре простых шага — от запуска до готового отчёта
-            </p>
-          </div>
+        <section id="услуги" className="bg-[#f6f8fb] py-20 text-[#0b1b31]"><div className="mx-auto max-w-[1240px] px-5 lg:px-10"><div className="mb-12 text-center"><h2 className="text-4xl font-extrabold sm:text-5xl">Услуги для IT-бизнеса</h2><p className="mt-4 text-lg text-slate-500">Полный цикл юридического сопровождения — от первого договора до выхода на международный рынок</p></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.map(([title, desc, price, Icon]) => <div key={title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_12px_35px_rgba(15,35,65,.05)] transition hover:-translate-y-1 hover:shadow-lg"><span className="mb-5 grid size-11 place-items-center rounded-xl bg-[#e8f2ff] text-[#1677d2]"><Icon className="size-5" /></span><h3 className="text-lg font-bold">{title}</h3><p className="mt-2 min-h-12 text-sm leading-6 text-slate-500">{desc}</p><p className="mt-5 font-bold text-[#1677d2]">{price}</p></div>)}</div><div className="mt-10 text-center"><a href="#contacts" className="inline-flex rounded-full border border-slate-300 px-6 py-3 font-bold">Все услуги и цены <ArrowRight className="ml-2 size-4" /></a></div></div></section>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
-            {[
-              { step: "01", icon: FileText, title: "Оставьте контакт", desc: "Укажите email и название продукта — это займёт 30 секунд" },
-              { step: "02", icon: CheckCircle2, title: "Ответьте на 8 вопросов", desc: "Вопросы о продукте, данных, документах и правах. Можно вернуться и изменить ответ" },
-              { step: "03", icon: Zap, title: "Получите результат", desc: "Система рассчитает категорию риска и сформирует персональный отчёт" },
-              { step: "04", icon: ArrowRight, title: "Узнайте, что делать дальше", desc: "Получите рекомендации и при необходимости — предложение расширенной диагностики" },
-            ].map((item, i) => (
-              <div key={i} className="text-center">
-                <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/8 border border-primary/15 mb-5">
-                  <item.icon className="w-7 h-7 text-primary" />
-                  <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-800 flex items-center justify-center font-display">
-                    {i + 1}
-                  </span>
-                </div>
-                <h3 className="font-display font-700 text-foreground mb-2">{item.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        <section id="о-компании" className="bg-[#06101f] py-24"><div className="mx-auto max-w-[1240px] px-5 lg:px-10"><div className="mb-12 text-center"><h2 className="text-4xl font-extrabold sm:text-5xl">Для кого мы работаем</h2><p className="mt-4 text-lg text-slate-400">Три типа клиентов — одна экспертиза в IT-праве</p></div><div className="grid gap-5 md:grid-cols-3">{[["Стартап без юриста", "Вы запускаете продукт и хотите сделать всё правильно с первого дня. Нужен минимальный правовой каркас: договоры, ПДн, права на код."], ["Бизнес с юристом без IT-опыта", "У вас есть юрист, но он не специализируется на IT. Нужна экспертиза в цифровом праве: 152-ФЗ, SaaS, API, AI."], ["Растущая компания", "Вы масштабируетесь: новые рынки, инвесторы, регуляторы. Нужен абонентский юрист, который понимает IT."]].map(([title, desc]) => <div key={title} className="rounded-2xl border border-white/10 bg-white/[.03] p-7"><h3 className="text-xl font-bold">{title}</h3><p className="mt-4 leading-7 text-slate-400">{desc}</p></div>)}</div></div></section>
 
-      {/* ── WHY TRUST ── */}
-      <section className="section-dark py-24">
-        <div className="container">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="font-display text-4xl sm:text-5xl font-800 text-white mb-6">
-                Почему результату
-                <br />можно доверять
-              </h2>
-              <div className="space-y-6">
-                {[
-                  { icon: Scale, title: "Основано на конкретных нормах", desc: "Каждый риск привязан к конкретным статьям: 152-ФЗ, КоАП РФ, ГК РФ ч. IV, Закону о защите прав потребителей и иным применимым актам" },
-                  { icon: AlertTriangle, title: "Трёхуровневая система оценки", desc: "Критические события, существенные риски и накопительный балл — не один параметр, а комплексная модель" },
-                  { icon: Shield, title: "Прозрачная методология", desc: "Вы видите, какие именно зоны проверялись и почему присвоена та или иная категория риска" },
-                  { icon: Clock, title: "Это не юридическая консультация", desc: "Диагностика — предварительная оценка, которая помогает понять, нужна ли полноценная проверка. Мы честно говорим об ограничениях" },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/8 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-5 h-5 text-white/70" />
-                    </div>
-                    <div>
-                      <div className="font-display font-700 text-white mb-1">{item.title}</div>
-                      <div className="text-white/55 text-sm leading-relaxed">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <section id="кейсы" className="bg-[#f6f8fb] py-24 text-[#0b1b31]"><div className="mx-auto max-w-[1240px] px-5 lg:px-10"><div className="mb-12 flex items-end justify-between"><div><p className="text-sm font-bold uppercase tracking-widest text-[#1677d2]">Кейсы</p><h2 className="mt-3 text-4xl font-extrabold sm:text-5xl">Реальные результаты для реальных компаний</h2></div><a href="#contacts" className="hidden rounded-full border border-slate-300 px-5 py-3 font-bold sm:block">Все кейсы</a></div><div className="grid gap-4 md:grid-cols-3">{[["SIGA", "Защита ПО и товарного знака", "Регистрация в Роспатенте за 45 дней"], ["АБЗ-ЭКСПЕРТ", "Комплексный IT-аудит", "Устранены 12 правовых рисков"], ["Стефан Попов", "Структурирование IP для инвестора", "Сделка закрыта на 30% выше оценки"]].map(([name, title, result]) => <div key={name} className="rounded-2xl border border-slate-200 bg-white p-7"><p className="text-sm font-bold text-[#1677d2]">{name}</p><h3 className="mt-10 text-xl font-bold">{title}</h3><p className="mt-3 text-slate-500">{result}</p></div>)}</div></div></section>
 
-            <div className="space-y-4">
-              {[
-                  { label: "Права на продукт", law: "ГК РФ ч. IV, ст. 1295, 1296, 1301" },
-                { label: "Персональные данные", law: "152-ФЗ · ст. 13.11 КоАП РФ" },
-                { label: "Защита потребителей", law: "Закон № 2300-1 · ст. 428 ГК РФ" },
-                { label: "Хранение данных", law: "ст. 18.1 152-ФЗ · ст. 15.5 149-ФЗ" },
-                { label: "Платёжная модель", law: "161-ФЗ · 173-ФЗ · ст. 15.25 КоАП" },
-              ].map((item, i) => (
-                <div key={i} className="card-dark p-4 flex items-center justify-between">
-                  <span className="text-white font-medium text-sm">{item.label}</span>
-                  <span className="text-white/40 text-xs font-mono">{item.law}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+        <section id="контакты" className="bg-[#06101f] py-24"><div className="mx-auto grid max-w-[1240px] items-center gap-14 px-5 lg:grid-cols-2 lg:px-10"><div><p className="text-sm font-bold uppercase tracking-widest text-[#4a91e8]">Основатель</p><h2 className="mt-4 text-4xl font-extrabold">Колунова Рада Янушевна</h2><p className="mt-3 text-lg text-slate-400">Основатель Neolex · Практикующий юрист в сфере IT и цифрового права</p><p className="mt-6 leading-7 text-slate-400">Более 7 лет сопровождения IT-компаний и цифровых продуктов. Выпускница МГЮА и РГГУ. Специализация: персональные данные, интеллектуальная собственность, SaaS-договоры, IT-аккредитация, регулируемые сферы.</p><div className="mt-7 flex flex-wrap gap-2">{["152-ФЗ и GDPR", "Права на ПО и IP", "SaaS и платформы", "IT-аккредитация", "AI и нейросети"].map(item => <span key={item} className="rounded-full border border-white/15 px-3 py-2 text-xs text-slate-300">{item}</span>)}</div><p className="mt-7 text-xs text-slate-500">Правовая база проверена на 1 июля 2026</p></div><div className="rounded-3xl border border-white/10 bg-white/[.04] p-8"><p className="text-sm font-bold uppercase tracking-widest text-[#4a91e8]">Готовы защитить свой продукт?</p><h2 className="mt-4 text-4xl font-extrabold leading-tight">Начните с бесплатной диагностики</h2><p className="mt-5 leading-7 text-slate-400">5 минут — и вы узнаете, где находятся главные правовые риски вашего продукта.</p><button onClick={startFree} className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#1677d2] px-6 py-4 font-bold">Бесплатная диагностика <ArrowRight className="size-5" /></button><button onClick={openPaid} className="mt-4 block text-sm font-semibold text-slate-300 hover:text-white">Связаться с юристом</button></div></div></section>
+      </main>
 
-      {/* ── PAID DIAGNOSTIC SECTION ── */}
-      <section className="py-24 bg-background border-t border-border">
-        <div className="container">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/15 text-primary text-sm font-medium mb-4">
-                <Shield className="w-3.5 h-3.5" />
-                Углублённая диагностика
-              </div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 text-xs font-medium mb-6 ml-0 sm:ml-2">
-                <Lock className="w-3 h-3" />
-                Сейчас в закрытом тестировании · доступ по промокоду
-              </div>
-              <h2 className="font-display text-3xl sm:text-4xl font-800 leading-tight mb-4">
-                Полный правовой аудит
-                <br />
-                <span className="text-gradient">за 4 900 ₽</span>
-              </h2>
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                14 блоков анализа, 50+ вопросов, AI-отчёт с дорожной картой устранения рисков на 30/60/90 дней. Загрузка документов, конкретные правовые основания, финансовые последствия каждого риска.
-              </p>
-              <ul className="space-y-2 mb-8">
-                {[
-                  "Корпоративная структура и права на продукт",
-                  "Персональные данные и соответствие применимым требованиям",
-                  "Договорная база с командой и подрядчиками",
-                  "Платёжная модель и финансовое регулирование",
-                  "Дорожная карта устранения рисков 30/60/90 дней",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={handleStartPaid}
-                className="btn-electric flex items-center gap-2 px-8 py-4 text-base rounded-xl"
-              >
-                Начать углублённую диагностику
-                <ArrowRight className="w-5 h-5" />
-              </button>
-              <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
-                <Lock className="w-3 h-3 flex-shrink-0" />
-                Углублённая диагностика пока доступна в тестовом режиме по промокоду
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { num: "14", label: "блоков анализа" },
-                { num: "50+", label: "вопросов" },
-                { num: "30/60/90", label: "дней дорожная карта" },
-                { num: "AI", label: "генерация отчёта" },
-              ].map((stat) => (
-                <div key={stat.label} className="card-premium p-6 text-center">
-                  <div className="font-display text-3xl font-800 text-foreground mb-1">{stat.num}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <footer className="border-t border-white/10 bg-[#030b17] px-5 py-8 text-center text-sm text-slate-500">© Neolex · Legal Tech · <a href="#contacts" className="hover:text-white">Политика конфиденциальности</a></footer>
 
-      {/* ── CTA ── */}
-      <section className="py-24 bg-background">
-        <div className="container text-center">
-          <h2 className="font-display text-4xl sm:text-5xl font-800 mb-6">
-            Готовы узнать, как обстоят дела
-            <br />
-            <span className="text-gradient">с вашим продуктом?</span>
-          </h2>
-          <p className="text-lg text-muted-foreground mb-10 max-w-lg mx-auto">
-            Бесплатная диагностика занимает 5–7 минут. Результат — сразу после завершения.
-          </p>
-          <button
-            onClick={handleStartDiagnostic}
-            className="btn-electric flex items-center gap-2 px-10 py-4 text-base rounded-xl mx-auto"
-          >
-            Начать диагностику
-            <ArrowRight className="w-5 h-5" />
-          </button>
-          <p className="text-sm text-muted-foreground mt-4">
-            Без регистрации · Без оплаты · Результат сразу
-          </p>
-        </div>
-      </section>
-
-      {/* ── FOOTER ── */}
-      <footer className="section-dark py-10 border-t border-white/8">
-        <div className="container flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center">
-                <Scale className="w-3.5 h-3.5 text-white/70" />
-              </div>
-              <span className="font-display font-700 text-white">Lexy</span>
-            </div>
-            <p className="text-white/40 text-sm text-center">
-              Диагностика носит информационный характер и не является юридической консультацией.
-            </p>
-            <div className="flex items-center gap-4 text-xs text-white/30">
-              <a href="/legal/user-agreement" className="hover:text-white/60 transition-colors">Соглашение</a>
-              <a href="/legal/privacy-policy" className="hover:text-white/60 transition-colors">Конфиденциальность</a>
-              <a href="/legal/marketing-consent" className="hover:text-white/60 transition-colors">Согласие на рассылку</a>
-            </div>
-          </div>
-          <div className="border-t border-white/8 pt-4 text-center text-white/20 text-xs">
-            © 2026 Lexy · Колунова Рада Янушевна · ИНН 402404019964 · Налог на профессиональный доход (самозанятая) · kolunovarada@yandex.ru
-          </div>
-        </div>
-      </footer>
-
-      {/* ── PROMO MODAL ── */}
-      {showPromoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowPromoModal(false); }}
-        >
-          <div className="bg-card border border-border rounded-2xl p-8 w-full max-w-sm mx-4 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="font-display font-700 text-lg">Углублённая диагностика</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">Доступна в тестовом режиме по промокоду</p>
-              </div>
-              <button
-                onClick={() => setShowPromoModal(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Промо-код</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={promoCode}
-                    onChange={(e) => { setPromoCode(e.target.value); setPromoError(""); setPromoValid(false); }}
-                    onKeyDown={(e) => e.key === "Enter" && handlePromoSubmit()}
-                    placeholder="Введите код"
-                    className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handlePromoSubmit}
-                    className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                  >
-                    Войти
-                  </button>
-                </div>
-                {promoError && (
-                  <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
-                    <X className="w-3 h-3" /> {promoError}
-                  </p>
-                )}
-                {promoValid && (
-                  <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Промо-код принят! Открываю...
-                  </p>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Углублённая диагностика находится в закрытом тестировании и пока доступна только по промокоду. Если у вас нет кода — напишите нам на{" "}
-                <a href="mailto:kolunovarada@yandex.ru" className="text-primary hover:underline">kolunovarada@yandex.ru</a>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      {showPromoModal && <div className="fixed inset-0 z-[100] grid place-items-center bg-black/70 p-5"><div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b1a2e] p-7 shadow-2xl"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-[#4a91e8]">Тестовый доступ</p><h2 className="mt-2 text-2xl font-extrabold">Углублённая диагностика</h2></div><button onClick={() => setShowPromoModal(false)} aria-label="Закрыть"><X className="size-5 text-slate-400" /></button></div><p className="mt-4 text-sm leading-6 text-slate-400">В Pilot-контуре доступ открывается по промокоду. Реальные платежи отключены.</p><input value={promoCode} onChange={e => setPromoCode(e.target.value)} placeholder="Промокод" className="mt-6 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none focus:border-[#1677d2]" />{promoError && <p className="mt-2 text-sm text-rose-300">{promoError}</p>}<button onClick={submitPromo} className="mt-5 w-full rounded-xl bg-[#1677d2] px-4 py-3.5 font-bold">Открыть тестовый доступ</button></div></div>}
     </div>
   );
+}
+
+function ReportPreview({ light = false }: { light?: boolean }) {
+  return <div className={`rounded-3xl border p-7 shadow-[0_20px_60px_rgba(0,0,0,.25)] ${light ? "border-slate-200 bg-white" : "border-white/10 bg-[#071426]"}`}><div className="flex items-start justify-between border-b border-current/10 pb-5"><div><p className={`text-xs ${light ? "text-slate-400" : "text-slate-500"}`}>Отчёт Lexy · Пример</p><h3 className={`mt-2 text-xl font-bold ${light ? "text-[#12223a]" : "text-white"}`}>Категория риска</h3></div><div className="text-right"><span className="rounded-full bg-rose-500/15 px-3 py-1 text-sm font-bold text-rose-400">Высокий</span><p className="mt-2 text-xs text-slate-500">балл 21</p></div></div><div className="mt-6 space-y-4">{risks.map(([label, level, width, color]) => <div key={label}><div className="mb-2 flex justify-between text-sm font-semibold"><span className={light ? "text-[#23324b]" : "text-slate-200"}>{label}</span><span style={{ color }}>{level}</span></div><div className="h-1.5 overflow-hidden bg-slate-700/60"><div className="h-full rounded-r-full" style={{ width, background: color }} /></div></div>)}</div><div className={`mt-7 rounded-2xl border p-4 text-sm leading-6 ${light ? "border-[#dbe7f5] bg-[#f2f7fc] text-slate-500" : "border-[#173657] bg-[#0c213b] text-slate-400"}`}><span className={light ? "font-bold text-[#23324b]" : "font-bold text-slate-200"}>Вывод:</span> выявлены существенные правовые риски. Рекомендуется оформить права на код и привести хранение данных в соответствие с 152-ФЗ.</div></div>;
 }

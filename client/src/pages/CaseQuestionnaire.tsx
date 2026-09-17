@@ -193,8 +193,8 @@ export default function CaseQuestionnaire() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-muted/30 text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+    <div className="min-h-screen overflow-x-hidden bg-[#f4f7fb] text-foreground">
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#06101f]/95 text-white backdrop-blur supports-[backdrop-filter]:bg-[#06101f]/90">
         <div className="mx-auto flex min-h-16 max-w-5xl items-center justify-between gap-3 px-4 py-2 sm:px-6">
           {isNavigationBlocked ? (
             <Button
@@ -202,24 +202,24 @@ export default function CaseQuestionnaire() {
               variant="ghost"
               disabled
               aria-describedby="questionnaire-navigation-blocked"
-              className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-1 font-display font-800 outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-1 font-display font-800 outline-none transition-colors hover:text-[#55a6ff] focus-visible:ring-2 focus-visible:ring-[#4a91e8]"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#1677d2] text-white shadow-lg shadow-blue-950/30">
                 <Scale className="size-4" aria-hidden="true" />
               </span>
-              <span className="truncate">Техническая анкета</span>
+              <span><span className="block truncate text-lg leading-none">Neolex</span><span className="mt-1 block text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Legal Tech · Lexy</span></span>
             </Button>
           ) : (
             <Button
               asChild
               variant="ghost"
-              className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-1 font-display font-800 outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-1 font-display font-800 outline-none transition-colors hover:text-[#55a6ff] focus-visible:ring-2 focus-visible:ring-[#4a91e8]"
             >
               <Link href="/cabinet">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#1677d2] text-white shadow-lg shadow-blue-950/30">
                   <Scale className="size-4" aria-hidden="true" />
                 </span>
-                <span className="truncate">Техническая анкета</span>
+                <span><span className="block truncate text-lg leading-none">Neolex</span><span className="mt-1 block text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Legal Tech · Lexy</span></span>
               </Link>
             </Button>
           )}
@@ -248,7 +248,7 @@ export default function CaseQuestionnaire() {
             </p>
           )}
         </div>
-        <div className="border-t border-amber-500/20 bg-amber-50 px-4 py-2 text-center text-xs font-semibold leading-relaxed text-amber-950">
+        <div className="border-t border-[#1677d2]/30 bg-[#0b2036] px-4 py-2 text-center text-xs font-semibold leading-relaxed text-[#b9d9f8]">
           Технический тестовый контур — не юридическое заключение
         </div>
       </header>

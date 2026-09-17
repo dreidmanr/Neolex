@@ -271,9 +271,9 @@ export default function Diagnostic() {
   const currentQ = QUESTIONS[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#f6f8fb] text-[#0b1b31] flex flex-col">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-white/10">
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <Scale className="w-5 h-5" />
@@ -296,7 +296,7 @@ export default function Diagnostic() {
       </nav>
 
       {/* Lexy header */}
-      <div className="bg-muted/40 border-b border-border py-3">
+      <div className="bg-muted/40 border-b border-white/10 py-3">
         <div className="container flex items-center gap-3">
           <div className="lexy-avatar text-sm">L</div>
           <div>
@@ -321,7 +321,7 @@ export default function Diagnostic() {
 
               <div className="card-premium p-6 rounded-2xl space-y-5">
                 {/* User agreement */}
-                <div className="flex gap-4 p-4 rounded-xl bg-muted/40 border border-border">
+                <div className="flex gap-4 p-4 rounded-xl bg-muted/40 border border-white/10">
                   <Checkbox
                     id="user-agreement"
                     checked={userAgreementAccepted}
@@ -331,7 +331,7 @@ export default function Diagnostic() {
                   <div>
                     <Label htmlFor="user-agreement" className="font-display font-600 text-sm cursor-pointer">
                       Принимаю{" "}
-                      <a href="/legal/user-agreement" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                      <a href="/legal/user-agreement" target="_blank" rel="noopener noreferrer" className="text-[#1677d2] underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
                         Пользовательское соглашение
                       </a>{" "}
                       <span className="text-destructive">*</span>
@@ -343,7 +343,7 @@ export default function Diagnostic() {
                 </div>
 
                 {/* Marketing consent */}
-                <div className="flex gap-4 p-4 rounded-xl bg-muted/40 border border-border">
+                <div className="flex gap-4 p-4 rounded-xl bg-muted/40 border border-white/10">
                   <Checkbox
                     id="marketing"
                     checked={marketingAccepted}
@@ -352,7 +352,7 @@ export default function Diagnostic() {
                   />
                   <div>
                     <Label htmlFor="marketing" className="font-display font-600 text-sm cursor-pointer">
-                      <a href="/legal/marketing-consent" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                      <a href="/legal/marketing-consent" target="_blank" rel="noopener noreferrer" className="text-[#1677d2] underline underline-offset-2 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
                         Согласен(-на) получать рекламные рассылки. Необязательно. От согласия можно отказаться в любой момент
                       </a>
                     </Label>
@@ -465,10 +465,10 @@ export default function Diagnostic() {
               {/* Question header */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                  <span className="font-display font-700 text-primary">Вопрос {currentQuestion + 1}</span>
+                  <span className="font-display font-700 text-[#1677d2]">Вопрос {currentQuestion + 1}</span>
                   <span>из {totalQuestions}</span>
                   {currentQ.multiSelect && (
-                    <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                    <span className="ml-auto text-xs bg-[#1677d2]/10 text-[#1677d2] px-2 py-0.5 rounded-full font-medium">
                       Можно выбрать несколько
                     </span>
                   )}
@@ -476,7 +476,7 @@ export default function Diagnostic() {
                 <h1 className="font-display text-2xl sm:text-3xl font-800 mb-3 leading-tight">
                   {currentQ.title}
                 </h1>
-                <p className="text-sm text-muted-foreground leading-relaxed bg-muted/50 rounded-lg px-4 py-3 border border-border">
+                <p className="text-sm text-muted-foreground leading-relaxed bg-muted/50 rounded-lg px-4 py-3 border border-white/10">
                   💡 {currentQ.hint}
                 </p>
               </div>
@@ -495,13 +495,13 @@ export default function Diagnostic() {
                           onClick={() => handleToggleMulti(currentQ.id, option.id, !!option.exclusive)}
                           className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
                             isSelected
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+                              ? "border-primary bg-[#1677d2]/5 shadow-sm"
+                              : "border-white/10 bg-card hover:border-primary/40 hover:bg-muted/40"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                              isSelected ? "border-primary bg-primary" : "border-border"
+                              isSelected ? "border-primary bg-[#1677d2]" : "border-white/10"
                             }`}>
                               {isSelected && (
                                 <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 12 12">
@@ -536,13 +536,13 @@ export default function Diagnostic() {
                           onClick={() => handleSelectSingle(currentQ.id, option.id)}
                           className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 ${
                             isSelected
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/40"
+                              ? "border-primary bg-[#1677d2]/5 shadow-sm"
+                              : "border-white/10 bg-card hover:border-primary/40 hover:bg-muted/40"
                           }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
-                              isSelected ? "border-primary bg-primary" : "border-border"
+                              isSelected ? "border-primary bg-[#1677d2]" : "border-white/10"
                             }`}>
                               {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                             </div>
@@ -601,7 +601,7 @@ export default function Diagnostic() {
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className="w-2 h-2 rounded-full bg-primary animate-bounce"
+                    className="w-2 h-2 rounded-full bg-[#1677d2] animate-bounce"
                     style={{ animationDelay: `${i * 150}ms` }}
                   />
                 ))}
