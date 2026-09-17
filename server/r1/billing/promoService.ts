@@ -83,7 +83,7 @@ function parseStoredResponse(value: unknown): RedeemPromoResponse {
       "accessStatus,casePublicId,status,tariffCode" ||
     typeof response.casePublicId !== "string" ||
     response.status !== "access_granted" ||
-    response.tariffCode !== "base_diagnostic" ||
+    response.tariffCode !== "lexy-advanced-diagnostic" ||
     response.accessStatus !== "active"
   ) {
     throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stored command response is invalid" });

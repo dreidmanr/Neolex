@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import AdminPilotDiagnostics from "./pages/AdminPilotDiagnostics";
 import Cabinet from "./pages/Cabinet";
 import CaseQuestionnaire from "./pages/CaseQuestionnaire";
+import CaseReport from "./pages/CaseReport";
 import Diagnostic from "./pages/Diagnostic";
 import Home from "./pages/Home";
 import LegalDocs from "./pages/LegalDocs";
@@ -34,14 +35,24 @@ function Router() {
       <Route path="/pilot/access" component={PilotAccess} />
       <Route path="/pilot" component={Pilot} />
       <Route path="/cabinet/diagnostics/:publicCaseId/questionnaire" component={CaseQuestionnaire} />
+      <Route path="/cabinet/cases/:publicId/report" component={CaseReport} />
       <Route path="/cabinet" component={Cabinet} />
       <Route path="/auth/request-link" component={RequestMagicLink} />
       <Route path="/auth/consume" component={MagicLinkConsume} />
       <Route path="/admin/pilot-diagnostics" component={AdminPilotDiagnostics} />
       <Route path="/" component={Home} />
+      <Route path="/about" component={Home} />
+      <Route path="/services" component={Home} />
+      <Route path="/lexy" component={Home} />
+      <Route path="/cases" component={Home} />
+      <Route path="/blog" component={Home} />
+      <Route path="/contacts" component={Home} />
       <Route path="/diagnostic" component={Diagnostic} />
       <Route path="/results/:token" component={Results} />
       <Route path="/paid" component={PaidDiagnostic} />
+      <Route path="/lexy/advanced" component={PaidDiagnostic} />
+      <Route path="/lexy/advanced/questionnaire" component={PaidDiagnostic} />
+      <Route path="/lexy/advanced/report/:token" component={PaidResults} />
       <Route path="/paid/results/:token" component={PaidResults} />
       <Route path="/legal/:doc" component={LegalDocs} />
       <Route path="/admin" component={Admin} />

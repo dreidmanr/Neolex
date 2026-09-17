@@ -21,7 +21,7 @@ const originalEnv = { ...process.env };
 const caseDto = {
   publicId: "case_public_identifier_01",
   status: "draft" as const,
-  serviceTier: "base_diagnostic",
+  serviceTier: "lexy-advanced-diagnostic",
   stateVersion: 1,
   createdAt: new Date("2026-01-01T00:00:00Z"),
   updatedAt: new Date("2026-01-01T00:00:00Z"),

@@ -65,8 +65,8 @@ async function grantActiveAccess(label: string): Promise<void> {
   const paymentId = `${RUN_PREFIX}_rules_payment_${label}`;
   await database.insert(tariffSnapshots).values({
     id: tariffId,
-    tariffCode: "base_diagnostic",
-    serviceTier: "base_diagnostic",
+    tariffCode: "lexy-advanced-diagnostic",
+    serviceTier: "lexy-advanced-diagnostic",
     provenanceStatus: "draft_test_only",
     catalogVersion: "r1-test",
     currency: "RUB",
@@ -77,7 +77,7 @@ async function grantActiveAccess(label: string): Promise<void> {
     customerAccountId: ACCOUNT_A,
     diagnosticCaseId: CASE_A,
     tariffSnapshotId: tariffId,
-    tariffCode: "base_diagnostic",
+    tariffCode: "lexy-advanced-diagnostic",
     campaignId: "rules_engine_test",
     sourceType: "promo",
     status: "promo_granted",

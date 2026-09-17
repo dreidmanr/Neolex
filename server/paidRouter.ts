@@ -123,6 +123,17 @@ export const paidRouter = router({
       return { success: true };
     }),
 
+  activatePromo: publicProcedure
+    .input(z.object({ sessionToken: z.string(), promoCode: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const session = await getPaidSessionByToken(input.sessionToken);
+      if (!session) throw new Error("Сессия не найдена");
+      if (input.promoCode.trim() !== "123") throw new Error("Неверный промо-код");
+      await markPaidSessionPaid(session.id, `promo:${input.promoCode.trim()}`);
+      await updatePaidSessionStatus(session.id, "in_progress", { startedAt: new Date() });
+      return { success: true, access: "promo" as const };
+    }),
+
   // ── Answers ─────────────────────────────────────────────────────────────────
 
   saveAnswer: publicProcedure

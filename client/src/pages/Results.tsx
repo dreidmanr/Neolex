@@ -80,8 +80,8 @@ function FeedbackForm({ sessionToken }: { sessionToken?: string }) {
           onClick={() => onChange(true)}
           className={`px-4 py-1.5 rounded-lg text-sm font-500 border transition-colors ${
             value === true
-              ? "bg-primary text-primary-foreground border-primary"
-              : "border-border hover:border-primary/50"
+              ? "bg-[#1677d2] text-[#1677d2]-foreground border-primary"
+              : "border-slate-200 hover:border-primary/50"
           }`}
         >
           Да
@@ -91,8 +91,8 @@ function FeedbackForm({ sessionToken }: { sessionToken?: string }) {
           onClick={() => onChange(false)}
           className={`px-4 py-1.5 rounded-lg text-sm font-500 border transition-colors ${
             value === false
-              ? "bg-muted text-foreground border-border"
-              : "border-border hover:border-muted"
+              ? "bg-muted text-foreground border-slate-200"
+              : "border-slate-200 hover:border-muted"
           }`}
         >
           Нет
@@ -104,8 +104,8 @@ function FeedbackForm({ sessionToken }: { sessionToken?: string }) {
   return (
     <div className="card-premium rounded-2xl p-6 sm:p-8 animate-fade-in-up">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <MessageSquare className="w-5 h-5 text-primary" />
+        <div className="w-10 h-10 rounded-xl bg-[#1677d2]/10 flex items-center justify-center flex-shrink-0">
+          <MessageSquare className="w-5 h-5 text-[#1677d2]" />
         </div>
         <div>
           <h3 className="font-display font-700 text-lg">Обратная связь</h3>
@@ -158,7 +158,7 @@ function FeedbackForm({ sessionToken }: { sessionToken?: string }) {
             placeholder="Что понравилось? Что можно улучшить?"
             rows={3}
             maxLength={2000}
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
+            className="w-full rounded-xl border border-slate-200 bg-background px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow"
           />
         </div>
 
@@ -233,7 +233,7 @@ function RiskBlockCard({ block }: { block: RiskBlock }) {
       </button>
 
       {expanded && (
-        <div className="px-6 pb-6 space-y-4 border-t border-border pt-4">
+        <div className="px-6 pb-6 space-y-4 border-t border-slate-200 pt-4">
           <div>
             <div className="text-xs font-700 text-muted-foreground uppercase tracking-wider mb-1.5">Суть риска</div>
             <p className="text-sm text-foreground leading-relaxed">{block.what}</p>
@@ -252,11 +252,11 @@ function RiskBlockCard({ block }: { block: RiskBlock }) {
               <p className="text-sm text-foreground leading-relaxed">{block.impact}</p>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/15">
-            <div className="text-xs font-700 text-primary uppercase tracking-wider mb-1.5">Что проверить</div>
+          <div className="p-4 rounded-xl bg-[#1677d2]/5 border border-primary/15">
+            <div className="text-xs font-700 text-[#1677d2] uppercase tracking-wider mb-1.5">Что проверить</div>
             <p className="text-sm text-foreground leading-relaxed">{block.action}</p>
           </div>
-          <div className="p-4 rounded-xl bg-muted/60 border border-border">
+          <div className="p-4 rounded-xl bg-muted/60 border border-slate-200">
             <div className="flex items-center gap-1.5 text-xs font-700 text-foreground uppercase tracking-wider mb-1.5">
               <Info className="w-3.5 h-3.5 flex-shrink-0" />
               Правовое основание
@@ -335,12 +335,12 @@ export default function Results() {
   const CategoryIcon = categoryIcon;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f6f8fb] text-[#0b1b31]">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-slate-200">
         <div className="container flex items-center justify-between h-14">
           <button onClick={() => navigate("/")} className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-primary" />
+            <Scale className="w-5 h-5 text-[#1677d2]" />
             <span className="font-display font-700 text-base">Lexy</span>
           </button>
           <div className="text-sm text-muted-foreground">Результаты диагностики</div>
@@ -348,7 +348,7 @@ export default function Results() {
       </nav>
 
       {/* Lexy bar */}
-      <div className="bg-muted/40 border-b border-border py-3">
+      <div className="bg-muted/40 border-b border-slate-200 py-3">
         <div className="container flex items-center gap-3">
           <div className="lexy-avatar text-sm">L</div>
           <div>
@@ -397,7 +397,7 @@ export default function Results() {
                     className={`rounded-xl p-3 border flex items-center gap-2 ${
                       isActive
                         ? `border-current ${sc?.label || "bg-muted"}`
-                        : "border-border bg-muted/30"
+                        : "border-slate-200 bg-muted/30"
                     }`}
                   >
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? (sc?.dot || "bg-muted-foreground") : "bg-muted-foreground/30"}`} />
@@ -408,7 +408,7 @@ export default function Results() {
                 );
               })}
             </div>
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-slate-200">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <div className="w-2 h-2 rounded-full bg-red-500" /> Критично
               </div>
@@ -440,7 +440,7 @@ export default function Results() {
         )}
 
         {/* ── DISCLAIMER ── */}
-        <div className="p-4 rounded-xl bg-muted/50 border border-border mb-6 animate-fade-in-up animate-delay-300">
+        <div className="p-4 rounded-xl bg-muted/50 border border-slate-200 mb-6 animate-fade-in-up animate-delay-300">
           <div className="flex items-start gap-3">
             <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
             <p className="text-xs text-muted-foreground leading-relaxed">

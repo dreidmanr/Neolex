@@ -47,7 +47,7 @@ const tx = { marker: "transaction" };
 const input = {
   customerAccountId: "acct-a",
   customerSessionId: "sess-a",
-  serviceTier: "base_diagnostic" as const,
+  serviceTier: "lexy-advanced-diagnostic" as const,
   idempotencyKey: "raw-key-must-not-persist",
   requestId: "request_case_service_test_01",
 };
@@ -110,7 +110,7 @@ describe("createSyntheticCase", () => {
         responseJson: {
           publicId: "existing_case_public_01",
           status: "draft",
-          serviceTier: "base_diagnostic",
+          serviceTier: "lexy-advanced-diagnostic",
           stateVersion: 1,
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",

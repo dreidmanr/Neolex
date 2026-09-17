@@ -17,7 +17,7 @@ function candidate(overrides: {
     },
     payment: {
       id: "payment_01", customerAccountId: "account_a", diagnosticCaseId: "case_a",
-      tariffSnapshotId: "tariff_01", tariffCode: "base_diagnostic",
+      tariffSnapshotId: "tariff_01", tariffCode: "lexy-advanced-diagnostic",
       campaignId: "r1_test_campaign", sourceType: "promo", status: "promo_granted",
       chargedAmount: 0, currency: "RUB", correlationId: "correlation_01",
       grantedAt: now, createdAt: now, ...overrides.payment,

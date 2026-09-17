@@ -128,6 +128,9 @@ export default function Cabinet() {
                 />
                 Обновить
               </Button>
+              <Button asChild className="min-h-11">
+                <Link href="/lexy/advanced">Углублённая диагностика</Link>
+              </Button>
             </div>
 
             {casesQuery.isLoading && <CasesSkeleton />}
@@ -188,6 +191,13 @@ export default function Cabinet() {
                           <Button asChild className="mt-4 min-h-11 w-full sm:w-auto">
                             <Link href={`/cabinet/diagnostics/${encodeURIComponent(item.publicId)}/questionnaire`}>
                               Продолжить анкету
+                            </Link>
+                          </Button>
+                        )}
+                        {item.status === "report_ready" && (
+                          <Button asChild className="mt-4 min-h-11 w-full sm:w-auto">
+                            <Link href={`/cabinet/cases/${encodeURIComponent(item.publicId)}/report`}>
+                              Открыть технический отчёт
                             </Link>
                           </Button>
                         )}

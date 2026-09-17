@@ -22,9 +22,9 @@ const consents = [
 describe("pilot promo routers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getOffer.mockReturnValue({ tariffCode: "base_diagnostic", serviceTier: "base_diagnostic", currency: "RUB", provenanceStatus: "draft_test_only" });
+    mocks.getOffer.mockReturnValue({ tariffCode: "lexy-advanced-diagnostic", serviceTier: "lexy-advanced-diagnostic", currency: "RUB", provenanceStatus: "draft_test_only" });
     mocks.getMetadata.mockReturnValue([]);
-    mocks.redeemPromo.mockResolvedValue({ casePublicId: "public_01", status: "access_granted", tariffCode: "base_diagnostic", accessStatus: "active" });
+    mocks.redeemPromo.mockResolvedValue({ casePublicId: "public_01", status: "access_granted", tariffCode: "lexy-advanced-diagnostic", accessStatus: "active" });
     Object.assign(process.env, {
       NODE_ENV: "test", LEXY_R1_SYNTHETIC_TEST_MODE: "true", LEXY_R1_TEST_IDENTITY: "r1-harness",
       LEXY_R1_DATABASE_CLASS: "disposable_test", DATABASE_URL: "mysql://u:p@localhost/lexy_r1_test_router",
@@ -36,14 +36,14 @@ describe("pilot promo routers", () => {
     await expect(pilotConsentsRouter.createCaller(context(false)).getRequiredMetadata()).rejects.toMatchObject({ code: "UNAUTHORIZED" });
   });
   it("passes only server context authority to redemption and returns minimal response", async () => {
-    const input = { tariffCode: "base_diagnostic", promoValue: "secret-code", idempotencyKey: "idem-key-123", consents };
-    await expect(pilotAccessRouter.createCaller(context()).redeemPromo(input)).resolves.toEqual({ casePublicId: "public_01", status: "access_granted", tariffCode: "base_diagnostic", accessStatus: "active" });
+    const input = { tariffCode: "lexy-advanced-diagnostic", promoValue: "secret-code", idempotencyKey: "idem-key-123", consents };
+    await expect(pilotAccessRouter.createCaller(context()).redeemPromo(input)).resolves.toEqual({ casePublicId: "public_01", status: "access_granted", tariffCode: "lexy-advanced-diagnostic", accessStatus: "active" });
     expect(mocks.redeemPromo).toHaveBeenCalledWith({ ...input, customerAccountId: customer.accountId, customerSessionId: customer.sessionId, requestId: "request_promo_router_01" });
   });
   it("rejects extra authority and billing fields", async () => {
     const caller = pilotAccessRouter.createCaller(context());
     for (const extra of [{ customerAccountId: "other" }, { campaignId: "other" }, { chargedAmount: 0 }, { paymentStatus: "promo_granted" }]) {
-      await expect(caller.redeemPromo({ tariffCode: "base_diagnostic", promoValue: "secret-code", idempotencyKey: "idem-key-123", consents, ...extra })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+      await expect(caller.redeemPromo({ tariffCode: "lexy-advanced-diagnostic", promoValue: "secret-code", idempotencyKey: "idem-key-123", consents, ...extra })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     }
     expect(mocks.redeemPromo).not.toHaveBeenCalled();
   });

@@ -1,0 +1,5714 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "id": "c3bbcf7f-c73c-43a2-8d14-a36bdbb0a554",
+  "prevId": "7ccbe552-78a8-41a4-9d48-233cfe2a1f78",
+  "tables": {
+    "access_grants": {
+      "name": "access_grants",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "paymentRecordId": {
+          "name": "paymentRecordId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('active','revoked','expired')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "grantedAt": {
+          "name": "grantedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revokedAt": {
+          "name": "revokedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocationReasonCode": {
+          "name": "revocationReasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "access_grants_case_payment_uq": {
+          "name": "access_grants_case_payment_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "paymentRecordId"
+          ],
+          "isUnique": true
+        },
+        "access_grants_payment_record_uq": {
+          "name": "access_grants_payment_record_uq",
+          "columns": [
+            "paymentRecordId"
+          ],
+          "isUnique": true
+        },
+        "access_grants_owner_case_status_expiry_idx": {
+          "name": "access_grants_owner_case_status_expiry_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status",
+            "expiresAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_access_grant_payment_owner_case": {
+          "name": "fk_access_grant_payment_owner_case",
+          "tableFrom": "access_grants",
+          "tableTo": "payment_records",
+          "columnsFrom": [
+            "paymentRecordId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "access_grants_id": {
+          "name": "access_grants_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "audit_events": {
+      "name": "audit_events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actorType": {
+          "name": "actorType",
+          "type": "enum('customer_account','customer_session','admin_user','service','migration')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actorId": {
+          "name": "actorId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "aggregateType": {
+          "name": "aggregateType",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "aggregateId": {
+          "name": "aggregateId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "eventType": {
+          "name": "eventType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fromStatus": {
+          "name": "fromStatus",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "toStatus": {
+          "name": "toStatus",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "enum('succeeded','denied','failed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reasonCode": {
+          "name": "reasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "requestId": {
+          "name": "requestId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "correlationId": {
+          "name": "correlationId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "idempotencyKeyHash": {
+          "name": "idempotencyKeyHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "privacySafeMetadata": {
+          "name": "privacySafeMetadata",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "audit_events_aggregate_created_idx": {
+          "name": "audit_events_aggregate_created_idx",
+          "columns": [
+            "aggregateType",
+            "aggregateId",
+            "createdAt"
+          ],
+          "isUnique": false
+        },
+        "audit_events_actor_created_idx": {
+          "name": "audit_events_actor_created_idx",
+          "columns": [
+            "actorType",
+            "actorId",
+            "createdAt"
+          ],
+          "isUnique": false
+        },
+        "audit_events_event_created_idx": {
+          "name": "audit_events_event_created_idx",
+          "columns": [
+            "eventType",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "audit_events_id": {
+          "name": "audit_events_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "auth_rate_limit_buckets": {
+      "name": "auth_rate_limit_buckets",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "bucketHash": {
+          "name": "bucketHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "windowStartedAt": {
+          "name": "windowStartedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "count": {
+          "name": "count",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "blockedUntil": {
+          "name": "blockedUntil",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "auth_rate_limit_scope_bucket_window_uq": {
+          "name": "auth_rate_limit_scope_bucket_window_uq",
+          "columns": [
+            "scope",
+            "bucketHash",
+            "windowStartedAt"
+          ],
+          "isUnique": true
+        },
+        "auth_rate_limit_buckets_expiry_idx": {
+          "name": "auth_rate_limit_buckets_expiry_idx",
+          "columns": [
+            "expiresAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "auth_rate_limit_buckets_id": {
+          "name": "auth_rate_limit_buckets_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "case_consents": {
+      "name": "case_consents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentId": {
+          "name": "documentId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentVersion": {
+          "name": "documentVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contentHash": {
+          "name": "contentHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "consentType": {
+          "name": "consentType",
+          "type": "enum('terms','data_processing','marketing')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accepted": {
+          "name": "accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actorCustomerSessionId": {
+          "name": "actorCustomerSessionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "acceptedAt": {
+          "name": "acceptedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "case_consents_assertion_uq": {
+          "name": "case_consents_assertion_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "documentId",
+            "documentVersion",
+            "consentType",
+            "actorCustomerSessionId"
+          ],
+          "isUnique": true
+        },
+        "case_consents_owner_case_accepted_idx": {
+          "name": "case_consents_owner_case_accepted_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "accepted"
+          ],
+          "isUnique": false
+        },
+        "case_consents_actor_idx": {
+          "name": "case_consents_actor_idx",
+          "columns": [
+            "actorCustomerSessionId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_case_consent_case_owner": {
+          "name": "fk_case_consent_case_owner",
+          "tableFrom": "case_consents",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_case_consent_actor_owner": {
+          "name": "fk_case_consent_actor_owner",
+          "tableFrom": "case_consents",
+          "tableTo": "customer_sessions",
+          "columnsFrom": [
+            "actorCustomerSessionId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "case_consents_id": {
+          "name": "case_consents_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "consent_records": {
+      "name": "consent_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionId": {
+          "name": "sessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "consentType": {
+          "name": "consentType",
+          "type": "enum('user_agreement','marketing')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accepted": {
+          "name": "accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentVersion": {
+          "name": "documentVersion",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "acceptedAt": {
+          "name": "acceptedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "consent_records_id": {
+          "name": "consent_records_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "contacts": {
+      "name": "contacts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionId": {
+          "name": "sessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "productName": {
+          "name": "productName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "contacts_id": {
+          "name": "contacts_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "credit_entitlements": {
+      "name": "credit_entitlements",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourcePaymentRecordId": {
+          "name": "sourcePaymentRecordId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceReportSnapshotId": {
+          "name": "sourceReportSnapshotId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceTariffId": {
+          "name": "sourceTariffId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceTariffVersion": {
+          "name": "sourceTariffVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "policyId": {
+          "name": "policyId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "policyVersion": {
+          "name": "policyVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amountRub": {
+          "name": "amountRub",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "enum('RUB')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "eligibleProductCode": {
+          "name": "eligibleProductCode",
+          "type": "enum('start_product','safe_sales','rights_and_ip','data_and_infrastructure','enterprise_readiness')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "issuedAt": {
+          "name": "issuedAt",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "businessTimeZone": {
+          "name": "businessTimeZone",
+          "type": "enum('Europe/Moscow')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('available','expired','revoked')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'available'"
+        },
+        "automaticRedemptionEnabled": {
+          "name": "automaticRedemptionEnabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "revokedAt": {
+          "name": "revokedAt",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocationReasonCode": {
+          "name": "revocationReasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "credit_entitlements_source_identity_uq": {
+          "name": "credit_entitlements_source_identity_uq",
+          "columns": [
+            "sourcePaymentRecordId",
+            "sourceReportSnapshotId",
+            "policyId"
+          ],
+          "isUnique": true
+        },
+        "credit_entitlements_report_uq": {
+          "name": "credit_entitlements_report_uq",
+          "columns": [
+            "sourceReportSnapshotId"
+          ],
+          "isUnique": true
+        },
+        "credit_entitlements_owner_case_status_expiry_idx": {
+          "name": "credit_entitlements_owner_case_status_expiry_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status",
+            "expiresAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_credit_entitlement_owner": {
+          "name": "fk_credit_entitlement_owner",
+          "tableFrom": "credit_entitlements",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_credit_entitlement_case_owner": {
+          "name": "fk_credit_entitlement_case_owner",
+          "tableFrom": "credit_entitlements",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_credit_entitlement_payment_owner_case": {
+          "name": "fk_credit_entitlement_payment_owner_case",
+          "tableFrom": "credit_entitlements",
+          "tableTo": "payment_records",
+          "columnsFrom": [
+            "sourcePaymentRecordId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_credit_entitlement_report_owner_case": {
+          "name": "fk_credit_entitlement_report_owner_case",
+          "tableFrom": "credit_entitlements",
+          "tableTo": "report_snapshots",
+          "columnsFrom": [
+            "sourceReportSnapshotId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "credit_entitlements_id": {
+          "name": "credit_entitlements_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_credit_entitlement_amount": {
+          "name": "chk_credit_entitlement_amount",
+          "value": "`credit_entitlements`.`amountRub` = 6900"
+        },
+        "chk_credit_entitlement_policy": {
+          "name": "chk_credit_entitlement_policy",
+          "value": "`credit_entitlements`.`policyId` = 'base-diagnostic-credit-6900-rub-v1'\n        AND `credit_entitlements`.`sourceTariffId` = 'lexy-advanced-diagnostic'\n        AND `credit_entitlements`.`businessTimeZone` = 'Europe/Moscow'\n        AND `credit_entitlements`.`automaticRedemptionEnabled` = false"
+        },
+        "chk_credit_entitlement_expiry": {
+          "name": "chk_credit_entitlement_expiry",
+          "value": "`credit_entitlements`.`expiresAt` > `credit_entitlements`.`issuedAt`"
+        },
+        "chk_credit_entitlement_lifecycle": {
+          "name": "chk_credit_entitlement_lifecycle",
+          "value": "(\n        (`credit_entitlements`.`status` IN ('available', 'expired')\n          AND `credit_entitlements`.`revokedAt` IS NULL\n          AND `credit_entitlements`.`revocationReasonCode` IS NULL)\n        OR (`credit_entitlements`.`status` = 'revoked'\n          AND `credit_entitlements`.`revokedAt` IS NOT NULL\n          AND `credit_entitlements`.`revocationReasonCode` REGEXP '^[a-z][a-z0-9_]{0,63}$')\n      )"
+        }
+      }
+    },
+    "customer_account_identities": {
+      "name": "customer_account_identities",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identityType": {
+          "name": "identityType",
+          "type": "enum('email')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "identityHash": {
+          "name": "identityHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('active','revoked')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "revokedAt": {
+          "name": "revokedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "customer_account_identities_type_hash_uq": {
+          "name": "customer_account_identities_type_hash_uq",
+          "columns": [
+            "identityType",
+            "identityHash"
+          ],
+          "isUnique": true
+        },
+        "customer_account_identities_account_status_idx": {
+          "name": "customer_account_identities_account_status_idx",
+          "columns": [
+            "customerAccountId",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_customer_identity_account": {
+          "name": "fk_customer_identity_account",
+          "tableFrom": "customer_account_identities",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "customer_account_identities_id": {
+          "name": "customer_account_identities_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "customer_accounts": {
+      "name": "customer_accounts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('active','suspended','closed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "customer_accounts_status_updated_idx": {
+          "name": "customer_accounts_status_updated_idx",
+          "columns": [
+            "status",
+            "updatedAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "customer_accounts_id": {
+          "name": "customer_accounts_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "customer_sessions": {
+      "name": "customer_sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tokenHash": {
+          "name": "tokenHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('active','revoked','expired')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revokedAt": {
+          "name": "revokedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocationReasonCode": {
+          "name": "revocationReasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "customer_sessions_token_hash_uq": {
+          "name": "customer_sessions_token_hash_uq",
+          "columns": [
+            "tokenHash"
+          ],
+          "isUnique": true
+        },
+        "customer_sessions_id_account_uq": {
+          "name": "customer_sessions_id_account_uq",
+          "columns": [
+            "id",
+            "customerAccountId"
+          ],
+          "isUnique": true
+        },
+        "customer_sessions_account_status_expiry_idx": {
+          "name": "customer_sessions_account_status_expiry_idx",
+          "columns": [
+            "customerAccountId",
+            "status",
+            "expiresAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_customer_session_account": {
+          "name": "fk_customer_session_account",
+          "tableFrom": "customer_sessions",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "customer_sessions_id": {
+          "name": "customer_sessions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "diagnostic_cases": {
+      "name": "diagnostic_cases",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "publicId": {
+          "name": "publicId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "serviceTier": {
+          "name": "serviceTier",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('draft','access_granted','in_progress','submitted','scoring','manual_review_required','report_ready','failed','archived')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "stateVersion": {
+          "name": "stateVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "diagnostic_cases_public_id_uq": {
+          "name": "diagnostic_cases_public_id_uq",
+          "columns": [
+            "publicId"
+          ],
+          "isUnique": true
+        },
+        "diagnostic_cases_id_account_uq": {
+          "name": "diagnostic_cases_id_account_uq",
+          "columns": [
+            "id",
+            "customerAccountId"
+          ],
+          "isUnique": true
+        },
+        "diagnostic_cases_owner_status_updated_idx": {
+          "name": "diagnostic_cases_owner_status_updated_idx",
+          "columns": [
+            "customerAccountId",
+            "status",
+            "updatedAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_diagnostic_case_account": {
+          "name": "fk_diagnostic_case_account",
+          "tableFrom": "diagnostic_cases",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "diagnostic_cases_id": {
+          "name": "diagnostic_cases_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "diagnostic_sessions": {
+      "name": "diagnostic_sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionToken": {
+          "name": "sessionToken",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('started','consented','contact_collected','in_progress','completed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'started'"
+        },
+        "riskCategory": {
+          "name": "riskCategory",
+          "type": "enum('low','moderate','high','critical')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "totalScore": {
+          "name": "totalScore",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "hasCriticalEvent": {
+          "name": "hasCriticalEvent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "diagnostic_sessions_id": {
+          "name": "diagnostic_sessions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "diagnostic_sessions_sessionToken_unique": {
+          "name": "diagnostic_sessions_sessionToken_unique",
+          "columns": [
+            "sessionToken"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "email_deliveries": {
+      "name": "email_deliveries",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "magicLinkTokenId": {
+          "name": "magicLinkTokenId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountIdentityId": {
+          "name": "customerAccountIdentityId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deliveryKind": {
+          "name": "deliveryKind",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('queued','sending','sent','failed','suppressed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'queued'"
+        },
+        "dedupeKey": {
+          "name": "dedupeKey",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attemptCount": {
+          "name": "attemptCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "leaseOwner": {
+          "name": "leaseOwner",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "leaseVersion": {
+          "name": "leaseVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "leaseExpiresAt": {
+          "name": "leaseExpiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "nextAttemptAt": {
+          "name": "nextAttemptAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lastAttemptAt": {
+          "name": "lastAttemptAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sentAt": {
+          "name": "sentAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "terminalAt": {
+          "name": "terminalAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lastErrorCode": {
+          "name": "lastErrorCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "templateVersion": {
+          "name": "templateVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "email_deliveries_token_uq": {
+          "name": "email_deliveries_token_uq",
+          "columns": [
+            "magicLinkTokenId"
+          ],
+          "isUnique": true
+        },
+        "email_deliveries_dedupe_key_uq": {
+          "name": "email_deliveries_dedupe_key_uq",
+          "columns": [
+            "dedupeKey"
+          ],
+          "isUnique": true
+        },
+        "email_deliveries_status_next_idx": {
+          "name": "email_deliveries_status_next_idx",
+          "columns": [
+            "status",
+            "nextAttemptAt"
+          ],
+          "isUnique": false
+        },
+        "email_deliveries_lease_expiry_idx": {
+          "name": "email_deliveries_lease_expiry_idx",
+          "columns": [
+            "leaseExpiresAt"
+          ],
+          "isUnique": false
+        },
+        "email_deliveries_identity_created_idx": {
+          "name": "email_deliveries_identity_created_idx",
+          "columns": [
+            "customerAccountIdentityId",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_email_delivery_token_identity": {
+          "name": "fk_email_delivery_token_identity",
+          "tableFrom": "email_deliveries",
+          "tableTo": "magic_link_tokens",
+          "columnsFrom": [
+            "magicLinkTokenId",
+            "customerAccountIdentityId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountIdentityId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "email_deliveries_id": {
+          "name": "email_deliveries_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "feedbacks": {
+      "name": "feedbacks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionToken": {
+          "name": "sessionToken",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rating": {
+          "name": "rating",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "usefulnessRating": {
+          "name": "usefulnessRating",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "wouldRecommend": {
+          "name": "wouldRecommend",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "comment": {
+          "name": "comment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "foundAccurate": {
+          "name": "foundAccurate",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "interestedInPaid": {
+          "name": "interestedInPaid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "feedbacks_id": {
+          "name": "feedbacks_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "idempotency_records": {
+      "name": "idempotency_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "idempotencyKey": {
+          "name": "idempotencyKey",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "requestHash": {
+          "name": "requestHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','completed','failed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "responseJson": {
+          "name": "responseJson",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "idempotency_records_account_scope_key_uq": {
+          "name": "idempotency_records_account_scope_key_uq",
+          "columns": [
+            "customerAccountId",
+            "scope",
+            "idempotencyKey"
+          ],
+          "isUnique": true
+        },
+        "idempotency_records_expiry_idx": {
+          "name": "idempotency_records_expiry_idx",
+          "columns": [
+            "expiresAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_idempotency_account": {
+          "name": "fk_idempotency_account",
+          "tableFrom": "idempotency_records",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "idempotency_records_id": {
+          "name": "idempotency_records_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "legacy_ownership_cases": {
+      "name": "legacy_ownership_cases",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceTable": {
+          "name": "sourceTable",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourcePrimaryKey": {
+          "name": "sourcePrimaryKey",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('unassigned','claim_pending','claimed','quarantined','manual_review','excluded_by_retention','migration_error')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'unassigned'"
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "permittedClaimChannel": {
+          "name": "permittedClaimChannel",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "claimEvidenceReference": {
+          "name": "claimEvidenceReference",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "decisionActorId": {
+          "name": "decisionActorId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reasonCode": {
+          "name": "reasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "decidedAt": {
+          "name": "decidedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "legacy_ownership_cases_source_uq": {
+          "name": "legacy_ownership_cases_source_uq",
+          "columns": [
+            "sourceTable",
+            "sourcePrimaryKey"
+          ],
+          "isUnique": true
+        },
+        "legacy_ownership_cases_status_created_idx": {
+          "name": "legacy_ownership_cases_status_created_idx",
+          "columns": [
+            "status",
+            "createdAt"
+          ],
+          "isUnique": false
+        },
+        "legacy_ownership_cases_account_status_idx": {
+          "name": "legacy_ownership_cases_account_status_idx",
+          "columns": [
+            "customerAccountId",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_legacy_ownership_account": {
+          "name": "fk_legacy_ownership_account",
+          "tableFrom": "legacy_ownership_cases",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "legacy_ownership_cases_id": {
+          "name": "legacy_ownership_cases_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "legacy_resource_links": {
+      "name": "legacy_resource_links",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceTable": {
+          "name": "sourceTable",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourcePrimaryKey": {
+          "name": "sourcePrimaryKey",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "targetType": {
+          "name": "targetType",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "targetId": {
+          "name": "targetId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "phase": {
+          "name": "phase",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mappingVersion": {
+          "name": "mappingVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "migrationRunId": {
+          "name": "migrationRunId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "correlationId": {
+          "name": "correlationId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "legacy_resource_links_source_target_type_uq": {
+          "name": "legacy_resource_links_source_target_type_uq",
+          "columns": [
+            "sourceTable",
+            "sourcePrimaryKey",
+            "targetType"
+          ],
+          "isUnique": true
+        },
+        "legacy_resource_links_target_idx": {
+          "name": "legacy_resource_links_target_idx",
+          "columns": [
+            "targetType",
+            "targetId"
+          ],
+          "isUnique": false
+        },
+        "legacy_resource_links_run_idx": {
+          "name": "legacy_resource_links_run_idx",
+          "columns": [
+            "migrationRunId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_legacy_link_migration_run": {
+          "name": "fk_legacy_link_migration_run",
+          "tableFrom": "legacy_resource_links",
+          "tableTo": "migration_runs",
+          "columnsFrom": [
+            "migrationRunId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "legacy_resource_links_id": {
+          "name": "legacy_resource_links_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "magic_link_tokens": {
+      "name": "magic_link_tokens",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountIdentityId": {
+          "name": "customerAccountIdentityId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tokenHash": {
+          "name": "tokenHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "requestScope": {
+          "name": "requestScope",
+          "type": "enum('magic_login')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tokenKeyVersion": {
+          "name": "tokenKeyVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('active','consumed','revoked','expired')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'active'"
+        },
+        "expiresAt": {
+          "name": "expiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "consumedAt": {
+          "name": "consumedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revokedAt": {
+          "name": "revokedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revocationReasonCode": {
+          "name": "revocationReasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "consumedByCustomerSessionId": {
+          "name": "consumedByCustomerSessionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "correlationId": {
+          "name": "correlationId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "magic_link_tokens_token_hash_uq": {
+          "name": "magic_link_tokens_token_hash_uq",
+          "columns": [
+            "tokenHash"
+          ],
+          "isUnique": true
+        },
+        "magic_link_tokens_session_uq": {
+          "name": "magic_link_tokens_session_uq",
+          "columns": [
+            "consumedByCustomerSessionId"
+          ],
+          "isUnique": true
+        },
+        "magic_link_tokens_id_identity_uq": {
+          "name": "magic_link_tokens_id_identity_uq",
+          "columns": [
+            "id",
+            "customerAccountIdentityId"
+          ],
+          "isUnique": true
+        },
+        "magic_link_tokens_identity_status_expiry_idx": {
+          "name": "magic_link_tokens_identity_status_expiry_idx",
+          "columns": [
+            "customerAccountIdentityId",
+            "status",
+            "expiresAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_magic_token_identity": {
+          "name": "fk_magic_token_identity",
+          "tableFrom": "magic_link_tokens",
+          "tableTo": "customer_account_identities",
+          "columnsFrom": [
+            "customerAccountIdentityId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_magic_token_session": {
+          "name": "fk_magic_token_session",
+          "tableFrom": "magic_link_tokens",
+          "tableTo": "customer_sessions",
+          "columnsFrom": [
+            "consumedByCustomerSessionId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "magic_link_tokens_id": {
+          "name": "magic_link_tokens_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "migration_reconciliation_records": {
+      "name": "migration_reconciliation_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "migrationRunId": {
+          "name": "migrationRunId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "resourceType": {
+          "name": "resourceType",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','matched','mismatch','failed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "dryRun": {
+          "name": "dryRun",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "sourceCount": {
+          "name": "sourceCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "targetCount": {
+          "name": "targetCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "matchedCount": {
+          "name": "matchedCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "missingCount": {
+          "name": "missingCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "duplicateCount": {
+          "name": "duplicateCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "orphanCount": {
+          "name": "orphanCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "sourceHash": {
+          "name": "sourceHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "targetHash": {
+          "name": "targetHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "summaryHash": {
+          "name": "summaryHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "migration_reconciliation_records_run_resource_uq": {
+          "name": "migration_reconciliation_records_run_resource_uq",
+          "columns": [
+            "migrationRunId",
+            "resourceType"
+          ],
+          "isUnique": true
+        },
+        "migration_reconciliation_records_status_created_idx": {
+          "name": "migration_reconciliation_records_status_created_idx",
+          "columns": [
+            "status",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_migration_recon_run": {
+          "name": "fk_migration_recon_run",
+          "tableFrom": "migration_reconciliation_records",
+          "tableTo": "migration_runs",
+          "columnsFrom": [
+            "migrationRunId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "migration_reconciliation_records_id": {
+          "name": "migration_reconciliation_records_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "migration_runs": {
+      "name": "migration_runs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "phase": {
+          "name": "phase",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('planned','running','succeeded','failed','cancelled')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'planned'"
+        },
+        "dryRun": {
+          "name": "dryRun",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "sourceCount": {
+          "name": "sourceCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "targetCount": {
+          "name": "targetCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "matchedCount": {
+          "name": "matchedCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "anomalyCount": {
+          "name": "anomalyCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "sourceManifestHash": {
+          "name": "sourceManifestHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "targetManifestHash": {
+          "name": "targetManifestHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "correlationId": {
+          "name": "correlationId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "startedAt": {
+          "name": "startedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "migration_runs_status_created_idx": {
+          "name": "migration_runs_status_created_idx",
+          "columns": [
+            "status",
+            "createdAt"
+          ],
+          "isUnique": false
+        },
+        "migration_runs_phase_created_idx": {
+          "name": "migration_runs_phase_created_idx",
+          "columns": [
+            "phase",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "migration_runs_id": {
+          "name": "migration_runs_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "outbox_events": {
+      "name": "outbox_events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "eventId": {
+          "name": "eventId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dedupeKey": {
+          "name": "dedupeKey",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "aggregateType": {
+          "name": "aggregateType",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "aggregateId": {
+          "name": "aggregateId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "eventType": {
+          "name": "eventType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "privacySafePayload": {
+          "name": "privacySafePayload",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','processing','published','failed','cancelled')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "attemptCount": {
+          "name": "attemptCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "leaseOwner": {
+          "name": "leaseOwner",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "leaseVersion": {
+          "name": "leaseVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "leaseExpiresAt": {
+          "name": "leaseExpiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "nextAttemptAt": {
+          "name": "nextAttemptAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lastAttemptAt": {
+          "name": "lastAttemptAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "publishedAt": {
+          "name": "publishedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lastErrorCode": {
+          "name": "lastErrorCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "outbox_events_event_id_uq": {
+          "name": "outbox_events_event_id_uq",
+          "columns": [
+            "eventId"
+          ],
+          "isUnique": true
+        },
+        "outbox_events_dedupe_key_uq": {
+          "name": "outbox_events_dedupe_key_uq",
+          "columns": [
+            "dedupeKey"
+          ],
+          "isUnique": true
+        },
+        "outbox_events_status_next_attempt_idx": {
+          "name": "outbox_events_status_next_attempt_idx",
+          "columns": [
+            "status",
+            "nextAttemptAt"
+          ],
+          "isUnique": false
+        },
+        "outbox_events_lease_expiry_idx": {
+          "name": "outbox_events_lease_expiry_idx",
+          "columns": [
+            "leaseExpiresAt"
+          ],
+          "isUnique": false
+        },
+        "outbox_events_aggregate_created_idx": {
+          "name": "outbox_events_aggregate_created_idx",
+          "columns": [
+            "aggregateType",
+            "aggregateId",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "outbox_events_id": {
+          "name": "outbox_events_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_outbox_event_attempt_count_nonnegative": {
+          "name": "chk_outbox_event_attempt_count_nonnegative",
+          "value": "`outbox_events`.`attemptCount` >= 0"
+        },
+        "chk_outbox_event_lease_version_nonnegative": {
+          "name": "chk_outbox_event_lease_version_nonnegative",
+          "value": "`outbox_events`.`leaseVersion` >= 0"
+        },
+        "chk_outbox_event_lease_lifecycle": {
+          "name": "chk_outbox_event_lease_lifecycle",
+          "value": "(\n      (`outbox_events`.`status` = 'processing' AND `outbox_events`.`leaseOwner` IS NOT NULL AND `outbox_events`.`leaseExpiresAt` IS NOT NULL)\n      OR (`outbox_events`.`status` <> 'processing' AND `outbox_events`.`leaseOwner` IS NULL AND `outbox_events`.`leaseExpiresAt` IS NULL)\n    )"
+        }
+      }
+    },
+    "paid_answers": {
+      "name": "paid_answers",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "paidSessionId": {
+          "name": "paidSessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "blockId": {
+          "name": "blockId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionId": {
+          "name": "questionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "answerType": {
+          "name": "answerType",
+          "type": "enum('single','multi','text','file')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "answerId": {
+          "name": "answerId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "answerIds": {
+          "name": "answerIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "answerText": {
+          "name": "answerText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "paid_answers_id": {
+          "name": "paid_answers_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "paid_consent_records": {
+      "name": "paid_consent_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "paidSessionId": {
+          "name": "paidSessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "consentType": {
+          "name": "consentType",
+          "type": "enum('user_agreement','marketing','data_processing')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accepted": {
+          "name": "accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentVersion": {
+          "name": "documentVersion",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "acceptedAt": {
+          "name": "acceptedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "paid_consent_records_id": {
+          "name": "paid_consent_records_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "paid_documents": {
+      "name": "paid_documents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "paidSessionId": {
+          "name": "paidSessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "blockId": {
+          "name": "blockId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "questionId": {
+          "name": "questionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fileName": {
+          "name": "fileName",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fileSize": {
+          "name": "fileSize",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "mimeType": {
+          "name": "mimeType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "storageKey": {
+          "name": "storageKey",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "storageUrl": {
+          "name": "storageUrl",
+          "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentCategory": {
+          "name": "documentCategory",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "paid_documents_id": {
+          "name": "paid_documents_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "paid_reports": {
+      "name": "paid_reports",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "paidSessionId": {
+          "name": "paidSessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "riskCategory": {
+          "name": "riskCategory",
+          "type": "enum('low','moderate','high','critical')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "keyFindings": {
+          "name": "keyFindings",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "scopeAndLimitations": {
+          "name": "scopeAndLimitations",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "factualInputs": {
+          "name": "factualInputs",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "riskMap": {
+          "name": "riskMap",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "riskBlocks": {
+          "name": "riskBlocks",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "missingDocuments": {
+          "name": "missingDocuments",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "financialConsequences": {
+          "name": "financialConsequences",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "roadmap": {
+          "name": "roadmap",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "nextStep": {
+          "name": "nextStep",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reportMarkdown": {
+          "name": "reportMarkdown",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criticalTriggers": {
+          "name": "criticalTriggers",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "totalRiskScore": {
+          "name": "totalRiskScore",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "generationModel": {
+          "name": "generationModel",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "paid_reports_id": {
+          "name": "paid_reports_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "paid_reports_paidSessionId_unique": {
+          "name": "paid_reports_paidSessionId_unique",
+          "columns": [
+            "paidSessionId"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "paid_sessions": {
+      "name": "paid_sessions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionToken": {
+          "name": "sessionToken",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "freeSessionId": {
+          "name": "freeSessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "contactName": {
+          "name": "contactName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "contactEmail": {
+          "name": "contactEmail",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "productName": {
+          "name": "productName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentStatus": {
+          "name": "paymentStatus",
+          "type": "enum('pending','paid','failed','refunded')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "paymentAmount": {
+          "name": "paymentAmount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "paymentProvider": {
+          "name": "paymentProvider",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentId": {
+          "name": "paymentId",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paidAt": {
+          "name": "paidAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('created','payment_pending','paid','in_progress','completed','report_ready')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'created'"
+        },
+        "currentBlock": {
+          "name": "currentBlock",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 1
+        },
+        "currentQuestion": {
+          "name": "currentQuestion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "anketaVersion": {
+          "name": "anketaVersion",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'v1'"
+        },
+        "startedAt": {
+          "name": "startedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reportGeneratedAt": {
+          "name": "reportGeneratedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "riskCategory": {
+          "name": "riskCategory",
+          "type": "enum('low','moderate','high','critical')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criticalTriggers": {
+          "name": "criticalTriggers",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "userGoals": {
+          "name": "userGoals",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "urgencyDeadline": {
+          "name": "urgencyDeadline",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "criticalQuestion": {
+          "name": "criticalQuestion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "paid_sessions_id": {
+          "name": "paid_sessions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "paid_sessions_sessionToken_unique": {
+          "name": "paid_sessions_sessionToken_unique",
+          "columns": [
+            "sessionToken"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "payment_records": {
+      "name": "payment_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tariffSnapshotId": {
+          "name": "tariffSnapshotId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tariffCode": {
+          "name": "tariffCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "campaignId": {
+          "name": "campaignId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceType": {
+          "name": "sourceType",
+          "type": "enum('promo')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('promo_granted')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "chargedAmount": {
+          "name": "chargedAmount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "currency": {
+          "name": "currency",
+          "type": "enum('RUB')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "correlationId": {
+          "name": "correlationId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "grantedAt": {
+          "name": "grantedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "payment_records_redemption_scope_uq": {
+          "name": "payment_records_redemption_scope_uq",
+          "columns": [
+            "customerAccountId",
+            "campaignId",
+            "tariffCode"
+          ],
+          "isUnique": true
+        },
+        "payment_records_id_account_case_uq": {
+          "name": "payment_records_id_account_case_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "payment_records_owner_case_idx": {
+          "name": "payment_records_owner_case_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_payment_record_case_owner": {
+          "name": "fk_payment_record_case_owner",
+          "tableFrom": "payment_records",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_payment_record_tariff_snapshot": {
+          "name": "fk_payment_record_tariff_snapshot",
+          "tableFrom": "payment_records",
+          "tableTo": "tariff_snapshots",
+          "columnsFrom": [
+            "tariffSnapshotId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "payment_records_id": {
+          "name": "payment_records_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_payment_records_zero_charge": {
+          "name": "chk_payment_records_zero_charge",
+          "value": "`payment_records`.`chargedAmount` = 0"
+        }
+      }
+    },
+    "questionnaire_answer_revisions": {
+      "name": "questionnaire_answer_revisions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireDraftId": {
+          "name": "questionnaireDraftId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionId": {
+          "name": "questionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "draftRevision": {
+          "name": "draftRevision",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valueJson": {
+          "name": "valueJson",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "answerState": {
+          "name": "answerState",
+          "type": "enum('active','inactive')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "enum('customer','system_branch_recompute')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "clientMutationIdHash": {
+          "name": "clientMutationIdHash",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "deactivationReasonCode": {
+          "name": "deactivationReasonCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "questionnaire_answer_revisions_draft_question_revision_uq": {
+          "name": "questionnaire_answer_revisions_draft_question_revision_uq",
+          "columns": [
+            "questionnaireDraftId",
+            "questionId",
+            "draftRevision"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_answer_revisions_draft_mutation_uq": {
+          "name": "questionnaire_answer_revisions_draft_mutation_uq",
+          "columns": [
+            "questionnaireDraftId",
+            "clientMutationIdHash"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_answer_revisions_draft_question_revision_idx": {
+          "name": "questionnaire_answer_revisions_draft_question_revision_idx",
+          "columns": [
+            "questionnaireDraftId",
+            "questionId",
+            "draftRevision"
+          ],
+          "isUnique": false
+        },
+        "questionnaire_answer_revisions_case_revision_idx": {
+          "name": "questionnaire_answer_revisions_case_revision_idx",
+          "columns": [
+            "diagnosticCaseId",
+            "draftRevision"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_questionnaire_answer_revision_draft_owner_case": {
+          "name": "fk_questionnaire_answer_revision_draft_owner_case",
+          "tableFrom": "questionnaire_answer_revisions",
+          "tableTo": "questionnaire_drafts",
+          "columnsFrom": [
+            "questionnaireDraftId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "questionnaire_answer_revisions_id": {
+          "name": "questionnaire_answer_revisions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_questionnaire_answer_revision_positive": {
+          "name": "chk_questionnaire_answer_revision_positive",
+          "value": "`questionnaire_answer_revisions`.`draftRevision` > 0"
+        }
+      }
+    },
+    "questionnaire_answers": {
+      "name": "questionnaire_answers",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionId": {
+          "name": "sessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionId": {
+          "name": "questionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "answerId": {
+          "name": "answerId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "answerIds": {
+          "name": "answerIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "answerText": {
+          "name": "answerText",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "questionnaire_answers_id": {
+          "name": "questionnaire_answers_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "questionnaire_drafts": {
+      "name": "questionnaire_drafts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireReleaseId": {
+          "name": "questionnaireReleaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireVersion": {
+          "name": "questionnaireVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireContentHash": {
+          "name": "questionnaireContentHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('open','submitted')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'open'"
+        },
+        "draftRevision": {
+          "name": "draftRevision",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "currentQuestionId": {
+          "name": "currentQuestionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "visibleQuestionIds": {
+          "name": "visibleQuestionIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "visibleSetHash": {
+          "name": "visibleSetHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "manualFollowUpRequired": {
+          "name": "manualFollowUpRequired",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "manualFollowUpTriggerIds": {
+          "name": "manualFollowUpTriggerIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "questionnaire_drafts_case_uq": {
+          "name": "questionnaire_drafts_case_uq",
+          "columns": [
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_drafts_id_owner_case_uq": {
+          "name": "questionnaire_drafts_id_owner_case_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_drafts_owner_case_status_updated_idx": {
+          "name": "questionnaire_drafts_owner_case_status_updated_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status",
+            "updatedAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_questionnaire_draft_case_owner": {
+          "name": "fk_questionnaire_draft_case_owner",
+          "tableFrom": "questionnaire_drafts",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "questionnaire_drafts_id": {
+          "name": "questionnaire_drafts_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_questionnaire_draft_revision_nonnegative": {
+          "name": "chk_questionnaire_draft_revision_nonnegative",
+          "value": "`questionnaire_drafts`.`draftRevision` >= 0"
+        }
+      }
+    },
+    "questionnaire_rule_evaluations": {
+      "name": "questionnaire_rule_evaluations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireSubmissionId": {
+          "name": "questionnaireSubmissionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceOutboxEventId": {
+          "name": "sourceOutboxEventId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "submittedCaseStateVersion": {
+          "name": "submittedCaseStateVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rulesetId": {
+          "name": "rulesetId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rulesetVersion": {
+          "name": "rulesetVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rulesetHash": {
+          "name": "rulesetHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inputSnapshotHash": {
+          "name": "inputSnapshotHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','succeeded','manual_review_required','failed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "outcomeJson": {
+          "name": "outcomeJson",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "outcomeHash": {
+          "name": "outcomeHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "manualReviewRequired": {
+          "name": "manualReviewRequired",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "failureCode": {
+          "name": "failureCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "startedAt": {
+          "name": "startedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "questionnaire_rule_evaluations_source_outbox_uq": {
+          "name": "questionnaire_rule_evaluations_source_outbox_uq",
+          "columns": [
+            "sourceOutboxEventId"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_rule_evaluations_submission_ruleset_uq": {
+          "name": "questionnaire_rule_evaluations_submission_ruleset_uq",
+          "columns": [
+            "questionnaireSubmissionId",
+            "rulesetHash"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_rule_evaluations_id_owner_case_submission_uq": {
+          "name": "questionnaire_rule_evaluations_id_owner_case_submission_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId",
+            "questionnaireSubmissionId"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_rule_evaluations_owner_case_status_idx": {
+          "name": "questionnaire_rule_evaluations_owner_case_status_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_questionnaire_rule_evaluation_owner": {
+          "name": "fk_questionnaire_rule_evaluation_owner",
+          "tableFrom": "questionnaire_rule_evaluations",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_questionnaire_rule_evaluation_case_owner": {
+          "name": "fk_questionnaire_rule_evaluation_case_owner",
+          "tableFrom": "questionnaire_rule_evaluations",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_questionnaire_rule_evaluation_submission_owner_case": {
+          "name": "fk_questionnaire_rule_evaluation_submission_owner_case",
+          "tableFrom": "questionnaire_rule_evaluations",
+          "tableTo": "questionnaire_submissions",
+          "columnsFrom": [
+            "questionnaireSubmissionId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_questionnaire_rule_evaluation_source_outbox": {
+          "name": "fk_questionnaire_rule_evaluation_source_outbox",
+          "tableFrom": "questionnaire_rule_evaluations",
+          "tableTo": "outbox_events",
+          "columnsFrom": [
+            "sourceOutboxEventId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "questionnaire_rule_evaluations_id": {
+          "name": "questionnaire_rule_evaluations_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_questionnaire_rule_evaluation_state_version_positive": {
+          "name": "chk_questionnaire_rule_evaluation_state_version_positive",
+          "value": "`questionnaire_rule_evaluations`.`submittedCaseStateVersion` > 0"
+        },
+        "chk_questionnaire_rule_evaluation_hashes": {
+          "name": "chk_questionnaire_rule_evaluation_hashes",
+          "value": "(\n      `questionnaire_rule_evaluations`.`rulesetHash` REGEXP '^[a-f0-9]{64}$'\n      AND `questionnaire_rule_evaluations`.`inputSnapshotHash` REGEXP '^[a-f0-9]{64}$'\n      AND (`questionnaire_rule_evaluations`.`outcomeHash` IS NULL OR `questionnaire_rule_evaluations`.`outcomeHash` REGEXP '^[a-f0-9]{64}$')\n    )"
+        },
+        "chk_questionnaire_rule_evaluation_lifecycle": {
+          "name": "chk_questionnaire_rule_evaluation_lifecycle",
+          "value": "(\n      (`questionnaire_rule_evaluations`.`status` = 'pending' AND `questionnaire_rule_evaluations`.`outcomeJson` IS NULL AND `questionnaire_rule_evaluations`.`outcomeHash` IS NULL AND `questionnaire_rule_evaluations`.`manualReviewRequired` = false AND `questionnaire_rule_evaluations`.`failureCode` IS NULL AND `questionnaire_rule_evaluations`.`completedAt` IS NULL)\n      OR (`questionnaire_rule_evaluations`.`status` = 'succeeded' AND `questionnaire_rule_evaluations`.`outcomeJson` IS NOT NULL AND `questionnaire_rule_evaluations`.`outcomeHash` IS NOT NULL AND `questionnaire_rule_evaluations`.`manualReviewRequired` = false AND `questionnaire_rule_evaluations`.`failureCode` IS NULL AND `questionnaire_rule_evaluations`.`completedAt` IS NOT NULL)\n      OR (`questionnaire_rule_evaluations`.`status` = 'manual_review_required' AND `questionnaire_rule_evaluations`.`outcomeJson` IS NOT NULL AND `questionnaire_rule_evaluations`.`outcomeHash` IS NOT NULL AND `questionnaire_rule_evaluations`.`manualReviewRequired` = true AND `questionnaire_rule_evaluations`.`failureCode` IS NULL AND `questionnaire_rule_evaluations`.`completedAt` IS NOT NULL)\n      OR (`questionnaire_rule_evaluations`.`status` = 'failed' AND `questionnaire_rule_evaluations`.`outcomeJson` IS NULL AND `questionnaire_rule_evaluations`.`outcomeHash` IS NULL AND `questionnaire_rule_evaluations`.`manualReviewRequired` = false AND `questionnaire_rule_evaluations`.`failureCode` IS NOT NULL AND `questionnaire_rule_evaluations`.`completedAt` IS NOT NULL)\n    )"
+        }
+      }
+    },
+    "questionnaire_submissions": {
+      "name": "questionnaire_submissions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireDraftId": {
+          "name": "questionnaireDraftId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "submissionVersion": {
+          "name": "submissionVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireReleaseId": {
+          "name": "questionnaireReleaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireVersion": {
+          "name": "questionnaireVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireContentHash": {
+          "name": "questionnaireContentHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "legalCoreReleaseId": {
+          "name": "legalCoreReleaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "legalCoreVersion": {
+          "name": "legalCoreVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rulesetId": {
+          "name": "rulesetId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rulesetBundleHash": {
+          "name": "rulesetBundleHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "visibleQuestionIds": {
+          "name": "visibleQuestionIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "visibleSetHash": {
+          "name": "visibleSetHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "manualFollowUpRequired": {
+          "name": "manualFollowUpRequired",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "manualFollowUpTriggerIds": {
+          "name": "manualFollowUpTriggerIds",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inputSnapshotJson": {
+          "name": "inputSnapshotJson",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inputSnapshotHash": {
+          "name": "inputSnapshotHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "submittedAt": {
+          "name": "submittedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "questionnaire_submissions_case_version_uq": {
+          "name": "questionnaire_submissions_case_version_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "submissionVersion"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_submissions_case_input_hash_uq": {
+          "name": "questionnaire_submissions_case_input_hash_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "inputSnapshotHash"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_submissions_id_owner_case_uq": {
+          "name": "questionnaire_submissions_id_owner_case_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "questionnaire_submissions_owner_case_submitted_idx": {
+          "name": "questionnaire_submissions_owner_case_submitted_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "submittedAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_questionnaire_submission_draft_owner_case": {
+          "name": "fk_questionnaire_submission_draft_owner_case",
+          "tableFrom": "questionnaire_submissions",
+          "tableTo": "questionnaire_drafts",
+          "columnsFrom": [
+            "questionnaireDraftId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "questionnaire_submissions_id": {
+          "name": "questionnaire_submissions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_questionnaire_submission_version_positive": {
+          "name": "chk_questionnaire_submission_version_positive",
+          "value": "`questionnaire_submissions`.`submissionVersion` > 0"
+        },
+        "chk_questionnaire_submission_legal_core_identity": {
+          "name": "chk_questionnaire_submission_legal_core_identity",
+          "value": "(\n      `questionnaire_submissions`.`legalCoreReleaseId` REGEXP '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'\n      AND `questionnaire_submissions`.`legalCoreVersion` REGEXP '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'\n      AND `questionnaire_submissions`.`rulesetId` REGEXP '^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$'\n      AND `questionnaire_submissions`.`rulesetBundleHash` REGEXP '^[a-f0-9]{64}$'\n    )"
+        }
+      }
+    },
+    "r1_document_manifests": {
+      "name": "r1_document_manifests",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "accessGrantId": {
+          "name": "accessGrantId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "categoryId": {
+          "name": "categoryId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fileName": {
+          "name": "fileName",
+          "type": "varchar(180)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "format": {
+          "name": "format",
+          "type": "enum('pdf','docx')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "mimeType": {
+          "name": "mimeType",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "byteSize": {
+          "name": "byteSize",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contentHashSha256": {
+          "name": "contentHashSha256",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "storageKey": {
+          "name": "storageKey",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('uploaded','extracting','analyzed','manual_review_required','failed','deleted')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'uploaded'"
+        },
+        "trustedContent": {
+          "name": "trustedContent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "promptInjectionRisk": {
+          "name": "promptInjectionRisk",
+          "type": "enum('untrusted_document_content')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'untrusted_document_content'"
+        },
+        "failureCode": {
+          "name": "failureCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "r1_document_manifests_id_owner_case_uq": {
+          "name": "r1_document_manifests_id_owner_case_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "r1_document_manifests_case_hash_uq": {
+          "name": "r1_document_manifests_case_hash_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "contentHashSha256"
+          ],
+          "isUnique": true
+        },
+        "r1_document_manifests_owner_case_status_idx": {
+          "name": "r1_document_manifests_owner_case_status_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_r1_document_manifest_case_owner": {
+          "name": "fk_r1_document_manifest_case_owner",
+          "tableFrom": "r1_document_manifests",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_r1_document_manifest_grant_owner_case": {
+          "name": "fk_r1_document_manifest_grant_owner_case",
+          "tableFrom": "r1_document_manifests",
+          "tableTo": "access_grants",
+          "columnsFrom": [
+            "accessGrantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "r1_document_manifests_id": {
+          "name": "r1_document_manifests_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_r1_document_manifest_hash": {
+          "name": "chk_r1_document_manifest_hash",
+          "value": "`r1_document_manifests`.`contentHashSha256` REGEXP '^[a-f0-9]{64}$'"
+        },
+        "chk_r1_document_manifest_size": {
+          "name": "chk_r1_document_manifest_size",
+          "value": "`r1_document_manifests`.`byteSize` > 0 AND `r1_document_manifests`.`byteSize` <= 26214400"
+        }
+      }
+    },
+    "r1_document_text_artifacts": {
+      "name": "r1_document_text_artifacts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentManifestId": {
+          "name": "documentManifestId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "extractorVersion": {
+          "name": "extractorVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('queued','processing','analyzed','manual_review_required','failed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'queued'"
+        },
+        "storageKey": {
+          "name": "storageKey",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "textHashSha256": {
+          "name": "textHashSha256",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "byteSize": {
+          "name": "byteSize",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "attemptCount": {
+          "name": "attemptCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "leaseOwner": {
+          "name": "leaseOwner",
+          "type": "varchar(128)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "leaseExpiresAt": {
+          "name": "leaseExpiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "failureCode": {
+          "name": "failureCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "r1_document_text_artifacts_document_version_uq": {
+          "name": "r1_document_text_artifacts_document_version_uq",
+          "columns": [
+            "documentManifestId",
+            "extractorVersion"
+          ],
+          "isUnique": true
+        },
+        "r1_document_text_artifacts_queue_idx": {
+          "name": "r1_document_text_artifacts_queue_idx",
+          "columns": [
+            "status",
+            "leaseExpiresAt",
+            "createdAt"
+          ],
+          "isUnique": false
+        },
+        "r1_document_text_artifacts_owner_case_idx": {
+          "name": "r1_document_text_artifacts_owner_case_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_r1_document_text_artifact_manifest_owner_case": {
+          "name": "fk_r1_document_text_artifact_manifest_owner_case",
+          "tableFrom": "r1_document_text_artifacts",
+          "tableTo": "r1_document_manifests",
+          "columnsFrom": [
+            "documentManifestId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "r1_document_text_artifacts_id": {
+          "name": "r1_document_text_artifacts_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_r1_document_text_artifact_hash": {
+          "name": "chk_r1_document_text_artifact_hash",
+          "value": "(`r1_document_text_artifacts`.`textHashSha256` IS NULL OR `r1_document_text_artifacts`.`textHashSha256` REGEXP '^[a-f0-9]{64}$')"
+        },
+        "chk_r1_document_text_artifact_attempts": {
+          "name": "chk_r1_document_text_artifact_attempts",
+          "value": "`r1_document_text_artifacts`.`attemptCount` >= 0 AND `r1_document_text_artifacts`.`attemptCount` <= 3"
+        },
+        "chk_r1_document_text_artifact_size": {
+          "name": "chk_r1_document_text_artifact_size",
+          "value": "(`r1_document_text_artifacts`.`byteSize` IS NULL OR (`r1_document_text_artifacts`.`byteSize` > 0 AND `r1_document_text_artifacts`.`byteSize` <= 2097152))"
+        }
+      }
+    },
+    "report_pdf_artifacts": {
+      "name": "report_pdf_artifacts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reportSnapshotId": {
+          "name": "reportSnapshotId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rendererVersion": {
+          "name": "rendererVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','ready','failed')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "storageKey": {
+          "name": "storageKey",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "contentHash": {
+          "name": "contentHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "byteSize": {
+          "name": "byteSize",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "failureCode": {
+          "name": "failureCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "report_pdf_artifacts_snapshot_renderer_uq": {
+          "name": "report_pdf_artifacts_snapshot_renderer_uq",
+          "columns": [
+            "reportSnapshotId",
+            "rendererVersion"
+          ],
+          "isUnique": true
+        },
+        "report_pdf_artifacts_id_owner_case_uq": {
+          "name": "report_pdf_artifacts_id_owner_case_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "report_pdf_artifacts_owner_case_status_idx": {
+          "name": "report_pdf_artifacts_owner_case_status_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_report_pdf_artifact_snapshot_owner_case": {
+          "name": "fk_report_pdf_artifact_snapshot_owner_case",
+          "tableFrom": "report_pdf_artifacts",
+          "tableTo": "report_snapshots",
+          "columnsFrom": [
+            "reportSnapshotId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "report_pdf_artifacts_id": {
+          "name": "report_pdf_artifacts_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_report_pdf_artifact_hash": {
+          "name": "chk_report_pdf_artifact_hash",
+          "value": "(`report_pdf_artifacts`.`contentHash` IS NULL OR `report_pdf_artifacts`.`contentHash` REGEXP '^[a-f0-9]{64}$')"
+        }
+      }
+    },
+    "report_snapshots": {
+      "name": "report_snapshots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customerAccountId": {
+          "name": "customerAccountId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "diagnosticCaseId": {
+          "name": "diagnosticCaseId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireSubmissionId": {
+          "name": "questionnaireSubmissionId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "questionnaireRuleEvaluationId": {
+          "name": "questionnaireRuleEvaluationId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sourceOutboxEventId": {
+          "name": "sourceOutboxEventId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reportVersion": {
+          "name": "reportVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generationReason": {
+          "name": "generationReason",
+          "type": "enum('initial_evaluation')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'initial_evaluation'"
+        },
+        "templateVersion": {
+          "name": "templateVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inputSnapshotHash": {
+          "name": "inputSnapshotHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "outcomeHash": {
+          "name": "outcomeHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rulesetBundleHash": {
+          "name": "rulesetBundleHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','processing','ready','failed','superseded')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "generationMode": {
+          "name": "generationMode",
+          "type": "enum('template')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'template'"
+        },
+        "readySlot": {
+          "name": "readySlot",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "leaseOwner": {
+          "name": "leaseOwner",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "leaseVersion": {
+          "name": "leaseVersion",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "leaseExpiresAt": {
+          "name": "leaseExpiresAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "attemptCount": {
+          "name": "attemptCount",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "payloadJson": {
+          "name": "payloadJson",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "payloadHash": {
+          "name": "payloadHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "contentHash": {
+          "name": "contentHash",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "failureCode": {
+          "name": "failureCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "lastAttemptAt": {
+          "name": "lastAttemptAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "completedAt": {
+          "name": "completedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "report_snapshots_case_version_uq": {
+          "name": "report_snapshots_case_version_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "reportVersion"
+          ],
+          "isUnique": true
+        },
+        "report_snapshots_case_input_reason_uq": {
+          "name": "report_snapshots_case_input_reason_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "inputSnapshotHash",
+            "generationReason"
+          ],
+          "isUnique": true
+        },
+        "report_snapshots_id_owner_case_uq": {
+          "name": "report_snapshots_id_owner_case_uq",
+          "columns": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "isUnique": true
+        },
+        "report_snapshots_evaluation_uq": {
+          "name": "report_snapshots_evaluation_uq",
+          "columns": [
+            "questionnaireRuleEvaluationId"
+          ],
+          "isUnique": true
+        },
+        "report_snapshots_source_outbox_uq": {
+          "name": "report_snapshots_source_outbox_uq",
+          "columns": [
+            "sourceOutboxEventId"
+          ],
+          "isUnique": true
+        },
+        "report_snapshots_case_ready_uq": {
+          "name": "report_snapshots_case_ready_uq",
+          "columns": [
+            "diagnosticCaseId",
+            "readySlot"
+          ],
+          "isUnique": true
+        },
+        "report_snapshots_owner_case_status_version_idx": {
+          "name": "report_snapshots_owner_case_status_version_idx",
+          "columns": [
+            "customerAccountId",
+            "diagnosticCaseId",
+            "status",
+            "reportVersion"
+          ],
+          "isUnique": false
+        },
+        "report_snapshots_status_lease_created_idx": {
+          "name": "report_snapshots_status_lease_created_idx",
+          "columns": [
+            "status",
+            "leaseExpiresAt",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "fk_report_snapshot_owner": {
+          "name": "fk_report_snapshot_owner",
+          "tableFrom": "report_snapshots",
+          "tableTo": "customer_accounts",
+          "columnsFrom": [
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_report_snapshot_case_owner": {
+          "name": "fk_report_snapshot_case_owner",
+          "tableFrom": "report_snapshots",
+          "tableTo": "diagnostic_cases",
+          "columnsFrom": [
+            "diagnosticCaseId",
+            "customerAccountId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_report_snapshot_submission_owner_case": {
+          "name": "fk_report_snapshot_submission_owner_case",
+          "tableFrom": "report_snapshots",
+          "tableTo": "questionnaire_submissions",
+          "columnsFrom": [
+            "questionnaireSubmissionId",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_report_snapshot_evaluation_owner_case_submission": {
+          "name": "fk_report_snapshot_evaluation_owner_case_submission",
+          "tableFrom": "report_snapshots",
+          "tableTo": "questionnaire_rule_evaluations",
+          "columnsFrom": [
+            "questionnaireRuleEvaluationId",
+            "customerAccountId",
+            "diagnosticCaseId",
+            "questionnaireSubmissionId"
+          ],
+          "columnsTo": [
+            "id",
+            "customerAccountId",
+            "diagnosticCaseId",
+            "questionnaireSubmissionId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_report_snapshot_source_outbox": {
+          "name": "fk_report_snapshot_source_outbox",
+          "tableFrom": "report_snapshots",
+          "tableTo": "outbox_events",
+          "columnsFrom": [
+            "sourceOutboxEventId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        },
+        "fk_report_snapshot_evaluation_source_outbox": {
+          "name": "fk_report_snapshot_evaluation_source_outbox",
+          "tableFrom": "report_snapshots",
+          "tableTo": "questionnaire_rule_evaluations",
+          "columnsFrom": [
+            "sourceOutboxEventId"
+          ],
+          "columnsTo": [
+            "sourceOutboxEventId"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "restrict"
+        }
+      },
+      "compositePrimaryKeys": {
+        "report_snapshots_id": {
+          "name": "report_snapshots_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {
+        "chk_report_snapshot_version": {
+          "name": "chk_report_snapshot_version",
+          "value": "`report_snapshots`.`reportVersion` > 0"
+        },
+        "chk_report_snapshot_template_version": {
+          "name": "chk_report_snapshot_template_version",
+          "value": "`report_snapshots`.`templateVersion` REGEXP '^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$'"
+        },
+        "chk_report_snapshot_hashes": {
+          "name": "chk_report_snapshot_hashes",
+          "value": "(\n      `report_snapshots`.`inputSnapshotHash` REGEXP '^[a-f0-9]{64}$'\n      AND `report_snapshots`.`outcomeHash` REGEXP '^[a-f0-9]{64}$'\n      AND `report_snapshots`.`rulesetBundleHash` REGEXP '^[a-f0-9]{64}$'\n      AND (`report_snapshots`.`payloadHash` IS NULL OR `report_snapshots`.`payloadHash` REGEXP '^[a-f0-9]{64}$')\n      AND (`report_snapshots`.`contentHash` IS NULL OR `report_snapshots`.`contentHash` REGEXP '^[a-f0-9]{64}$')\n    )"
+        },
+        "chk_report_snapshot_counters": {
+          "name": "chk_report_snapshot_counters",
+          "value": "`report_snapshots`.`attemptCount` >= 0 AND `report_snapshots`.`leaseVersion` >= 0"
+        },
+        "chk_report_snapshot_failure_code_safe": {
+          "name": "chk_report_snapshot_failure_code_safe",
+          "value": "`report_snapshots`.`failureCode` IS NULL OR `report_snapshots`.`failureCode` REGEXP '^[a-z][a-z0-9_]{0,63}$'"
+        },
+        "chk_report_snapshot_lifecycle": {
+          "name": "chk_report_snapshot_lifecycle",
+          "value": "(\n      (`report_snapshots`.`status` = 'pending'\n        AND `report_snapshots`.`readySlot` IS NULL\n        AND `report_snapshots`.`leaseOwner` IS NULL\n        AND `report_snapshots`.`leaseExpiresAt` IS NULL\n        AND `report_snapshots`.`leaseVersion` = 0\n        AND `report_snapshots`.`attemptCount` = 0\n        AND `report_snapshots`.`lastAttemptAt` IS NULL\n        AND `report_snapshots`.`payloadJson` IS NULL\n        AND `report_snapshots`.`payloadHash` IS NULL\n        AND `report_snapshots`.`contentHash` IS NULL\n        AND `report_snapshots`.`failureCode` IS NULL\n        AND `report_snapshots`.`completedAt` IS NULL)\n      OR (`report_snapshots`.`status` = 'processing'\n        AND `report_snapshots`.`readySlot` IS NULL\n        AND `report_snapshots`.`leaseOwner` IS NOT NULL\n        AND `report_snapshots`.`leaseExpiresAt` IS NOT NULL\n        AND `report_snapshots`.`leaseVersion` > 0\n        AND `report_snapshots`.`attemptCount` > 0\n        AND `report_snapshots`.`lastAttemptAt` IS NOT NULL\n        AND `report_snapshots`.`leaseExpiresAt` > `report_snapshots`.`lastAttemptAt`\n        AND `report_snapshots`.`payloadJson` IS NULL\n        AND `report_snapshots`.`payloadHash` IS NULL\n        AND `report_snapshots`.`contentHash` IS NULL\n        AND `report_snapshots`.`failureCode` IS NULL\n        AND `report_snapshots`.`completedAt` IS NULL)\n      OR (`report_snapshots`.`status` = 'ready'\n        AND `report_snapshots`.`readySlot` = 1\n        AND `report_snapshots`.`leaseOwner` IS NULL\n        AND `report_snapshots`.`leaseExpiresAt` IS NULL\n        AND `report_snapshots`.`leaseVersion` > 0\n        AND `report_snapshots`.`attemptCount` > 0\n        AND `report_snapshots`.`lastAttemptAt` IS NOT NULL\n        AND `report_snapshots`.`payloadJson` IS NOT NULL\n        AND `report_snapshots`.`payloadHash` IS NOT NULL\n        AND `report_snapshots`.`contentHash` IS NOT NULL\n        AND `report_snapshots`.`failureCode` IS NULL\n        AND `report_snapshots`.`completedAt` IS NOT NULL\n        AND `report_snapshots`.`completedAt` >= `report_snapshots`.`lastAttemptAt`)\n      OR (`report_snapshots`.`status` = 'failed'\n        AND `report_snapshots`.`readySlot` IS NULL\n        AND `report_snapshots`.`leaseOwner` IS NULL\n        AND `report_snapshots`.`leaseExpiresAt` IS NULL\n        AND `report_snapshots`.`leaseVersion` > 0\n        AND `report_snapshots`.`attemptCount` > 0\n        AND `report_snapshots`.`lastAttemptAt` IS NOT NULL\n        AND `report_snapshots`.`payloadJson` IS NULL\n        AND `report_snapshots`.`payloadHash` IS NULL\n        AND `report_snapshots`.`contentHash` IS NULL\n        AND `report_snapshots`.`failureCode` IS NOT NULL\n        AND `report_snapshots`.`completedAt` IS NOT NULL\n        AND `report_snapshots`.`completedAt` >= `report_snapshots`.`lastAttemptAt`)\n      OR (`report_snapshots`.`status` = 'superseded'\n        AND `report_snapshots`.`readySlot` IS NULL\n        AND `report_snapshots`.`leaseOwner` IS NULL\n        AND `report_snapshots`.`leaseExpiresAt` IS NULL\n        AND `report_snapshots`.`leaseVersion` > 0\n        AND `report_snapshots`.`attemptCount` > 0\n        AND `report_snapshots`.`lastAttemptAt` IS NOT NULL\n        AND `report_snapshots`.`payloadJson` IS NOT NULL\n        AND `report_snapshots`.`payloadHash` IS NOT NULL\n        AND `report_snapshots`.`contentHash` IS NOT NULL\n        AND `report_snapshots`.`failureCode` IS NULL\n        AND `report_snapshots`.`completedAt` IS NOT NULL\n        AND `report_snapshots`.`completedAt` >= `report_snapshots`.`lastAttemptAt`)\n    )"
+        }
+      }
+    },
+    "scoring_results": {
+      "name": "scoring_results",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "sessionId": {
+          "name": "sessionId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "riskCategory": {
+          "name": "riskCategory",
+          "type": "enum('low','moderate','high','critical')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "totalScore": {
+          "name": "totalScore",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "hasCriticalEvent": {
+          "name": "hasCriticalEvent",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "criticalEvents": {
+          "name": "criticalEvents",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "significantRisks": {
+          "name": "significantRisks",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "riskBlocks": {
+          "name": "riskBlocks",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "mainConclusion": {
+          "name": "mainConclusion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "scoring_results_id": {
+          "name": "scoring_results_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "scoring_results_sessionId_unique": {
+          "name": "scoring_results_sessionId_unique",
+          "columns": [
+            "sessionId"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "tariff_snapshots": {
+      "name": "tariff_snapshots",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tariffCode": {
+          "name": "tariffCode",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "serviceTier": {
+          "name": "serviceTier",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provenanceStatus": {
+          "name": "provenanceStatus",
+          "type": "enum('draft_test_only')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "catalogVersion": {
+          "name": "catalogVersion",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "enum('RUB')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "tariff_snapshots_id": {
+          "name": "tariff_snapshots_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "openId": {
+          "name": "openId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "loginMethod": {
+          "name": "loginMethod",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enum('user','admin')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        },
+        "lastSignedIn": {
+          "name": "lastSignedIn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "users_id": {
+          "name": "users_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "users_openId_unique": {
+          "name": "users_openId_unique",
+          "columns": [
+            "openId"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
+  }
+}

@@ -70,7 +70,7 @@ function caseRow(overrides: Record<string, unknown> = {}) {
     id: input.caseId,
     publicId: "case_public_identifier_01",
     customerAccountId: input.customerAccountId,
-    serviceTier: "base_diagnostic",
+    serviceTier: "lexy-advanced-diagnostic",
     status: input.fromStatus,
     stateVersion: input.expectedStateVersion,
     createdAt: new Date(),

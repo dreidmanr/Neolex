@@ -1,0 +1,11 @@
+import { readFile, writeFile } from "node:fs/promises";
+const path = "client/src/pages/CaseQuestionnaire.tsx";
+let s = await readFile(path, "utf8");
+s = s.replaceAll("bg-muted/30", "bg-[#f4f7fb]");
+s = s.replace("<header className=\"sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85\">", "<header className=\"sticky top-0 z-20 border-b border-white/10 bg-[#06101f]/95 text-white backdrop-blur supports-[backdrop-filter]:bg-[#06101f]/90\">");
+s = s.replaceAll("hover:text-primary focus-visible:ring-2 focus-visible:ring-ring", "hover:text-[#55a6ff] focus-visible:ring-2 focus-visible:ring-[#4a91e8]");
+s = s.replaceAll("<span className=\"flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground\">", "<span className=\"flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#1677d2] text-white shadow-lg shadow-blue-950/30\">");
+s = s.replaceAll("<span className=\"truncate\">Техническая анкета</span>", "<span><span className=\"block truncate text-lg leading-none\">Neolex</span><span className=\"mt-1 block text-[10px] font-bold uppercase tracking-[.16em] text-slate-400\">Legal Tech · Lexy</span></span>");
+s = s.replace("border-t border-amber-500/20 bg-amber-50 px-4 py-2 text-center text-xs font-semibold leading-relaxed text-amber-950", "border-t border-[#1677d2]/30 bg-[#0b2036] px-4 py-2 text-center text-xs font-semibold leading-relaxed text-[#b9d9f8]");
+await writeFile(path, s);
+console.log("questionnaire shell rebranded");

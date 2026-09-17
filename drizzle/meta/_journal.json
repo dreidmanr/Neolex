@@ -71,6 +71,34 @@
       "when": 1789414689091,
       "tag": "0009_r1_rules_engine_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1789548572112,
+      "tag": "0010_r1_web_report_expand",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1789550000000,
+      "tag": "0011_r1_pdf_artifact_expand",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1789589720126,
+      "tag": "0012_r1_document_manifest",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1789646049508,
+      "tag": "0013_r2_document_text_artifacts",
+      "breakpoints": true
     }
   ]
 }

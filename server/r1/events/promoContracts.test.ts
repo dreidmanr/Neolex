@@ -3,7 +3,7 @@ import { outboxDedupeKey, parseAuditEvent, parseOutboxEvent } from "./contracts"
 
 const facts = {
   paymentId: "payment_01", caseId: "case_01", grantId: "grant_01",
-  tariffCode: "base_diagnostic" as const, chargedAmount: 0 as const,
+  tariffCode: "lexy-advanced-diagnostic" as const, chargedAmount: 0 as const,
   currency: "RUB" as const, campaignId: "r1_test_campaign", test: true as const,
 };
 const audit = {

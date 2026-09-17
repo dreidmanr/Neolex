@@ -10,6 +10,8 @@ import { registerPdfRoutes } from "../pdfRoutes";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerMagicLinkRoutes } from "../r1/auth/magicLinkRoutes";
+import { registerR1PdfRoutes } from "../r1/artifacts/pdfRoutes";
+import { registerR1DocumentRoutes } from "../r1/documents/documentRoutes";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,12 +36,14 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
   registerMagicLinkRoutes(app);
+  registerR1DocumentRoutes(app);
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerPdfRoutes(app as any);
+  registerR1PdfRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",

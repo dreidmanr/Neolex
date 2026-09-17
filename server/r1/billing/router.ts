@@ -6,7 +6,7 @@ import { redeemPromo } from "./promoService";
 import { getOffer } from "./tariffService";
 
 const redeemPromoInputSchema = z.object({
-  tariffCode: z.string().min(1).max(64).refine(value => value === "base_diagnostic", { message: "Offer is unavailable" }),
+  tariffCode: z.string().min(1).max(64).refine(value => value === "lexy-advanced-diagnostic", { message: "Offer is unavailable" }),
   promoValue: z.string().min(1).max(512),
   idempotencyKey: z.string().min(8).max(128),
   consents: consentAssertionsSchema,

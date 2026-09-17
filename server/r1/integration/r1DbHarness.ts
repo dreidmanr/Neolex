@@ -8,6 +8,7 @@ import {
   authRateLimitBuckets,
   auditEvents,
   caseConsents,
+  creditEntitlements,
   customerAccountIdentities,
   customerAccounts,
   customerSessions,
@@ -21,6 +22,10 @@ import {
   questionnaireDrafts,
   questionnaireRuleEvaluations,
   questionnaireSubmissions,
+  r1DocumentManifests,
+  r1DocumentTextArtifacts,
+  reportPdfArtifacts,
+  reportSnapshots,
   tariffSnapshots,
   type User,
 } from "../../../drizzle/schema";
@@ -166,6 +171,11 @@ export async function cleanRunData(): Promise<void> {
     runAccountIds.has(row.customerAccountId) &&
     runCaseIds.has(row.diagnosticCaseId)
   );
+  const allReportSnapshots = await database.select().from(reportSnapshots);
+  const runReportSnapshots = allReportSnapshots.filter(row =>
+    runAccountIds.has(row.customerAccountId) &&
+    runCaseIds.has(row.diagnosticCaseId)
+  );
 
   const aggregateIds = new Set([
     ...runDeliveries.map(row => row.id), ...runTokens.map(row => row.id),
@@ -173,8 +183,19 @@ export async function cleanRunData(): Promise<void> {
     ...runDrafts.map(row => row.id), ...runAnswerRevisions.map(row => row.id),
     ...runSubmissions.map(row => row.id),
     ...runRuleEvaluations.map(row => row.id),
+    ...runReportSnapshots.map(row => row.id),
   ]);
   for (const accountId of Array.from(runAccountIds)) {
+    await database.delete(creditEntitlements)
+      .where(eq(creditEntitlements.customerAccountId, accountId));
+    await database.delete(r1DocumentTextArtifacts)
+      .where(eq(r1DocumentTextArtifacts.customerAccountId, accountId));
+    await database.delete(r1DocumentManifests)
+      .where(eq(r1DocumentManifests.customerAccountId, accountId));
+    await database.delete(reportPdfArtifacts)
+      .where(eq(reportPdfArtifacts.customerAccountId, accountId));
+    await database.delete(reportSnapshots)
+      .where(eq(reportSnapshots.customerAccountId, accountId));
     await database.delete(questionnaireRuleEvaluations)
       .where(eq(questionnaireRuleEvaluations.customerAccountId, accountId));
   }
@@ -236,7 +257,7 @@ export async function seedOwners(): Promise<void> {
       id: CASE_A,
       publicId: PUBLIC_A,
       customerAccountId: ACCOUNT_A,
-      serviceTier: "base_diagnostic",
+      serviceTier: "lexy-advanced-diagnostic",
       status: "draft",
       stateVersion: 1,
       createdAt: new Date(now.getTime() - 1_000),
@@ -246,7 +267,7 @@ export async function seedOwners(): Promise<void> {
       id: CASE_B,
       publicId: PUBLIC_B,
       customerAccountId: ACCOUNT_B,
-      serviceTier: "base_diagnostic",
+      serviceTier: "lexy-advanced-diagnostic",
       status: "draft",
       stateVersion: 1,
       createdAt: now,

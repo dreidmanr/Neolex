@@ -38,7 +38,7 @@ describe("pilotAdmin.diagnostics.list", () => {
     mocks.listCases.mockResolvedValue([{
       publicId: "case_public_identifier_01",
       status: "draft",
-      tier: "base_diagnostic",
+      tier: "lexy-advanced-diagnostic",
       riskCategory: null,
       escalationStatus: null,
       reportStatus: null,
@@ -92,7 +92,7 @@ describe("pilotAdmin.diagnostics.list", () => {
     expect(result.items[0]).toEqual({
       publicId: "case_public_identifier_01",
       status: "draft",
-      tier: "base_diagnostic",
+      tier: "lexy-advanced-diagnostic",
       riskCategory: null,
       escalationStatus: null,
       reportStatus: null,
