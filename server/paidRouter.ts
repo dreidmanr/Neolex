@@ -86,7 +86,26 @@ export const paidRouter = router({
       return { success: true };
     }),
 
-  // ── Payment ─────────────────────────────────────────────────────────────────
+  // ── Promo access (payments are disabled in the pilot) ───────────────────────
+
+  activatePromo: publicProcedure
+    .input(z.object({
+      sessionToken: z.string(),
+      promoCode: z.string().trim().min(1),
+    }))
+    .mutation(async ({ input }) => {
+      const session = await getPaidSessionByToken(input.sessionToken);
+      if (!session) throw new Error("Сессия не найдена");
+      const expectedPromo = process.env.LEXY_PROMO_CODE ?? "123";
+      if (input.promoCode !== expectedPromo) {
+        throw new Error("Неверный промо-код");
+      }
+      await markPaidSessionPaid(session.id, `promo:${expectedPromo}`);
+      await updatePaidSessionStatus(session.id, "in_progress", { startedAt: new Date() });
+      return { success: true, access: "promo" as const };
+    }),
+
+  // ── Legacy payment compatibility ───────────────────────────────────────────
 
   initiatePayment: publicProcedure
     .input(z.object({ sessionToken: z.string() }))
