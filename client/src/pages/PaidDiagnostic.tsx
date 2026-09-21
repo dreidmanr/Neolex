@@ -62,6 +62,7 @@ export default function PaidDiagnostic() {
   const [contactEmail, setContactEmail] = useState("");
   const [productName, setProductName] = useState("");
   const [website, setWebsite] = useState("");
+  const [promoCode, setPromoCode] = useState("");
 
   // Questionnaire
   const [currentBlock, setCurrentBlock] = useState(0);
@@ -109,14 +110,15 @@ export default function PaidDiagnostic() {
 
   const createSession = trpc.paid.createSession.useMutation();
   const saveConsents = trpc.paid.saveConsents.useMutation();
-  const confirmPayment = trpc.paid.confirmPayment.useMutation();
+  const activatePromo = trpc.paid.activatePromo.useMutation();
   const saveAnswer = trpc.paid.saveAnswer.useMutation();
   const uploadDocument = trpc.paid.uploadDocument.useMutation();
   const completeMutation = trpc.paid.complete.useMutation();
 
   // ── Step: Landing → Consent ─────────────────────────────────────────────────
 
-  const handleStartDiagnostic = () => {
+  const handleStartDiagnostic = (code: string) => {
+    setPromoCode(code);
     setStep("consent");
     scrollTop();
   };
@@ -168,7 +170,7 @@ export default function PaidDiagnostic() {
   const handlePaymentConfirm = async () => {
     if (!sessionToken) return;
     try {
-      await confirmPayment.mutateAsync({ sessionToken });
+      await activatePromo.mutateAsync({ sessionToken, promoCode });
       setStep("questionnaire");
       setCurrentBlock(0);
       scrollTop();
@@ -395,10 +397,9 @@ export default function PaidDiagnostic() {
         {/* ── PAYMENT ── */}
         {step === "payment" && (
           <PaymentScreen
-            amount={PAID_PRICE_RUB}
             email={contactEmail}
             onConfirm={handlePaymentConfirm}
-            isLoading={confirmPayment.isPending}
+            isLoading={activatePromo.isPending}
           />
         )}
 
@@ -443,7 +444,7 @@ export default function PaidDiagnostic() {
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-function PaidLanding({ onStart }: { onStart: () => void }) {
+function PaidLanding({ onStart }: { onStart: (promoCode: string) => void }) {
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [promoValid, setPromoValid] = useState(false);
@@ -520,7 +521,7 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
-            onClick={onStart}
+            onClick={() => onStart(promoCode.trim())}
             disabled={!promoValid}
             className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
           >
@@ -566,7 +567,7 @@ function PaidLanding({ onStart }: { onStart: () => void }) {
       {/* CTA */}
       <div className="text-center space-y-4">
         <button
-          onClick={onStart}
+          onClick={() => onStart(promoCode.trim())}
           disabled={!promoValid}
           className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
         >
@@ -706,24 +707,24 @@ function ContactScreen({
   );
 }
 
-function PaymentScreen({ amount, email, onConfirm, isLoading }: {
-  amount: number; email: string; onConfirm: () => void; isLoading: boolean;
+function PaymentScreen({ email, onConfirm, isLoading }: {
+  email: string; onConfirm: () => void; isLoading: boolean;
 }) {
   return (
     <div className="max-w-md mx-auto space-y-8">
       <div className="text-center space-y-3">
-        <h2 className="text-2xl font-bold text-gray-900">Оплата диагностики</h2>
-        <p className="text-gray-500 text-sm">После оплаты вы сразу перейдёте к анкете</p>
+        <h2 className="text-2xl font-bold text-gray-900">Доступ по промокоду</h2>
+        <p className="text-gray-500 text-sm">Реальные платежи отключены. После активации вы перейдёте к анкете.</p>
       </div>
 
       <div className="border border-gray-100 rounded-3xl p-6 space-y-4">
         <div className="flex justify-between items-center">
           <span className="text-gray-600">Углублённая правовая диагностика</span>
-          <span className="font-bold text-gray-900">{amount.toLocaleString("ru-RU")} ₽</span>
+          <span className="font-bold text-green-600">По промокоду</span>
         </div>
         <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Итого</span>
-          <span className="text-2xl font-bold text-gray-900">{amount.toLocaleString("ru-RU")} ₽</span>
+          <span className="font-semibold text-gray-900">Стоимость сейчас</span>
+          <span className="text-2xl font-bold text-green-600">0 ₽</span>
         </div>
         <div className="text-xs text-gray-400">Квитанция будет отправлена на {email}</div>
       </div>
@@ -731,7 +732,7 @@ function PaymentScreen({ amount, email, onConfirm, isLoading }: {
       <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3">
         <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <div className="text-sm text-amber-800">
-          <strong>Демо-режим:</strong> Интеграция с платёжной системой в разработке. Нажмите «Оплатить», чтобы перейти к диагностике.
+          <strong>Тестовый доступ:</strong> реальные платежи не подключены. Активируйте диагностику по проверенному промокоду.
         </div>
       </div>
 
@@ -740,12 +741,12 @@ function PaymentScreen({ amount, email, onConfirm, isLoading }: {
         disabled={isLoading}
         className="w-full py-4 bg-gray-900 text-white rounded-2xl font-semibold text-lg hover:bg-gray-800 disabled:opacity-40 active:scale-[0.98] transition-all duration-150"
       >
-        {isLoading ? "Подтверждаем..." : `Оплатить ${amount.toLocaleString("ru-RU")} ₽`}
+        {isLoading ? "Активируем доступ..." : "Активировать доступ и начать"}
       </button>
 
       <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
         <div className="flex items-center gap-1"><Lock className="w-3 h-3" /> Защищённое соединение</div>
-        <div>Возврат в течение 14 дней</div>
+        <div>Реальные платежи отключены</div>
       </div>
     </div>
   );
