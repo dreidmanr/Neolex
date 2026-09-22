@@ -12,6 +12,7 @@ import PaidResults from "./pages/PaidResults";
 import LexyWidget from "./components/LexyWidget";
 import LegalDocs from "./pages/LegalDocs";
 import Admin from "./pages/Admin";
+import SiteSection from "./pages/SiteSection";
 
 function Router() {
   return (
@@ -21,6 +22,12 @@ function Router() {
       <Route path="/results/:token" component={Results} />
       <Route path="/paid" component={PaidDiagnostic} />
       <Route path="/paid/results/:token" component={PaidResults} />
+      <Route path="/about" component={SiteSection} />
+      <Route path="/services" component={SiteSection} />
+      <Route path="/lexy" component={SiteSection} />
+      <Route path="/cases" component={SiteSection} />
+      <Route path="/content" component={SiteSection} />
+      <Route path="/contacts" component={SiteSection} />
       <Route path="/legal/:doc" component={LegalDocs} />
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
