@@ -25,6 +25,8 @@ import {
   X,
 } from "lucide-react";
 import { ReportSharePanel } from "@/components/ReportSharePanel";
+import NeolexHeader from "@/components/NeolexHeader";
+import NeolexFooter from "@/components/NeolexFooter";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -332,33 +334,9 @@ export default function PaidDiagnostic() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div ref={topRef} className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-          <button onClick={() => navigate("/")} className="flex items-center gap-2 text-gray-900 hover:opacity-70 transition-opacity">
-            <div className="w-7 h-7 rounded-lg bg-gray-900 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">N</span>
-            </div>
-            <span className="font-semibold text-sm">Lexy</span>
-          </button>
-          {step === "questionnaire" && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500">Блок {currentBlock + 1} из {totalBlocks}</span>
-              <div className="w-32 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gray-900 rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 text-xs text-gray-400">
-            <Lock className="w-3 h-3" />
-            <span>Защищено</span>
-          </div>
-        </div>
-      </header>
+    <div ref={topRef} className="min-h-screen bg-[#f6f9fd] text-slate-950">
+      <NeolexHeader dark />
+      {step === "questionnaire" && <div className="border-b border-white/10 bg-[#071426] text-white"><div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3"><span className="text-sm text-white/60">Углублённая диагностика · блок {currentBlock + 1} из {totalBlocks}</span><div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-[#318cff] transition-all duration-500" style={{ width: `${progress}%` }} /></div></div></div>}
 
       <div className="max-w-3xl mx-auto px-4 py-12">
         {/* ── LANDING ── */}
@@ -439,6 +417,7 @@ export default function PaidDiagnostic() {
           />
         )}
       </div>
+      <NeolexFooter />
     </div>
   );
 }
