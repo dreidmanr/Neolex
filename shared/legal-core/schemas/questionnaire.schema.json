@@ -1,0 +1,827 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neolex.local/schemas/questionnaire.schema.json",
+  "artifactType": "questionnaire_schema_v1",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "reviewStatus": {
+    "reviewedByLawyer": false,
+    "statement": "Конфигурация не проверена и не утверждена юристом."
+  },
+  "title": "Схема конфигурации questionnaire_v2 Lexy",
+  "description": "Структурная схема черновой конфигурации юридической анкеты. Семантические межссылки и количественные инварианты дополнительно проверяются отдельной валидацией Release 0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "artifactType",
+    "releaseId",
+    "version",
+    "effectiveFrom",
+    "effectiveTo",
+    "updatedBy",
+    "updatedAt",
+    "sourceCommit",
+    "status",
+    "reviewStatus",
+    "source",
+    "releaseFlags",
+    "interpretation",
+    "release1Selection",
+    "branches",
+    "disabledBranchTriggerPolicy",
+    "blocks"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "artifactType": {
+      "const": "questionnaire_v2"
+    },
+    "releaseId": {
+      "const": "lexy-r0-2026-09-12"
+    },
+    "version": {
+      "const": "1.0.0-draft.1"
+    },
+    "effectiveFrom": {
+      "type": "null"
+    },
+    "effectiveTo": {
+      "type": "null"
+    },
+    "updatedBy": {
+      "const": "Manus AI"
+    },
+    "updatedAt": {
+      "const": "2026-09-12T18:40:24Z"
+    },
+    "sourceCommit": {
+      "const": "78e2f89e99340a403ce389eada223da6bf336676"
+    },
+    "status": {
+      "const": "draft_pending_legal_approval"
+    },
+    "reviewStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reviewedByLawyer",
+        "statement"
+      ],
+      "properties": {
+        "reviewedByLawyer": {
+          "const": false
+        },
+        "statement": {
+          "type": "string"
+        }
+      }
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "releaseFlags": {
+      "$ref": "#/$defs/releaseFlags"
+    },
+    "interpretation": {
+      "$ref": "#/$defs/interpretation"
+    },
+    "release1Selection": {
+      "$ref": "#/$defs/release1Selection"
+    },
+    "branches": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/branch"
+      }
+    },
+    "disabledBranchTriggerPolicy": {
+      "$ref": "#/$defs/disabledBranchTriggerPolicy"
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "version",
+        "effectiveFrom",
+        "effectiveTo",
+        "updatedBy",
+        "updatedAt",
+        "sourceCommit",
+        "status"
+      ],
+      "properties": {
+        "releaseId": {
+          "const": "lexy-r0-2026-09-12"
+        },
+        "version": {
+          "const": "1.0.0-draft.1"
+        },
+        "effectiveFrom": {
+          "type": "null"
+        },
+        "effectiveTo": {
+          "type": "null"
+        },
+        "updatedBy": {
+          "const": "Manus AI"
+        },
+        "updatedAt": {
+          "const": "2026-09-12T18:40:24Z"
+        },
+        "sourceCommit": {
+          "const": "78e2f89e99340a403ce389eada223da6bf336676"
+        },
+        "status": {
+          "const": "draft_pending_legal_approval"
+        },
+        "reviewStatus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reviewedByLawyer",
+            "statement"
+          ],
+          "properties": {
+            "reviewedByLawyer": {
+              "const": false
+            },
+            "statement": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit",
+        "file",
+        "anketaVersion",
+        "priceRub",
+        "questionCount",
+        "contentHashSha256"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "file": {
+          "type": "string"
+        },
+        "anketaVersion": {
+          "type": "string"
+        },
+        "priceRub": {
+          "type": "number"
+        },
+        "questionCount": {
+          "const": 63
+        },
+        "contentHashSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "releaseFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release0",
+        "release1Pilot",
+        "clientAccess"
+      ],
+      "properties": {
+        "release0": {
+          "$ref": "#/$defs/release0Flag"
+        },
+        "release1Pilot": {
+          "$ref": "#/$defs/release1Flag"
+        },
+        "clientAccess": {
+          "$ref": "#/$defs/clientAccess"
+        }
+      }
+    },
+    "release0Flag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "architectureOnly",
+        "runtimeIntegration"
+      ],
+      "properties": {
+        "state": {
+          "const": "согласовано_к_началу"
+        },
+        "architectureOnly": {
+          "const": true
+        },
+        "runtimeIntegration": {
+          "const": false
+        }
+      }
+    },
+    "release1Flag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "enabledNow",
+        "activeCoreQuestions",
+        "activeBranchQuestions"
+      ],
+      "properties": {
+        "state": {
+          "const": "запланирован_не_включен"
+        },
+        "enabledNow": {
+          "const": false
+        },
+        "activeCoreQuestions": {
+          "const": 33
+        },
+        "activeBranchQuestions": {
+          "const": 6
+        }
+      }
+    },
+    "clientAccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "currentAccessChange",
+        "statement"
+      ],
+      "properties": {
+        "currentAccessChange": {
+          "const": "не_изменяется"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "interpretation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normativeRequirements",
+        "projectDecisions",
+        "openQuestions"
+      ],
+      "properties": {
+        "normativeRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        },
+        "projectDecisions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/statement"
+          }
+        }
+      }
+    },
+    "statement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "нормативное_требование",
+            "проектное_решение",
+            "открытый_вопрос"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "release1Selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activeCoreQuestionIds",
+        "activeBranchQuestionIds",
+        "selectionRationale"
+      ],
+      "properties": {
+        "activeCoreQuestionIds": {
+          "type": "array",
+          "minItems": 33,
+          "maxItems": 33,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "activeBranchQuestionIds": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectionRationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "branch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "activeInPilot",
+        "questionIds",
+        "activation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "activeInPilot": {
+          "type": "boolean"
+        },
+        "questionIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "activation": {
+          "type": "object"
+        }
+      }
+    },
+    "disabledBranchTriggerPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "reason",
+        "triggerPolicies"
+      ],
+      "properties": {
+        "action": {
+          "const": "manual_follow_up_required"
+        },
+        "reason": {
+          "const": "ветка не активна в текущей версии анкеты"
+        },
+        "triggerPolicies": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/triggerPolicy"
+          }
+        }
+      }
+    },
+    "triggerPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sourceQuestionId",
+        "sourceAnswerOptionId",
+        "legacyBranchTrigger",
+        "targetBranchId",
+        "targetQuestionIds",
+        "branchActiveInPilot",
+        "onTrigger"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sourceQuestionId": {
+          "type": "string"
+        },
+        "sourceAnswerOptionId": {
+          "type": "string"
+        },
+        "legacyBranchTrigger": {
+          "type": "string"
+        },
+        "targetBranchId": {
+          "type": "string"
+        },
+        "targetQuestionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "branchActiveInPilot": {
+          "type": "boolean"
+        },
+        "onTrigger": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/triggerAction"
+          }
+        }
+      }
+    },
+    "triggerAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "activate_questions",
+            "manual_follow_up_required"
+          ]
+        },
+        "questionIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "why",
+        "what",
+        "questions"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        },
+        "what": {
+          "type": "string"
+        },
+        "hasFileUpload": {
+          "type": "boolean"
+        },
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/question"
+          }
+        }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "blockId",
+        "text",
+        "type",
+        "required",
+        "classification",
+        "activeInPilot",
+        "releaseFlags",
+        "branchConditions",
+        "criticalInputMetadata"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^b[0-9]+_q[0-9]+$"
+        },
+        "blockId": {
+          "type": "integer"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hint": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "single",
+            "multi",
+            "text",
+            "file"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        },
+        "branchCondition": {
+          "$ref": "#/$defs/legacyBranchCondition"
+        },
+        "classification": {
+          "enum": [
+            "core",
+            "branch"
+          ]
+        },
+        "activeInPilot": {
+          "type": "boolean"
+        },
+        "releaseFlags": {
+          "$ref": "#/$defs/questionReleaseFlags"
+        },
+        "branchConditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/branchCondition"
+          }
+        },
+        "criticalInputMetadata": {
+          "$ref": "#/$defs/criticalInputMetadata"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "options"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "single",
+                  "multi"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "options"
+            ]
+          }
+        }
+      ]
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "riskFlag": {
+          "type": "boolean"
+        },
+        "criticalTrigger": {
+          "type": "boolean"
+        },
+        "branchTrigger": {
+          "type": "string"
+        }
+      }
+    },
+    "legacyBranchCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "questionId",
+        "answerIds"
+      ],
+      "properties": {
+        "questionId": {
+          "type": "string"
+        },
+        "answerIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "questionReleaseFlags": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release0",
+        "release1Pilot"
+      ],
+      "properties": {
+        "release0": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "configuredOnly"
+          ],
+          "properties": {
+            "configuredOnly": {
+              "const": true
+            }
+          }
+        },
+        "release1Pilot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabledNow"
+          ],
+          "properties": {
+            "enabledNow": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "branchCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "operator",
+        "inputs",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "ответ_на_вариант"
+        },
+        "operator": {
+          "enum": [
+            "any",
+            "all"
+          ]
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/branchInput"
+          }
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "branchInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "questionId",
+        "answerOptionIds"
+      ],
+      "properties": {
+        "questionId": {
+          "type": "string"
+        },
+        "answerOptionIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "criticalInputMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "isCriticalInput",
+        "criticalOptionIds",
+        "handling"
+      ],
+      "properties": {
+        "isCriticalInput": {
+          "type": "boolean"
+        },
+        "criticalOptionIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "handling": {
+          "enum": [
+            "не_применяется",
+            "критический_триггер_требует_детерминированной_эскалации"
+          ]
+        }
+      }
+    }
+  }
+}

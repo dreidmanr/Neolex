@@ -1,0 +1,121 @@
+{
+  "id": "LEXR0-FIXTURE-008",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "caseKind": "questionnaire",
+  "releaseTarget": "release_1_pilot",
+  "profile": {
+    "code": "white_label_reseller",
+    "name": "White-label / реселлерская модель",
+    "scenario": "Продажи идут под брендом партнёра и через реселлеров; ответственность распределена, но есть критичная зависимость от платформы.",
+    "source": "ТЗ v3 §29, профиль 8"
+  },
+  "canonicalAnswers": {
+    "b1_q1": "Эталонный цифровой продукт",
+    "b1_q2": "saas",
+    "b1_q3": [
+      "b2b_small"
+    ],
+    "b1_q4": "russia_only",
+    "b1_q5": "growth",
+    "b1_q6": [
+      "goal_partner"
+    ],
+    "b2_q1": "ooo",
+    "b2_q2": "same",
+    "b2_q3": "no",
+    "b2_q5": "no",
+    "b3_q1": [
+      "b2b_contract"
+    ],
+    "b3_q2": [
+      "white_label",
+      "partners"
+    ],
+    "b3_q3": "no",
+    "b4_q2": "all",
+    "b4_q3": "all",
+    "b4_q7": "no",
+    "b5_q1": [
+      "name",
+      "email"
+    ],
+    "b5_q2": "russia",
+    "b5_q3": "yes",
+    "b5_q4": "yes",
+    "b5_q6": "no",
+    "b6_q1": [
+      "privacy",
+      "b2b_contract"
+    ],
+    "b6_q2": "current",
+    "b7_q1": "direct",
+    "b7_q4": "no",
+    "b8_q2": "yes",
+    "b10_q1": [
+      "none"
+    ],
+    "b10_q2": "yes",
+    "b11_q1": [
+      "employees"
+    ],
+    "b11_q2": "yes",
+    "b11_q4": "no",
+    "b12_q1": "no",
+    "b12_q3": "no",
+    "b9_q1": "yes",
+    "b9_q2": "yes",
+    "b9_q3": "yes"
+  },
+  "expectedActiveRiskIds": [
+    "LEXR0-RISK-022"
+  ],
+  "expectedForbiddenRiskIds": [
+    "LEXR0-RISK-016",
+    "LEXR0-RISK-021"
+  ],
+  "expectedRiskProfile": "medium",
+  "expectedEscalation": {
+    "required": false,
+    "manualReviewRequired": false,
+    "manualFollowUpRequired": false,
+    "lawyerReviewRequired": false,
+    "expectedEvidenceStatus": "questionnaire_based",
+    "expectedQueueCodes": [],
+    "reason": "Эскалация не ожидается."
+  },
+  "expectedRecommendationProductCode": "enterprise_readiness",
+  "expectedReportSections": [
+    "questionnaire_facts",
+    "executive_summary",
+    "risk_profile",
+    "risk_details",
+    "evidence_statuses",
+    "legal_bases",
+    "roadmap",
+    "analysis_limitations",
+    "recommendation",
+    "configuration_provenance"
+  ],
+  "allowedLegalBasisIds": [
+    "LB-RU-GK-421",
+    "LB-RU-INFO-149FZ"
+  ],
+  "notes": {
+    "normativeRequirement": [
+      "ТЗ v3 §29 требует профиль white-label / реселлерской модели."
+    ],
+    "projectDecision": [
+      "Партнёрская ветка активна; подтверждённое распределение ответственности запрещает риск 021, зависимость активирует риск 022."
+    ],
+    "openQuestion": [
+      "Нужно юридически подтвердить, когда технологическая зависимость требует ручной проверки вместо пакетного маршрута."
+    ]
+  }
+}

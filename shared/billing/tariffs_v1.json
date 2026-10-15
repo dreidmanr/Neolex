@@ -1,0 +1,168 @@
+{
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "configType": "каталог тарифов",
+  "purpose": "Архитектурная фиксация продуктовых идентификаторов, отображаемых цен и правил снимка цены. Конфигурация не создаёт доступ и не выполняет оплату.",
+  "normativeRequirements": [
+    {
+      "id": "TZ-5.3",
+      "text": "Линейка включает углублённую диагностику за 6 900 RUB, диагностику с документами за 14 900–19 900 RUB и экспертный разбор отчёта за 12 000–20 000 RUB; экспертный разбор оформляется как заявка и следующий шаг, а не самостоятельный самообслуживаемый продукт."
+    },
+    {
+      "id": "TZ-30.1",
+      "text": "Тестовый промодоступ может открыть любой из двух диагностических тарифов. Запись о таком доступе должна сохранять выбранный тариф, прайс и нулевую фактически списанную сумму."
+    },
+    {
+      "id": "AUDIT-PAY-01",
+      "text": "Идентификатор тарифа, валюта, отображаемая цена и правило зачёта должны быть согласованы до создания платёжных записей; произвольное наименование продукта не является идентификатором."
+    }
+  ],
+  "projectDecisions": [
+    {
+      "id": "PD-TARIFF-01",
+      "text": "Каждая будущая платёжная запись хранит неизменяемый снимок тарифа и цены; изменение этой конфигурации не изменяет ранее созданные записи."
+    },
+    {
+      "id": "PD-TARIFF-02",
+      "text": "Кампания тестового промодоступа задаётся только идентификатором кампании и серверной политикой. Исходное значение промокода в эту конфигурацию не включается."
+    },
+    {
+      "id": "PD-TARIFF-03",
+      "text": "Диагностика с документами остаётся тарифом каталога, но её фактическая доступность зависит от отдельной реализации Release 2 и не следует из данной конфигурации."
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "OQ-TARIFF-01",
+      "text": "Для документарного тарифа требуется утвердить конкретную цену внутри диапазона для каждой коммерческой заявки до выставления счёта или создания платёжной записи."
+    },
+    {
+      "id": "OQ-TARIFF-02",
+      "text": "Требуется юридическое и коммерческое утверждение клиентских формулировок состава услуг, условий документарного тарифа и экспертной заявки."
+    }
+  ],
+  "currency": "RUB",
+  "promoCampaigns": [
+    {
+      "campaignId": "diagnostic-test-access-r0",
+      "status": "draft_pending_legal_approval",
+      "policy": "Сервер после защищённой проверки допускает однократное предоставление тестового доступа к одному из двух диагностических тарифов. Значение проверяемого промокода, его хэш, секреты провайдера и иные учётные данные не хранятся в этом файле.",
+      "eligibleTariffIds": [
+        "lexy-advanced-diagnostic",
+        "lexy-diagnostic-with-documents"
+      ],
+      "ineligibleTariffIds": [
+        "lexy-expert-report-review-request"
+      ],
+      "paymentRecordStatus": "promo_granted",
+      "chargedAmountRub": 0,
+      "redemptionScope": "Одна успешная выдача доступа на аккаунт и кампанию; повтор того же запроса возвращает исходный результат без второй платёжной записи или второго права доступа."
+    }
+  ],
+  "tariffs": [
+    {
+      "tariffId": "lexy-advanced-diagnostic",
+      "status": "draft_pending_legal_approval",
+      "name": "Lexy: углублённая диагностика",
+      "kind": "диагностический тариф",
+      "selfService": true,
+      "availabilityTarget": "Release 1, закрытый Pilot",
+      "price": {
+        "pricingModel": "фиксированная цена",
+        "displayPriceRub": 6900,
+        "minimumPriceRub": 6900,
+        "maximumPriceRub": 6900,
+        "currency": "RUB"
+      },
+      "scope": "Адаптивная анкета, риск-скоринг, персональный отчёт, карта рисков, правовые основания, перечень документов и план 30/60/90.",
+      "eligiblePromoCampaignIds": [
+        "diagnostic-test-access-r0"
+      ],
+      "creditPolicyId": "base-diagnostic-credit-6900-rub-v1",
+      "priceSnapshot": {
+        "required": true,
+        "fields": [
+          "tariffId",
+          "tariffVersion",
+          "tariffName",
+          "pricingModel",
+          "displayPriceRub",
+          "chargedAmountRub",
+          "currency"
+        ]
+      }
+    },
+    {
+      "tariffId": "lexy-diagnostic-with-documents",
+      "status": "draft_pending_legal_approval",
+      "name": "Lexy: диагностика с документами",
+      "kind": "диагностический тариф",
+      "selfService": true,
+      "availabilityTarget": "Release 2 после отдельного ввода безопасной обработки документов",
+      "price": {
+        "pricingModel": "диапазон цены",
+        "displayPriceFromRub": 14900,
+        "displayPriceToRub": 19900,
+        "minimumPriceRub": 14900,
+        "maximumPriceRub": 19900,
+        "currency": "RUB",
+        "exactPriceSelectionRequired": true
+      },
+      "scope": "Состав базовой диагностики и анализ до трёх ключевых документов.",
+      "eligiblePromoCampaignIds": [
+        "diagnostic-test-access-r0"
+      ],
+      "creditPolicyId": null,
+      "commercialTermsNote": "Зачёт 6 900 RUB для этого тарифа определяется отдельным коммерческим предложением; стоимость документарного анализа может оставаться отдельной выполненной услугой.",
+      "priceSnapshot": {
+        "required": true,
+        "fields": [
+          "tariffId",
+          "tariffVersion",
+          "tariffName",
+          "pricingModel",
+          "selectedPriceRub",
+          "chargedAmountRub",
+          "currency"
+        ]
+      }
+    },
+    {
+      "tariffId": "lexy-expert-report-review-request",
+      "status": "draft_pending_legal_approval",
+      "name": "Экспертный разбор отчёта",
+      "kind": "заявка на экспертный разбор",
+      "selfService": false,
+      "availabilityTarget": "Следующий шаг после отчёта; операционный процесс требует отдельного согласования",
+      "price": {
+        "pricingModel": "диапазон цены",
+        "displayPriceFromRub": 12000,
+        "displayPriceToRub": 20000,
+        "minimumPriceRub": 12000,
+        "maximumPriceRub": 20000,
+        "currency": "RUB",
+        "exactPriceSelectionRequired": true
+      },
+      "scope": "Видеовстреча с юристом по критичным рискам, стратегии и следующему шагу.",
+      "eligiblePromoCampaignIds": [],
+      "creditPolicyId": null,
+      "requestOnlyReason": "Это не самостоятельный самообслуживаемый продукт и не создаёт доступ к анкете автоматически."
+    }
+  ],
+  "legacyDiscrepancies": [
+    {
+      "id": "LEGACY-PRICE-4900",
+      "status": "зафиксировано без исправления в рамках Release 0",
+      "observedValueRub": 4900,
+      "targetValueRub": 6900,
+      "source": "shared/paidDiagnosticData.ts и current-questionnaire-v1.json на sourceCommit",
+      "text": "Текущее значение 4 900 RUB является legacy discrepancy. Оно не является ценой данного каталога и не должно использоваться для новых снимков цены или расчёта зачёта. Изменение исполняемого кода в рамках этого артефакта не производится."
+    }
+  ]
+}

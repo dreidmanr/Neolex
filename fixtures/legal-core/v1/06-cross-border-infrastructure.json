@@ -1,0 +1,122 @@
+{
+  "id": "LEXR0-FIXTURE-006",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "caseKind": "questionnaire",
+  "releaseTarget": "release_1_pilot",
+  "profile": {
+    "code": "cross_border_infrastructure",
+    "name": "Продукт с трансграничной инфраструктурой",
+    "scenario": "Продукт работает в России и за рубежом, а данные российских пользователей хранятся за пределами России.",
+    "source": "ТЗ v3 §29, профиль 6"
+  },
+  "canonicalAnswers": {
+    "b1_q1": "Эталонный цифровой продукт",
+    "b1_q2": "saas",
+    "b1_q3": [
+      "b2b_small"
+    ],
+    "b1_q4": "russia_international",
+    "b1_q5": "growth",
+    "b1_q6": [
+      "goal_general"
+    ],
+    "b2_q1": "ooo",
+    "b2_q2": "same",
+    "b2_q3": "no",
+    "b2_q5": "no",
+    "b3_q1": [
+      "b2b_contract"
+    ],
+    "b3_q2": [
+      "direct"
+    ],
+    "b3_q3": "no",
+    "b4_q2": "all",
+    "b4_q3": "all",
+    "b4_q7": "no",
+    "b5_q1": [
+      "name",
+      "email"
+    ],
+    "b5_q2": "abroad",
+    "b5_q3": "yes",
+    "b5_q4": "yes",
+    "b5_q6": "no",
+    "b6_q1": [
+      "privacy",
+      "b2b_contract"
+    ],
+    "b6_q2": "current",
+    "b7_q1": "direct",
+    "b7_q4": "no",
+    "b8_q2": "yes",
+    "b10_q1": [
+      "none"
+    ],
+    "b10_q2": "yes",
+    "b11_q1": [
+      "employees"
+    ],
+    "b11_q2": "yes",
+    "b11_q4": "no",
+    "b12_q1": "no",
+    "b12_q3": "no"
+  },
+  "expectedActiveRiskIds": [
+    "LEXR0-RISK-010"
+  ],
+  "expectedForbiddenRiskIds": [
+    "LEXR0-RISK-009",
+    "LEXR0-RISK-012",
+    "LEXR0-RISK-016"
+  ],
+  "expectedRiskProfile": "critical",
+  "expectedEscalation": {
+    "required": true,
+    "manualReviewRequired": true,
+    "manualFollowUpRequired": false,
+    "lawyerReviewRequired": true,
+    "expectedEvidenceStatus": "manual_review_required",
+    "expectedQueueCodes": [
+      "LEGAL-EXPERT-REVIEW",
+      "LEGAL-CROSS-BORDER-REVIEW"
+    ],
+    "reason": "Трансграничная архитектура требует ручной квалификации локализации и передачи данных."
+  },
+  "expectedRecommendationProductCode": "expert_review",
+  "expectedReportSections": [
+    "questionnaire_facts",
+    "preliminary_summary",
+    "active_risks",
+    "evidence_statuses",
+    "legal_bases",
+    "analysis_limitations",
+    "expert_escalation",
+    "recommendation",
+    "configuration_provenance"
+  ],
+  "allowedLegalBasisIds": [
+    "LB-RU-ADMIN-13-11",
+    "LB-RU-PD-152FZ-12",
+    "LB-RU-PD-152FZ-18-5",
+    "LB-RU-PD-152FZ-3-11"
+  ],
+  "notes": {
+    "normativeRequirement": [
+      "ТЗ v3 §13.2 относит хранение данных российских пользователей за рубежом к критическому сценарию."
+    ],
+    "projectDecision": [
+      "LEXR0-RISK-010 является единственным активным риском; международный рынок дополнительно определяет очередь эскалации."
+    ],
+    "openQuestion": [
+      "Требуется юридически проверить фактические потоки данных, роли провайдеров и применимость требований локализации."
+    ]
+  }
+}

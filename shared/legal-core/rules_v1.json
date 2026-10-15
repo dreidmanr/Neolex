@@ -1,0 +1,3480 @@
+{
+  "$schema": "./schemas/rules.schema.json",
+  "artifactType": "rules_v1",
+  "rulesetId": "rules_v1",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "reviewStatus": {
+    "reviewedByLawyer": false,
+    "statement": "Конфигурация не проверена и не утверждена юристом. Все условия, уровни, доказательства и эскалации имеют статус проекта."
+  },
+  "releaseFlags": {
+    "release0": {
+      "architectureOnly": true,
+      "runtimeIntegration": false
+    },
+    "release1Pilot": {
+      "planned": true,
+      "enabledNow": false
+    },
+    "clientAccess": {
+      "currentAccessChange": "не_изменяется",
+      "statement": "Клиентский доступ не закрывается и не изменяется этим архитектурным артефактом."
+    }
+  },
+  "governance": {
+    "normativeRequirements": [
+      {
+        "id": "NORM-RULES-001",
+        "type": "нормативное_требование",
+        "source": "ТЗ v3 §§13.2–13.4",
+        "text": "Активация рисков, уровни, критические override, эскалация и итоговая агрегация рассчитываются детерминированно; критические триггеры не сглаживаются общим баллом."
+      },
+      {
+        "id": "NORM-RULES-002",
+        "type": "нормативное_требование",
+        "source": "ТЗ v3 §§8.1, 9.2, 11.7",
+        "text": "Отключённая сработавшая ветка и превышение 15 дополнительных вопросов создают manual_follow_up_required, а недоступный критический вход не должен скрывать риск."
+      },
+      {
+        "id": "NORM-RULES-003",
+        "type": "нормативное_требование",
+        "source": "ТЗ v3 §§12.4, 14.4",
+        "text": "Запрашиваемые категории документов выбираются детерминированно, не более трёх основных; автоматическое документарное подтверждение допускается только при выполнении всех условий, а в Release 0 запрещено."
+      },
+      {
+        "id": "NORM-RULES-004",
+        "type": "нормативное_требование",
+        "source": "ТЗ v3 §§13.3, 27",
+        "text": "Критические, спорные, трансграничные, регулируемые, противоречивые и сделочные сценарии запускают lawyer_review_required и не предлагают фиксированный пакет как достаточное решение."
+      }
+    ],
+    "projectDecisions": [
+      {
+        "id": "DESIGN-RULES-001",
+        "type": "проектное_решение",
+        "text": "Предикаты заданы закрытым декларативным JSON AST по идентификаторам. Сопоставление по подстрокам, регулярным выражениям, меткам вариантов и свободному русскоязычному тексту не поддерживается."
+      },
+      {
+        "id": "DESIGN-RULES-002",
+        "type": "проектное_решение",
+        "text": "Каждый из 25 рисков имеет ровно одно базовое правило активации; более высокий уровень задаётся отдельным override после базовой активации."
+      },
+      {
+        "id": "DESIGN-RULES-003",
+        "type": "проектное_решение",
+        "text": "Общий риск-профиль определяется максимумом индивидуальных уровней, а не суммой или средним баллом. Это исключает сглаживание критического результата."
+      },
+      {
+        "id": "DESIGN-RULES-004",
+        "type": "проектное_решение",
+        "text": "Для B2C-триггера наличие B2C или смешанной модели используется как проектный прокси признака значимости, поскольку текущая анкета не содержит отдельного вопроса об объёме B2C-продаж."
+      },
+      {
+        "id": "DESIGN-RULES-005",
+        "type": "проектное_решение",
+        "text": "В Release 0 категории документов только формируют запрос. Ни один документ не переводит вывод в document_confirmed автоматически."
+      }
+    ],
+    "openQuestions": [
+      {
+        "id": "OPEN-RULES-001",
+        "type": "открытый_вопрос",
+        "text": "Требуется юридически согласовать каждое условие активации, включая трактовку ответов «не уверен(а)», «частично» и «планируется»."
+      },
+      {
+        "id": "OPEN-RULES-002",
+        "type": "открытый_вопрос",
+        "text": "Требуется решить, нужен ли в анкете отдельный закрытый вопрос о значимости B2C-продаж для точного применения ТЗ §13.2."
+      },
+      {
+        "id": "OPEN-RULES-003",
+        "type": "открытый_вопрос",
+        "text": "Требуется согласовать владельца очередей, рабочий календарь и фактический SLA экспертной эскалации; конфигурация фиксирует только проектные коды очередей."
+      },
+      {
+        "id": "OPEN-RULES-004",
+        "type": "открытый_вопрос",
+        "text": "Требуется юридическая fixture-проверка уровней вероятности, влияния и срочности до подключения rules engine к runtime."
+      }
+    ]
+  },
+  "engineContract": {
+    "deterministic": true,
+    "predicateFormat": "declarative_json_ast_v1",
+    "executionPhases": [
+      "consistency",
+      "branching",
+      "risk_activation",
+      "critical_override",
+      "follow_up",
+      "escalation",
+      "document_request",
+      "aggregation"
+    ],
+    "prohibitedPredicateCapabilities": [
+      "поиск по подстроке",
+      "регулярные выражения по ответу",
+      "сопоставление по русскоязычной метке",
+      "анализ свободного текста",
+      "вызов языковой модели"
+    ],
+    "unknownReferencePolicy": "fail_closed_configuration_error",
+    "missingAnswerPolicy": "Атомарный предикат ответа возвращает false. Для обязательного активного вопроса неполнота блокирует расчёт отчёта на уровне серверной валидации.",
+    "tracePolicy": "Для каждого результата сохраняются rulesetId, version, ruleId, стадия, истинные атомарные предикаты, questionId, optionId и применённый override.",
+    "evidenceDerivation": {
+      "manualReviewRequired": {
+        "derivationRuleId": "DERIVATION-EVIDENCE-001",
+        "when": {
+          "activeRiskCatalogItemField": "manualReviewRequired",
+          "operator": "equals",
+          "value": true
+        },
+        "inputEvidenceStatus": "questionnaire_based",
+        "outputRiskBlockEvidenceStatus": "manual_review_required",
+        "preserveEvidenceAndProvenanceFields": [
+          "questionnaireAnswerRefs",
+          "documentEvidence",
+          "sourceQuestionIds",
+          "traceAtoms"
+        ],
+        "automaticDocumentConfirmationAllowed": false,
+        "statement": "Для каждого активного риска, чей элемент risk_catalog_v1 имеет manualReviewRequired=true, генератор заменяет только итоговый evidence.status risk block с questionnaire_based на manual_review_required; исходные questionnaire evidence и provenance сохраняются без изменения."
+      }
+    },
+    "escalationQueueAggregation": {
+      "method": "deduplicate_sort_lexicographic",
+      "candidateSource": "queueCode каждого сработавшего escalationRules result",
+      "outputField": "requiredQueueCodes",
+      "beforeQueueEvent": {
+        "queueCode": null,
+        "status": "required_not_routed"
+      },
+      "queueEventRequirement": {
+        "queueCodeRepresents": "single_actual_queue",
+        "statusesRequiringQueueEvent": [
+          "queued",
+          "assigned",
+          "in_progress",
+          "resolved"
+        ]
+      },
+      "statement": "Все коды очередей сработавших escalation rules дедуплицируются и сортируются лексикографически в requiredQueueCodes. Порядок не задаёт primary queue или precedence. До фактического queue event queueCode=null и status=required_not_routed; queued и последующие фактические статусы допустимы только при зафиксированном queue event."
+    }
+  },
+  "levelModel": {
+    "severityOrder": [
+      "low",
+      "medium",
+      "high",
+      "critical"
+    ],
+    "probabilityOrder": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "impactOrder": [
+      "limited",
+      "significant",
+      "substantial",
+      "blocking"
+    ],
+    "urgencyOrder": [
+      "monitor",
+      "90_days",
+      "60_days",
+      "30_days",
+      "immediate"
+    ],
+    "criticalOverrideFloor": "high",
+    "evidenceStatusesAllowedInRelease0": [
+      "questionnaire_based",
+      "manual_review_required"
+    ]
+  },
+  "riskRules": [
+    {
+      "id": "RULE-RISK-001",
+      "version": "1.0.0-draft.1",
+      "priority": 10,
+      "riskId": "LEXR0-RISK-001",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b2_q1",
+        "optionIds": [
+          "none"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b2_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-CORPORATE"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-002",
+      "version": "1.0.0-draft.1",
+      "priority": 20,
+      "riskId": "LEXR0-RISK-002",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b2_q2",
+        "optionIds": [
+          "different",
+          "founder",
+          "unclear"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b2_q2",
+            "b1_q5"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-CORPORATE",
+            "DOC-IP-DEVELOPMENT"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-003",
+      "version": "1.0.0-draft.1",
+      "priority": 30,
+      "riskId": "LEXR0-RISK-003",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q3",
+            "optionIds": [
+              "yes_no_agreement",
+              "yes_informal"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q5",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q1",
+            "optionIds": [
+              "cofounders_informal"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "all_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q1",
+                "optionIds": [
+                  "yes"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q2",
+                "optionIds": [
+                  "corporate"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b2_q3",
+            "b2_q5",
+            "b11_q1",
+            "b11_q4",
+            "b1_q5"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-CORPORATE",
+            "DOC-DISPUTES"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-004",
+      "version": "1.0.0-draft.1",
+      "priority": 40,
+      "riskId": "LEXR0-RISK-004",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "high",
+          "probability": "medium",
+          "impact": "substantial",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b4_q1",
+            "b4_q2",
+            "b11_q2"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-IP-DEVELOPMENT"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-005",
+      "version": "1.0.0-draft.1",
+      "priority": 50,
+      "riskId": "LEXR0-RISK-005",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q3",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q2",
+            "optionIds": [
+              "founder",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b4_q3",
+            "b4_q2",
+            "b1_q5"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-IP-DEVELOPMENT"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-006",
+      "version": "1.0.0-draft.1",
+      "priority": 60,
+      "riskId": "LEXR0-RISK-006",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q7",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          },
+          {
+            "op": "all_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q1",
+                "optionIds": [
+                  "yes"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q2",
+                "optionIds": [
+                  "ip"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q3",
+            "optionIds": [
+              "yes"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b4_q7",
+            "b12_q1",
+            "b12_q3"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-IP-LICENSES",
+            "DOC-DISPUTES"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-007",
+      "version": "1.0.0-draft.1",
+      "priority": 70,
+      "riskId": "LEXR0-RISK-007",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q4",
+            "optionIds": [
+              "significant",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q5",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q8",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "medium",
+          "probability": "medium",
+          "impact": "significant",
+          "urgency": "60_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": false,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b4_q4",
+            "b4_q5",
+            "b4_q8"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-IP-LICENSES"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-008",
+      "version": "1.0.0-draft.1",
+      "priority": 80,
+      "riskId": "LEXR0-RISK-008",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b11_q3",
+        "optionIds": [
+          "yes",
+          "unclear"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b11_q3",
+            "b4_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-ACCESS-CONTROL"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-009",
+      "version": "1.0.0-draft.1",
+      "priority": 90,
+      "riskId": "LEXR0-RISK-009",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q1",
+            "optionIds": [
+              "health",
+              "biometric",
+              "children"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q1",
+            "optionIds": [
+              "medicine",
+              "children",
+              "sensitive_data"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b5_q1",
+            "b10_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PERSONAL-DATA"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-010",
+      "version": "1.0.0-draft.1",
+      "priority": 100,
+      "riskId": "LEXR0-RISK-010",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b5_q2",
+        "optionIds": [
+          "mixed",
+          "abroad",
+          "unclear"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b5_q2",
+            "b1_q4",
+            "b7_q3"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PERSONAL-DATA"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-011",
+      "version": "1.0.0-draft.1",
+      "priority": 110,
+      "riskId": "LEXR0-RISK-011",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q3",
+            "optionIds": [
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q4",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q5",
+            "optionIds": [
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q7",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "high",
+          "probability": "medium",
+          "impact": "substantial",
+          "urgency": "30_days"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b5_q3",
+            "b5_q4",
+            "b5_q5",
+            "b5_q7"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PERSONAL-DATA"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-012",
+      "version": "1.0.0-draft.1",
+      "priority": 120,
+      "riskId": "LEXR0-RISK-012",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q6",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "all_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q1",
+                "optionIds": [
+                  "yes"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q2",
+                "optionIds": [
+                  "pd"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q4",
+            "optionIds": [
+              "yes"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b5_q6",
+            "b12_q1",
+            "b12_q4"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PERSONAL-DATA",
+            "DOC-DISPUTES"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-013",
+      "version": "1.0.0-draft.1",
+      "priority": 130,
+      "riskId": "LEXR0-RISK-013",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b6_q1",
+        "optionIds": [
+          "none"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b6_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-CONTRACTS"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-014",
+      "version": "1.0.0-draft.1",
+      "priority": 140,
+      "riskId": "LEXR0-RISK-014",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b6_q2",
+            "optionIds": [
+              "old",
+              "partial",
+              "almost_none",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b13_q1",
+            "optionIds": [
+              "none"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "high",
+          "probability": "medium",
+          "impact": "substantial",
+          "urgency": "30_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": false,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b6_q2",
+            "b13_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-CONTRACTS"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-015",
+      "version": "1.0.0-draft.1",
+      "priority": 150,
+      "riskId": "LEXR0-RISK-015",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b6_q3",
+        "optionIds": [
+          "yes",
+          "unclear"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "high",
+          "probability": "medium",
+          "impact": "substantial",
+          "urgency": "30_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b6_q3",
+            "b1_q3"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-CONTRACTS"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-016",
+      "version": "1.0.0-draft.1",
+      "priority": 160,
+      "riskId": "LEXR0-RISK-016",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q1",
+            "optionIds": [
+              "foreign",
+              "agent",
+              "partner",
+              "multiple"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q3",
+            "optionIds": [
+              "yes",
+              "planned"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "high",
+          "probability": "medium",
+          "impact": "substantial",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b7_q1",
+            "b7_q3",
+            "b1_q4"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PAYMENT-INFRASTRUCTURE"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-017",
+      "version": "1.0.0-draft.1",
+      "priority": 170,
+      "riskId": "LEXR0-RISK-017",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "all_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b7_q2",
+                "optionIds": [
+                  "yes"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b8_q2",
+                "optionIds": [
+                  "partial",
+                  "no",
+                  "unclear"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b7_q2",
+            "b7_q4"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PAYMENTS-CONSUMER",
+            "DOC-PAYMENT-INFRASTRUCTURE",
+            "DOC-DISPUTES"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-018",
+      "version": "1.0.0-draft.1",
+      "priority": 180,
+      "riskId": "LEXR0-RISK-018",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b8_q1",
+                "optionIds": [
+                  "yes",
+                  "mixed"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q3",
+                "optionIds": [
+                  "b2c",
+                  "mixed"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b8_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b8_q1",
+            "b1_q3",
+            "b8_q2"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PAYMENTS-CONSUMER"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-019",
+      "version": "1.0.0-draft.1",
+      "priority": 190,
+      "riskId": "LEXR0-RISK-019",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b8_q3",
+        "optionIds": [
+          "yes",
+          "unclear"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "medium",
+          "probability": "medium",
+          "impact": "significant",
+          "urgency": "60_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": false,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b8_q3"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PAYMENTS-CONSUMER"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-020",
+      "version": "1.0.0-draft.1",
+      "priority": 200,
+      "riskId": "LEXR0-RISK-020",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b3_q3",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b3_q1",
+            "optionIds": [
+              "advertising"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "medium",
+          "probability": "medium",
+          "impact": "significant",
+          "urgency": "60_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": false,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b3_q1",
+            "b3_q3",
+            "b10_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-MARKETING"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-021",
+      "version": "1.0.0-draft.1",
+      "priority": 210,
+      "riskId": "LEXR0-RISK-021",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b9_q1",
+                "optionIds": [
+                  "yes"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b3_q2",
+                "optionIds": [
+                  "partners",
+                  "white_label"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b9_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "high",
+          "probability": "medium",
+          "impact": "substantial",
+          "urgency": "30_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b9_q1",
+            "b9_q2",
+            "b3_q2"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PARTNERS"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-022",
+      "version": "1.0.0-draft.1",
+      "priority": 220,
+      "riskId": "LEXR0-RISK-022",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b9_q3",
+        "optionIds": [
+          "yes",
+          "unclear"
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "medium",
+          "probability": "medium",
+          "impact": "significant",
+          "urgency": "60_days"
+        },
+        "criticalOverrideEligible": false,
+        "lawyerReviewRequiredWhenActive": false,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b9_q3",
+            "b3_q2"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-PARTNERS"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-023",
+      "version": "1.0.0-draft.1",
+      "priority": 230,
+      "riskId": "LEXR0-RISK-023",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q2",
+            "optionIds": [
+              "fintech",
+              "medtech"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q1",
+            "optionIds": [
+              "finance",
+              "medicine",
+              "education",
+              "hr",
+              "children",
+              "advertising",
+              "sensitive_data",
+              "gov",
+              "critical_infra"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b1_q2",
+            "b10_q1"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-REGULATORY"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-024",
+      "version": "1.0.0-draft.1",
+      "priority": 240,
+      "riskId": "LEXR0-RISK-024",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q2",
+            "optionIds": [
+              "yes_missing",
+              "unclear"
+            ]
+          },
+          {
+            "op": "all_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b10_q1",
+                "optionIds": [
+                  "finance",
+                  "medicine",
+                  "education",
+                  "hr",
+                  "children",
+                  "advertising",
+                  "sensitive_data",
+                  "gov",
+                  "critical_infra"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b10_q2",
+                "optionIds": [
+                  "no"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b10_q2"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-REGULATORY"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    },
+    {
+      "id": "RULE-RISK-025",
+      "version": "1.0.0-draft.1",
+      "priority": 250,
+      "riskId": "LEXR0-RISK-025",
+      "evaluationStage": "risk_activation",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q3",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q3",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "all_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q1",
+                "optionIds": [
+                  "yes"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b12_q2",
+                "optionIds": [
+                  "tax"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "active": true,
+        "level": {
+          "severity": "critical",
+          "probability": "high",
+          "impact": "blocking",
+          "urgency": "immediate"
+        },
+        "criticalOverrideEligible": true,
+        "lawyerReviewRequiredWhenActive": true,
+        "evidence": {
+          "status": "questionnaire_based",
+          "sourceQuestionIds": [
+            "b10_q3",
+            "b12_q1",
+            "b12_q3",
+            "b12_q4"
+          ],
+          "automaticDocumentConfirmationAllowed": false,
+          "requestedDocumentCategoryIds": [
+            "DOC-DISPUTES"
+          ],
+          "tracePolicy": "Сохранить идентификатор правила, версию, истинные атомарные предикаты и фактические option IDs; свободный текст не анализировать."
+        }
+      }
+    }
+  ],
+  "criticalOverrideRules": [
+    {
+      "id": "OVERRIDE-TZ-13-2-01",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 1",
+      "description": "Не подтверждены права на ключевой код, дизайн, данные или иной объект интеллектуальной собственности.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q2",
+            "optionIds": [
+              "founder",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q3",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-002",
+        "LEXR0-RISK-004",
+        "LEXR0-RISK-005"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-02",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 2",
+      "description": "Обрабатываются медицинские, биометрические данные или данные детей без ясной правовой модели.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b5_q1",
+                "optionIds": [
+                  "health",
+                  "biometric",
+                  "children"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b10_q1",
+                "optionIds": [
+                  "medicine",
+                  "children",
+                  "sensitive_data"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b5_q3",
+                "optionIds": [
+                  "no",
+                  "unclear"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b5_q4",
+                "optionIds": [
+                  "partial",
+                  "no",
+                  "unclear"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-009",
+        "LEXR0-RISK-011"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-03",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 3",
+      "description": "Данные российских пользователей хранятся за рубежом либо место хранения неясно.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "answer_contains_any",
+        "questionId": "b5_q2",
+        "optionIds": [
+          "mixed",
+          "abroad",
+          "unclear"
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-010"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-04",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 4",
+      "description": "Есть B2C-продажи без ясных условий оплаты, возврата и ограничения ответственности.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q3",
+                "optionIds": [
+                  "b2c",
+                  "mixed"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b8_q1",
+                "optionIds": [
+                  "yes",
+                  "mixed"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b8_q2",
+            "optionIds": [
+              "partial",
+              "no",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-017",
+        "LEXR0-RISK-018"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-05",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 5",
+      "description": "Продукт относится к регулируемой сфере, но специальные требования не проверены.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q2",
+                "optionIds": [
+                  "fintech",
+                  "medtech"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b10_q1",
+                "optionIds": [
+                  "finance",
+                  "medicine",
+                  "education",
+                  "hr",
+                  "children",
+                  "advertising",
+                  "sensitive_data",
+                  "gov",
+                  "critical_infra"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q2",
+            "optionIds": [
+              "no",
+              "yes_missing",
+              "unclear"
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-023",
+        "LEXR0-RISK-024"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-06",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 6",
+      "description": "Есть спор, проверка, предписание или требование удалить ключевой актив.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q5",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q7",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q6",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q3",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q1",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q3",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q4",
+            "optionIds": [
+              "yes"
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-003",
+        "LEXR0-RISK-006",
+        "LEXR0-RISK-012",
+        "LEXR0-RISK-017",
+        "LEXR0-RISK-025"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-07",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 7",
+      "description": "При подготовке к инвестициям, продаже или Enterprise-проверке есть разрывы в правах, данных или договорах.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q5",
+                "optionIds": [
+                  "pre_investment",
+                  "pre_sale"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q6",
+                "optionIds": [
+                  "goal_investment",
+                  "goal_sale",
+                  "goal_enterprise"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "risk_is_active_any",
+            "riskIds": [
+              "LEXR0-RISK-002",
+              "LEXR0-RISK-003",
+              "LEXR0-RISK-004",
+              "LEXR0-RISK-005",
+              "LEXR0-RISK-008",
+              "LEXR0-RISK-009",
+              "LEXR0-RISK-010",
+              "LEXR0-RISK-011",
+              "LEXR0-RISK-013",
+              "LEXR0-RISK-014",
+              "LEXR0-RISK-015"
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-002",
+        "LEXR0-RISK-003",
+        "LEXR0-RISK-004",
+        "LEXR0-RISK-005",
+        "LEXR0-RISK-008",
+        "LEXR0-RISK-009",
+        "LEXR0-RISK-010",
+        "LEXR0-RISK-011",
+        "LEXR0-RISK-013"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    },
+    {
+      "id": "OVERRIDE-TZ-13-2-08",
+      "version": "1.0.0-draft.1",
+      "normativeSource": "ТЗ v3 §13.2, пункт 8",
+      "description": "Домены, репозитории, облака или ключевые доступы контролируются подрядчиком либо бывшим сотрудником.",
+      "evaluationStage": "critical_override",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q1",
+            "optionIds": [
+              "contractors",
+              "outsource"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q3",
+            "optionIds": [
+              "yes"
+            ]
+          }
+        ]
+      },
+      "targetRiskIds": [
+        "LEXR0-RISK-008"
+      ],
+      "applicationMode": "active_risks_only",
+      "result": {
+        "minimumSeverity": "high",
+        "lawyerReviewRequired": true,
+        "overrideAppliedFlag": "critical_override_applied"
+      }
+    }
+  ],
+  "branchRules": [
+    {
+      "id": "BRANCH-001",
+      "version": "1.0.0-draft.1",
+      "priority": 10,
+      "sourceQuestionId": "b1_q3",
+      "sourceOptionId": "b2c",
+      "targetBranchId": "consumer",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q3",
+            "optionIds": [
+              "b2c"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "consumer",
+            "expected": true
+          }
+        ]
+      },
+      "result": {
+        "action": "activate_questions",
+        "targetQuestionIds": [
+          "b8_q1",
+          "b8_q3"
+        ],
+        "manualFollowUpRequired": false,
+        "reason": "Активная ветка должна быть открыта детерминированно."
+      }
+    },
+    {
+      "id": "BRANCH-002",
+      "version": "1.0.0-draft.1",
+      "priority": 20,
+      "sourceQuestionId": "b1_q5",
+      "sourceOptionId": "pre_investment",
+      "targetBranchId": "investment",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q5",
+            "optionIds": [
+              "pre_investment"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "investment",
+            "expected": false
+          }
+        ]
+      },
+      "result": {
+        "action": "manual_follow_up_required",
+        "targetQuestionIds": [
+          "b14_q1",
+          "b14_q2",
+          "b14_q3"
+        ],
+        "manualFollowUpRequired": true,
+        "reason": "ветка не активна в текущей версии анкеты"
+      }
+    },
+    {
+      "id": "BRANCH-003",
+      "version": "1.0.0-draft.1",
+      "priority": 30,
+      "sourceQuestionId": "b1_q5",
+      "sourceOptionId": "pre_sale",
+      "targetBranchId": "investment",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q5",
+            "optionIds": [
+              "pre_sale"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "investment",
+            "expected": false
+          }
+        ]
+      },
+      "result": {
+        "action": "manual_follow_up_required",
+        "targetQuestionIds": [
+          "b14_q1",
+          "b14_q2",
+          "b14_q3"
+        ],
+        "manualFollowUpRequired": true,
+        "reason": "ветка не активна в текущей версии анкеты"
+      }
+    },
+    {
+      "id": "BRANCH-004",
+      "version": "1.0.0-draft.1",
+      "priority": 40,
+      "sourceQuestionId": "b3_q2",
+      "sourceOptionId": "partners",
+      "targetBranchId": "partners",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b3_q2",
+            "optionIds": [
+              "partners"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "partners",
+            "expected": true
+          }
+        ]
+      },
+      "result": {
+        "action": "activate_questions",
+        "targetQuestionIds": [
+          "b9_q1",
+          "b9_q2",
+          "b9_q3"
+        ],
+        "manualFollowUpRequired": false,
+        "reason": "Активная ветка должна быть открыта детерминированно."
+      }
+    },
+    {
+      "id": "BRANCH-005",
+      "version": "1.0.0-draft.1",
+      "priority": 50,
+      "sourceQuestionId": "b4_q1",
+      "sourceOptionId": "contractors",
+      "targetBranchId": "contractors",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q1",
+            "optionIds": [
+              "contractors"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "contractors",
+            "expected": false
+          }
+        ]
+      },
+      "result": {
+        "action": "manual_follow_up_required",
+        "targetQuestionIds": [
+          "b11_q3"
+        ],
+        "manualFollowUpRequired": true,
+        "reason": "ветка не активна в текущей версии анкеты"
+      }
+    },
+    {
+      "id": "BRANCH-006",
+      "version": "1.0.0-draft.1",
+      "priority": 60,
+      "sourceQuestionId": "b4_q1",
+      "sourceOptionId": "outsource",
+      "targetBranchId": "contractors",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q1",
+            "optionIds": [
+              "outsource"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "contractors",
+            "expected": false
+          }
+        ]
+      },
+      "result": {
+        "action": "manual_follow_up_required",
+        "targetQuestionIds": [
+          "b11_q3"
+        ],
+        "manualFollowUpRequired": true,
+        "reason": "ветка не активна в текущей версии анкеты"
+      }
+    },
+    {
+      "id": "BRANCH-007",
+      "version": "1.0.0-draft.1",
+      "priority": 70,
+      "sourceQuestionId": "b8_q1",
+      "sourceOptionId": "yes",
+      "targetBranchId": "consumer",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b8_q1",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "consumer",
+            "expected": true
+          }
+        ]
+      },
+      "result": {
+        "action": "activate_questions",
+        "targetQuestionIds": [
+          "b8_q3"
+        ],
+        "manualFollowUpRequired": false,
+        "reason": "Активная ветка должна быть открыта детерминированно."
+      }
+    },
+    {
+      "id": "BRANCH-008",
+      "version": "1.0.0-draft.1",
+      "priority": 80,
+      "sourceQuestionId": "b8_q1",
+      "sourceOptionId": "mixed",
+      "targetBranchId": "consumer",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b8_q1",
+            "optionIds": [
+              "mixed"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "consumer",
+            "expected": true
+          }
+        ]
+      },
+      "result": {
+        "action": "activate_questions",
+        "targetQuestionIds": [
+          "b8_q3"
+        ],
+        "manualFollowUpRequired": false,
+        "reason": "Активная ветка должна быть открыта детерминированно."
+      }
+    }
+  ],
+  "consistencyRules": [
+    {
+      "id": "CONSISTENCY-001",
+      "description": "В ответе о документах одновременно выбраны «ничего» и конкретный документ.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b6_q1",
+            "optionIds": [
+              "none"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b6_q1",
+            "optionIds": [
+              "offer",
+              "user_agreement",
+              "privacy",
+              "consent",
+              "cookie",
+              "b2b_contract",
+              "sla",
+              "nda",
+              "dpa",
+              "license",
+              "agency",
+              "dev_contract"
+            ]
+          }
+        ]
+      },
+      "version": "1.0.0-draft.1",
+      "evaluationStage": "consistency",
+      "result": {
+        "setFlag": "answers_inconsistent",
+        "lawyerReviewRequired": true,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "CONSISTENCY-002",
+      "description": "В ответе о регулируемой сфере одновременно выбраны «ничего» и специальный режим.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q1",
+            "optionIds": [
+              "none"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q1",
+            "optionIds": [
+              "finance",
+              "medicine",
+              "education",
+              "hr",
+              "children",
+              "advertising",
+              "sensitive_data",
+              "gov",
+              "critical_infra"
+            ]
+          }
+        ]
+      },
+      "version": "1.0.0-draft.1",
+      "evaluationStage": "consistency",
+      "result": {
+        "setFlag": "answers_inconsistent",
+        "lawyerReviewRequired": true,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "CONSISTENCY-003",
+      "description": "В ответе о готовых к предоставлению материалах одновременно выбраны «ничего» и конкретный документ.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b13_q1",
+            "optionIds": [
+              "none"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b13_q1",
+            "optionIds": [
+              "charter",
+              "corp_agreement",
+              "dev_contracts",
+              "license",
+              "user_docs",
+              "pd_docs",
+              "client_contracts",
+              "partner_contracts",
+              "brand_docs",
+              "claims"
+            ]
+          }
+        ]
+      },
+      "version": "1.0.0-draft.1",
+      "evaluationStage": "consistency",
+      "result": {
+        "setFlag": "answers_inconsistent",
+        "lawyerReviewRequired": true,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "CONSISTENCY-004",
+      "description": "Основная аудитория включает физических лиц, но отдельный ответ отрицает наличие конечных пользователей-физлиц.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q3",
+            "optionIds": [
+              "b2c",
+              "mixed"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b8_q1",
+            "optionIds": [
+              "no"
+            ]
+          }
+        ]
+      },
+      "version": "1.0.0-draft.1",
+      "evaluationStage": "consistency",
+      "result": {
+        "setFlag": "answers_inconsistent",
+        "lawyerReviewRequired": true,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "CONSISTENCY-005",
+      "description": "Указаны чувствительные данные, но выбран ответ об отсутствии специальных режимов.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q1",
+            "optionIds": [
+              "health",
+              "biometric",
+              "children"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q1",
+            "optionIds": [
+              "none"
+            ]
+          }
+        ]
+      },
+      "version": "1.0.0-draft.1",
+      "evaluationStage": "consistency",
+      "result": {
+        "setFlag": "answers_inconsistent",
+        "lawyerReviewRequired": true,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "CONSISTENCY-006",
+      "description": "Указано отсутствие юридического лица, но ключевые активы отнесены к тому же или другому юридическому лицу.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q1",
+            "optionIds": [
+              "none"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q2",
+            "optionIds": [
+              "same",
+              "different"
+            ]
+          }
+        ]
+      },
+      "version": "1.0.0-draft.1",
+      "evaluationStage": "consistency",
+      "result": {
+        "setFlag": "answers_inconsistent",
+        "lawyerReviewRequired": true,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    }
+  ],
+  "followUpRules": [
+    {
+      "id": "FOLLOW-UP-001",
+      "version": "1.0.0-draft.1",
+      "description": "Если прогнозируемое число активных веточных вопросов превышает 15, требуется ручной дозапрос.",
+      "when": {
+        "op": "active_branch_question_count_greater_than",
+        "value": 15
+      },
+      "result": {
+        "setFlag": "manual_follow_up_required",
+        "reason": "превышен лимит 15 дополнительных вопросов",
+        "queueCode": "LEGAL-MANUAL-FOLLOW-UP"
+      }
+    },
+    {
+      "id": "FOLLOW-UP-002",
+      "version": "1.0.0-draft.1",
+      "description": "Сработал контекст использования подрядчиков, но вопрос о контроле критических доступов отключён в Pilot; критический риск LEXR0-RISK-008 не должен исчезать.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q1",
+            "optionIds": [
+              "contractors",
+              "outsource"
+            ]
+          },
+          {
+            "op": "branch_is_active",
+            "branchId": "contractors",
+            "expected": false
+          }
+        ]
+      },
+      "result": {
+        "setFlag": "manual_follow_up_required",
+        "reason": "критический вход риска LEXR0-RISK-008 недоступен: ветка не активна в текущей версии анкеты",
+        "queueCode": "LEGAL-MANUAL-FOLLOW-UP"
+      }
+    },
+    {
+      "id": "FOLLOW-UP-003",
+      "version": "1.0.0-draft.1",
+      "description": "Все входные вопросы риска LEXR0-RISK-007 отключены в Pilot; требуется ручной дозапрос при наличии внешней разработки или AI-продукта.",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q1",
+            "optionIds": [
+              "contractors",
+              "outsource",
+              "mixed"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q2",
+            "optionIds": [
+              "ai_product"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "setFlag": "manual_follow_up_required",
+        "reason": "входы риска LEXR0-RISK-007 не активны в текущей версии анкеты",
+        "queueCode": "LEGAL-MANUAL-FOLLOW-UP"
+      }
+    }
+  ],
+  "escalationRules": [
+    {
+      "id": "ESCALATION-001",
+      "version": "1.0.0-draft.1",
+      "description": "Активирован хотя бы один риск, для которого каталог требует ручной юридической проверки.",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-001",
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-003",
+          "LEXR0-RISK-004",
+          "LEXR0-RISK-005",
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-008",
+          "LEXR0-RISK-009",
+          "LEXR0-RISK-010",
+          "LEXR0-RISK-011",
+          "LEXR0-RISK-012",
+          "LEXR0-RISK-013",
+          "LEXR0-RISK-015",
+          "LEXR0-RISK-016",
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-018",
+          "LEXR0-RISK-021",
+          "LEXR0-RISK-023",
+          "LEXR0-RISK-024",
+          "LEXR0-RISK-025"
+        ]
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-EXPERT-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-002",
+      "version": "1.0.0-draft.1",
+      "description": "Применено критическое override-правило.",
+      "when": {
+        "op": "flag_is_set",
+        "flag": "critical_override_applied",
+        "expected": true
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-EXPERT-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-003",
+      "version": "1.0.0-draft.1",
+      "description": "Есть спор, претензия, проверка, предписание, инцидент или активное требование.",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q5",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b4_q7",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q6",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q3",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b11_q4",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q1",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q3",
+            "optionIds": [
+              "yes"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b12_q4",
+            "optionIds": [
+              "yes"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-DISPUTE-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-004",
+      "version": "1.0.0-draft.1",
+      "description": "Указана иностранная структура, трансграничные данные или иностранная платёжная инфраструктура.",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q1",
+            "optionIds": [
+              "foreign",
+              "group"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b2_q4",
+            "optionIds": [
+              "yes",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q4",
+            "optionIds": [
+              "international",
+              "russia_international"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b5_q2",
+            "optionIds": [
+              "mixed",
+              "abroad",
+              "unclear"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q1",
+            "optionIds": [
+              "foreign"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b7_q3",
+            "optionIds": [
+              "yes",
+              "planned"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-CROSS-BORDER-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-005",
+      "version": "1.0.0-draft.1",
+      "description": "Требуется квалификация потенциально регулируемой деятельности.",
+      "when": {
+        "op": "any_of",
+        "args": [
+          {
+            "op": "answer_contains_any",
+            "questionId": "b1_q2",
+            "optionIds": [
+              "fintech",
+              "medtech"
+            ]
+          },
+          {
+            "op": "answer_contains_any",
+            "questionId": "b10_q1",
+            "optionIds": [
+              "finance",
+              "medicine",
+              "education",
+              "hr",
+              "children",
+              "advertising",
+              "sensitive_data",
+              "gov",
+              "critical_infra"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-REGULATORY-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-006",
+      "version": "1.0.0-draft.1",
+      "description": "Обнаружено формализованное противоречие ответов.",
+      "when": {
+        "op": "flag_is_set",
+        "flag": "answers_inconsistent",
+        "expected": true
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-INCONSISTENCY-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-007",
+      "version": "1.0.0-draft.1",
+      "description": "Подготовка к сделке или Enterprise-проверке сочетается с пробелами в правах, данных, договорах или корпоративной структуре.",
+      "when": {
+        "op": "all_of",
+        "args": [
+          {
+            "op": "any_of",
+            "args": [
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q5",
+                "optionIds": [
+                  "pre_investment",
+                  "pre_sale"
+                ]
+              },
+              {
+                "op": "answer_contains_any",
+                "questionId": "b1_q6",
+                "optionIds": [
+                  "goal_investment",
+                  "goal_sale",
+                  "goal_enterprise"
+                ]
+              }
+            ]
+          },
+          {
+            "op": "risk_is_active_any",
+            "riskIds": [
+              "LEXR0-RISK-002",
+              "LEXR0-RISK-003",
+              "LEXR0-RISK-004",
+              "LEXR0-RISK-005",
+              "LEXR0-RISK-008",
+              "LEXR0-RISK-009",
+              "LEXR0-RISK-010",
+              "LEXR0-RISK-011",
+              "LEXR0-RISK-013",
+              "LEXR0-RISK-014",
+              "LEXR0-RISK-015"
+            ]
+          }
+        ]
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-DEAL-READINESS-REVIEW",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    },
+    {
+      "id": "ESCALATION-008",
+      "version": "1.0.0-draft.1",
+      "description": "Сработал ручной дозапрос из-за отключённой ветки или превышения лимита веточных вопросов.",
+      "when": {
+        "op": "flag_is_set",
+        "flag": "manual_follow_up_required",
+        "expected": true
+      },
+      "result": {
+        "setFlag": "lawyer_review_required",
+        "queueCode": "LEGAL-MANUAL-FOLLOW-UP",
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false,
+        "automaticReportMode": "preliminary_summary_only"
+      }
+    }
+  ],
+  "requestedDocumentCategories": [
+    {
+      "id": "DOC-CORPORATE",
+      "title": "Корпоративные документы и структура владения",
+      "purpose": "Подтверждает лицо, ведущее деятельность, структуру участия и принадлежность активов.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-001",
+        "LEXR0-RISK-002",
+        "LEXR0-RISK-003"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 1
+    },
+    {
+      "id": "DOC-IP-DEVELOPMENT",
+      "title": "Договоры с разработчиками и документы о передаче прав",
+      "purpose": "Позволяет проверить письменное оформление разработки и цепочку перехода исключительных прав.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-002",
+        "LEXR0-RISK-004",
+        "LEXR0-RISK-005"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 2
+    },
+    {
+      "id": "DOC-IP-LICENSES",
+      "title": "Лицензии и реестр сторонних компонентов",
+      "purpose": "Позволяет проверить основания использования стороннего кода, контента, моделей и иных объектов.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-006",
+        "LEXR0-RISK-007"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 3
+    },
+    {
+      "id": "DOC-ACCESS-CONTROL",
+      "title": "Реестр критических доступов и владельцев учётных записей",
+      "purpose": "Позволяет проверить контроль компании над репозиториями, доменами, облаками и ключевыми учётными записями.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-008"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 4
+    },
+    {
+      "id": "DOC-PERSONAL-DATA",
+      "title": "Документы по персональным данным и схема потоков данных",
+      "purpose": "Позволяет проверить категории данных, основания обработки, локализацию, меры защиты и реагирование на инциденты.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-009",
+        "LEXR0-RISK-010",
+        "LEXR0-RISK-011",
+        "LEXR0-RISK-012"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 5
+    },
+    {
+      "id": "DOC-CONTRACTS",
+      "title": "Пользовательские и клиентские договоры",
+      "purpose": "Позволяет проверить наличие, актуальность и распределение ответственности в договорной базе.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-013",
+        "LEXR0-RISK-014",
+        "LEXR0-RISK-015"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 6
+    },
+    {
+      "id": "DOC-PAYMENTS-CONSUMER",
+      "title": "Правила оплаты, подписки, отмены и возвратов",
+      "purpose": "Позволяет проверить раскрытие условий оплаты и пользовательский путь подписки, отказа и возврата.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-017",
+        "LEXR0-RISK-018",
+        "LEXR0-RISK-019"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 7
+    },
+    {
+      "id": "DOC-PAYMENT-INFRASTRUCTURE",
+      "title": "Договоры с платёжными провайдерами и схема расчётов",
+      "purpose": "Позволяет проверить роли участников расчётов, трансграничные элементы и порядок работы со спорами.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-016",
+        "LEXR0-RISK-017"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 8
+    },
+    {
+      "id": "DOC-MARKETING",
+      "title": "Рекламные материалы и доказательства заявленных характеристик",
+      "purpose": "Позволяет проверить содержание обещаний, гарантий и сравнений с фактическими подтверждениями.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-020"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 9
+    },
+    {
+      "id": "DOC-PARTNERS",
+      "title": "Партнёрские, агентские и реселлерские договоры",
+      "purpose": "Позволяет проверить роли сторон, ответственность, доступ к данным и зависимость от внешних платформ.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-021",
+        "LEXR0-RISK-022"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 10
+    },
+    {
+      "id": "DOC-REGULATORY",
+      "title": "Лицензии, разрешения, аккредитации и отраслевые материалы",
+      "purpose": "Позволяет проверить применимость и выполнение специальных формальных требований.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-023",
+        "LEXR0-RISK-024"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 11
+    },
+    {
+      "id": "DOC-DISPUTES",
+      "title": "Претензии, проверки, предписания и судебные материалы",
+      "purpose": "Позволяет установить предмет, статус, сроки и масштаб уже возникшего требования или спора.",
+      "potentialConfirmationTargetRiskIds": [
+        "LEXR0-RISK-003",
+        "LEXR0-RISK-006",
+        "LEXR0-RISK-012",
+        "LEXR0-RISK-017",
+        "LEXR0-RISK-025"
+      ],
+      "release0EvidenceEffect": "Категория только запрашивается как потенциальное доказательство. Автоматический статус document_confirmed в Release 0 запрещён.",
+      "baseTieBreakPriority": 12
+    }
+  ],
+  "requestedDocumentCategoryRules": [
+    {
+      "id": "DOC-REQUEST-001",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-001",
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-003"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-CORPORATE",
+        "supportingRiskIds": [
+          "LEXR0-RISK-001",
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-003"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-002",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-004",
+          "LEXR0-RISK-005"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-IP-DEVELOPMENT",
+        "supportingRiskIds": [
+          "LEXR0-RISK-002",
+          "LEXR0-RISK-004",
+          "LEXR0-RISK-005"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-003",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-007"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-IP-LICENSES",
+        "supportingRiskIds": [
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-007"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-004",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-008"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-ACCESS-CONTROL",
+        "supportingRiskIds": [
+          "LEXR0-RISK-008"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-005",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-009",
+          "LEXR0-RISK-010",
+          "LEXR0-RISK-011",
+          "LEXR0-RISK-012"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-PERSONAL-DATA",
+        "supportingRiskIds": [
+          "LEXR0-RISK-009",
+          "LEXR0-RISK-010",
+          "LEXR0-RISK-011",
+          "LEXR0-RISK-012"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-006",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-013",
+          "LEXR0-RISK-014",
+          "LEXR0-RISK-015"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-CONTRACTS",
+        "supportingRiskIds": [
+          "LEXR0-RISK-013",
+          "LEXR0-RISK-014",
+          "LEXR0-RISK-015"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-007",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-018",
+          "LEXR0-RISK-019"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-PAYMENTS-CONSUMER",
+        "supportingRiskIds": [
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-018",
+          "LEXR0-RISK-019"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-008",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-016",
+          "LEXR0-RISK-017"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-PAYMENT-INFRASTRUCTURE",
+        "supportingRiskIds": [
+          "LEXR0-RISK-016",
+          "LEXR0-RISK-017"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-009",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-020"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-MARKETING",
+        "supportingRiskIds": [
+          "LEXR0-RISK-020"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-010",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-021",
+          "LEXR0-RISK-022"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-PARTNERS",
+        "supportingRiskIds": [
+          "LEXR0-RISK-021",
+          "LEXR0-RISK-022"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-011",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-023",
+          "LEXR0-RISK-024"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-REGULATORY",
+        "supportingRiskIds": [
+          "LEXR0-RISK-023",
+          "LEXR0-RISK-024"
+        ]
+      }
+    },
+    {
+      "id": "DOC-REQUEST-012",
+      "version": "1.0.0-draft.1",
+      "when": {
+        "op": "risk_is_active_any",
+        "riskIds": [
+          "LEXR0-RISK-003",
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-012",
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-025"
+        ]
+      },
+      "result": {
+        "requestCategoryId": "DOC-DISPUTES",
+        "supportingRiskIds": [
+          "LEXR0-RISK-003",
+          "LEXR0-RISK-006",
+          "LEXR0-RISK-012",
+          "LEXR0-RISK-017",
+          "LEXR0-RISK-025"
+        ]
+      }
+    }
+  ],
+  "aggregationPolicy": {
+    "overallRiskProfile": {
+      "method": "maximum_active_risk_severity",
+      "emptyRiskSetResult": "low",
+      "overridePrecedence": true,
+      "statement": "Сначала применяются все override к индивидуальным рискам, затем общий профиль равен наивысшему уровню активного риска. Суммирование и усреднение запрещены."
+    },
+    "leadRiskTieBreaks": [
+      {
+        "rank": 1,
+        "field": "severity",
+        "direction": "descending",
+        "order": [
+          "critical",
+          "high",
+          "medium",
+          "low"
+        ]
+      },
+      {
+        "rank": 2,
+        "field": "criticalOverrideApplied",
+        "direction": "true_first",
+        "order": [
+          true,
+          false
+        ]
+      },
+      {
+        "rank": 3,
+        "field": "impact",
+        "direction": "descending",
+        "order": [
+          "blocking",
+          "substantial",
+          "significant",
+          "limited"
+        ]
+      },
+      {
+        "rank": 4,
+        "field": "urgency",
+        "direction": "descending",
+        "order": [
+          "immediate",
+          "30_days",
+          "60_days",
+          "90_days",
+          "monitor"
+        ]
+      },
+      {
+        "rank": 5,
+        "field": "riskId",
+        "direction": "ascending_lexicographic"
+      }
+    ],
+    "lawyerReviewAggregation": {
+      "method": "logical_or",
+      "inputs": [
+        "critical_override_applied",
+        "answers_inconsistent",
+        "manual_follow_up_required",
+        "escalation_rule_matched"
+      ],
+      "whenTrue": {
+        "clientCta": "Запросить экспертный разбор",
+        "fixedPackageOfferAllowed": false
+      }
+    },
+    "requestedDocuments": {
+      "method": "deduplicate_rank_limit",
+      "maxPrimaryCategories": 3,
+      "candidateSource": "Все категории, возвращённые requestedDocumentCategoryRules для активных рисков.",
+      "categoryWeight": {
+        "method": "maximum_supporting_risk_severity",
+        "order": [
+          "critical",
+          "high",
+          "medium",
+          "low"
+        ]
+      },
+      "tieBreaks": [
+        {
+          "rank": 1,
+          "field": "categoryWeight",
+          "direction": "descending"
+        },
+        {
+          "rank": 2,
+          "field": "minimumSupportingRiskId",
+          "direction": "ascending_lexicographic"
+        },
+        {
+          "rank": 3,
+          "field": "baseTieBreakPriority",
+          "direction": "ascending"
+        },
+        {
+          "rank": 4,
+          "field": "categoryId",
+          "direction": "ascending_lexicographic"
+        }
+      ],
+      "overflowPolicy": "Категории после первых трёх сохраняются как optionalRequestedDocumentCategories в том же детерминированном порядке."
+    },
+    "ruleConflictResolution": {
+      "riskActivation": "Повторные результаты для одного riskId объединяются по OR; используется наиболее высокий уровень каждого измерения.",
+      "override": "Все истинные override применяются; итоговый уровень не ниже максимального minimumSeverity.",
+      "flags": "Флаги объединяются по OR и не могут быть сброшены последующим правилом.",
+      "stableOutputOrder": "Риски сортируются по leadRiskTieBreaks; трассировки правил — по стадии, priority и ruleId; категории документов — по requestedDocuments.tieBreaks."
+    }
+  },
+  "coverage": {
+    "riskIds": [
+      "LEXR0-RISK-001",
+      "LEXR0-RISK-002",
+      "LEXR0-RISK-003",
+      "LEXR0-RISK-004",
+      "LEXR0-RISK-005",
+      "LEXR0-RISK-006",
+      "LEXR0-RISK-007",
+      "LEXR0-RISK-008",
+      "LEXR0-RISK-009",
+      "LEXR0-RISK-010",
+      "LEXR0-RISK-011",
+      "LEXR0-RISK-012",
+      "LEXR0-RISK-013",
+      "LEXR0-RISK-014",
+      "LEXR0-RISK-015",
+      "LEXR0-RISK-016",
+      "LEXR0-RISK-017",
+      "LEXR0-RISK-018",
+      "LEXR0-RISK-019",
+      "LEXR0-RISK-020",
+      "LEXR0-RISK-021",
+      "LEXR0-RISK-022",
+      "LEXR0-RISK-023",
+      "LEXR0-RISK-024",
+      "LEXR0-RISK-025"
+    ],
+    "criticalOverrideIds": [
+      "OVERRIDE-TZ-13-2-01",
+      "OVERRIDE-TZ-13-2-02",
+      "OVERRIDE-TZ-13-2-03",
+      "OVERRIDE-TZ-13-2-04",
+      "OVERRIDE-TZ-13-2-05",
+      "OVERRIDE-TZ-13-2-06",
+      "OVERRIDE-TZ-13-2-07",
+      "OVERRIDE-TZ-13-2-08"
+    ],
+    "disabledBranchManualFollowUpRuleIds": [
+      "BRANCH-002",
+      "BRANCH-003",
+      "BRANCH-005",
+      "BRANCH-006"
+    ],
+    "evidenceStatusCoverage": [
+      "questionnaire_based",
+      "manual_review_required"
+    ],
+    "requestedDocumentCategoryIds": [
+      "DOC-CORPORATE",
+      "DOC-IP-DEVELOPMENT",
+      "DOC-IP-LICENSES",
+      "DOC-ACCESS-CONTROL",
+      "DOC-PERSONAL-DATA",
+      "DOC-CONTRACTS",
+      "DOC-PAYMENTS-CONSUMER",
+      "DOC-PAYMENT-INFRASTRUCTURE",
+      "DOC-MARKETING",
+      "DOC-PARTNERS",
+      "DOC-REGULATORY",
+      "DOC-DISPUTES"
+    ],
+    "statement": "Ровно 25 рисков имеют правила активации; восемь требований ТЗ §13.2 представлены отдельными override; отключённые ветки, эскалации и категории документов заданы детерминированно."
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "id": "LEXR0-FIXTURE-015",
+  "releaseId": "lexy-r0-2026-09-12",
+  "version": "1.0.0-draft.1",
+  "effectiveFrom": null,
+  "effectiveTo": null,
+  "updatedBy": "Manus AI",
+  "updatedAt": "2026-09-12T18:40:24Z",
+  "sourceCommit": "78e2f89e99340a403ce389eada223da6bf336676",
+  "status": "draft_pending_legal_approval",
+  "caseKind": "questionnaire",
+  "releaseTarget": "release_1_pilot",
+  "profile": {
+    "code": "branch_answer_changed",
+    "name": "Клиент изменил ответ и отключил ранее открытую ветку",
+    "scenario": "Сначала пользователь выбрал B2C и заполнил consumer-ветку, затем изменил аудиторию на B2B; stale-ответы ветки удалены.",
+    "source": "ТЗ v3 §29, профиль 15"
+  },
+  "canonicalAnswers": {
+    "b1_q1": "Эталонный цифровой продукт",
+    "b1_q2": "saas",
+    "b1_q3": [
+      "b2b_small"
+    ],
+    "b1_q4": "russia_only",
+    "b1_q5": "growth",
+    "b1_q6": [
+      "goal_general"
+    ],
+    "b2_q1": "ooo",
+    "b2_q2": "same",
+    "b2_q3": "no",
+    "b2_q5": "no",
+    "b3_q1": [
+      "b2b_contract"
+    ],
+    "b3_q2": [
+      "direct"
+    ],
+    "b3_q3": "no",
+    "b4_q2": "all",
+    "b4_q3": "all",
+    "b4_q7": "no",
+    "b5_q1": [
+      "name",
+      "email"
+    ],
+    "b5_q2": "russia",
+    "b5_q3": "yes",
+    "b5_q4": "yes",
+    "b5_q6": "no",
+    "b6_q1": [
+      "privacy",
+      "b2b_contract"
+    ],
+    "b6_q2": "current",
+    "b7_q1": "direct",
+    "b7_q4": "no",
+    "b8_q2": "yes",
+    "b10_q1": [
+      "none"
+    ],
+    "b10_q2": "yes",
+    "b11_q1": [
+      "employees"
+    ],
+    "b11_q2": "yes",
+    "b11_q4": "no",
+    "b12_q1": "no",
+    "b12_q3": "no"
+  },
+  "expectedActiveRiskIds": [],
+  "expectedForbiddenRiskIds": [
+    "LEXR0-RISK-017",
+    "LEXR0-RISK-018",
+    "LEXR0-RISK-019"
+  ],
+  "expectedRiskProfile": "low",
+  "expectedEscalation": {
+    "required": false,
+    "manualReviewRequired": false,
+    "manualFollowUpRequired": false,
+    "lawyerReviewRequired": false,
+    "expectedEvidenceStatus": "questionnaire_based",
+    "expectedQueueCodes": [],
+    "reason": "Эскалация не ожидается."
+  },
+  "expectedRecommendationProductCode": "start_product",
+  "expectedReportSections": [
+    "questionnaire_facts",
+    "executive_summary",
+    "risk_profile",
+    "risk_details",
+    "evidence_statuses",
+    "legal_bases",
+    "roadmap",
+    "analysis_limitations",
+    "recommendation",
+    "configuration_provenance"
+  ],
+  "allowedLegalBasisIds": [],
+  "notes": {
+    "normativeRequirement": [
+      "ТЗ v3 §§11.7 и 29 требует удалять неактивные ответы после изменения триггера ветки и не учитывать их в расчёте."
+    ],
+    "projectDecision": [
+      "Canonical answers отражают конечное B2B-состояние и намеренно не содержат b8_q1 и b8_q3; consumer-риски запрещены."
+    ],
+    "openQuestion": [
+      "Нужно согласовать аудит удаления stale-ответов и возможность восстановления предыдущего черновика без влияния на новый snapshot."
+    ]
+  },
+  "stateTransition": {
+    "previousTriggerAnswer": {
+      "questionId": "b1_q3",
+      "value": [
+        "b2c"
+      ]
+    },
+    "previouslyActiveQuestionIds": [
+      "b8_q1",
+      "b8_q3"
+    ],
+    "finalTriggerAnswer": {
+      "questionId": "b1_q3",
+      "value": [
+        "b2b_small"
+      ]
+    },
+    "expectedDeactivatedQuestionIds": [
+      "b8_q1",
+      "b8_q3"
+    ],
+    "staleAnswersExpectedInCanonicalAnswers": false
+  }
+}
