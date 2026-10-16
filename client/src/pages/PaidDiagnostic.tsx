@@ -160,7 +160,18 @@ export default function PaidDiagnostic() {
         dataProcessingAccepted: dataProcessing,
       });
 
-      setStep("payment");
+      // Pilot access: a valid promo code replaces payment entirely.
+      // Keep the legacy payment screen only for sessions started without a promo code.
+      if (promoCode.trim()) {
+        await activatePromo.mutateAsync({
+          sessionToken: result.sessionToken,
+          promoCode: promoCode.trim(),
+        });
+        setStep("questionnaire");
+        setCurrentBlock(0);
+      } else {
+        setStep("payment");
+      }
       scrollTop();
     } catch (e: any) {
       toast.error("Ошибка создания сессии: " + (e.message || "Попробуйте ещё раз"));
